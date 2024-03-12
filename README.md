@@ -58,14 +58,14 @@ cnull [ścieżka-do-katalogu]
 Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnalizowanie błędu w przypadku niepowodzenia.
 
 **Inne polecenia interpretera:**
-- `cnull --help` - wyświetlenie instrukcji inter
+- `cnull --help` - wyświetlenie instrukcji interpretera
 - `cnull --version` - wyświetlenie używanej wersji interpretera
 
 ## Specyfikacja języka
 
 ### Elementy języka
 
-- struktura programu (z jakich elementów może się składać program)
+%%- struktura programu (z jakich elementów może się składać program)
 - omówienie poszczególnych elementów języka
 
     - literały (w tym stałe liczbowe, operatory)
@@ -73,7 +73,122 @@ Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnali
     - zmienne, wyrażenia
     - funckje
     - bloki try-catch-finally
-    - klasy
+    - klasy%%
+
+#### Wykaz leksemów
+
+1. **Słowa kluczowe**
+	- typy danych/zwracane z funkcji lub metody
+		- `bool`
+		- `char`
+		- `string`
+		- `sbyte`
+		- `byte`
+		- `short`
+		- `ushort`
+		- `int`
+		- `uint`
+		- `long`
+		- `ulong`
+		- `void`
+	- stałe
+		- `null`
+		- `true`
+		- `false`
+	- instrukcje sterujące
+		- `if`
+		- `else`
+		- `while`
+		- `return`
+		- `throw`
+		- `try`
+		- `catch`
+		- `finally`
+	- deklaracje typów złożonych
+		- `class`		
+		- `exception`
+	- pozostałe
+		- `new`
+		- `import`
+2. **Operatory**
+	- matematyczne - `+`, `-`, `*`, `/`
+	- priorytetu - `(`, `)`
+	- przypisania - `=`
+	- porównania - `<`, `<=`, `>`, `>=`, `==`, `!=`
+	- boolowskie - `&&`, `||`, `!`, `?`
+	- odwołania do znaku w ciągu - `[]`
+	- wyłuskania - `.`
+3. **Identyfikatory**
+4. **Ograniczenia bloków kodu** - `{`, `}`
+5. **Komentarz** - `// ...`
+6. **Oddzielenie argumentów/parametrów funkcji** - `,`
+7. **Koniec instrukcji** - `;`
+8. **Stałe**
+	- liczbowe
+	- tekstowe
+	- znakowe
+	- określone ww. słowami kluczowymi
+
+#### Literały, identyfikatory i operatory
+
+1. **Stałe**
+	- **stałe liczbowe** - interpretowane w formacie dziesiętnym. Niedozwolone jest poprzedzanie stałych zerami.
+		- całkowitoliczbowe - `0, -250, 12345`
+		- zmiennoprzecinkowe - `0.24`, `-1.4567`, `1234.5678`, `.290`. W przypadku stałych zmiennoprzecinkowych nieposiadających części całkowitej dozwolone jest pominięcie zera na początku.
+	- **stałe tekstowe** - ujmowane znakiem cudzysłowu - `"przykładowy tekst"`, `"Ala ma kota"`
+	- **stałe znakowe** - ujmowane znakiem apostrofu. Mogą zawierać jedynie pojedynczy znak - `'a', 'A', 'h'`
+	- **stałe boolowskie** - `true`, `false`
+	- **stała wartości pustej** - `null`
+2. **Identyfikatory** - mogą zawierać jedynie litery, znaki podkreślenia oraz cyfry (z czego cyfry nie może być znakiem rozpoczynającym identyfikator). Zasady tworzenia identyfikatorów są takie same dla zmiennych, klas, funkcji, metod oraz wyjątków. Maksymalna długość identyfikatora wynosi 256 znaków. `myVariable`, `MYVARIABLE`, `My_Variable`, `_myVariable1`, `____`. 
+3. **Operatory**
+	- **matematyczne** - `+`, `-`, `*`, `/`
+	- **priorytetu** - `(`, `)`
+	- **przypisania** - `=`
+	- **porównania** - `<`, `<=`, `>`, `>=`, `==`, `!=`
+	- **boolowskie** - `&&`, `||`, `!`, `?` (sprawdzenie, czy wartość jest pusta)
+	- **odwołania do znaku w ciągu** - `[]`
+	- **wyłuskania** - `.`
+1. **Oznaczenie granic bloku kodu** - `{`, `}`
+2. **Komentarze** - `// przykładowy komentarz jednolinijkowy`
+
+### Typy danych
+
+Język C? jest typowany **statycznie i silnie**. Domyślnie, **każdy typ danych akceptuje wartość `null`.** Język C?, podobnie jak język C#, dzieli typy na 2 podstawowe grupy:
+- **typy wartościowe** - w przypadku C? są to wszystkie typy prymitywne (łącznie ze `string`). Są one **niemutowalne**, **kopiowane przy przypisaniu** oraz **przekazywane przez wartość** jako argument.
+- **typy referencyjne** - czyli klasy. Są one **mutowalne**, przy przypisaniu **kopiowana jest referencja**, a jako argument są one **przekazywane przez referencję**.
+
+#### Typy wartościowe
+
+1. **`bool`** - typ boolowski
+2. **Typy całkowitoliczbowe**
+	1. **`sbyte`** - 8-bitowa liczba całkowita ze znakiem
+	2. **`byte`** - 8-bitowa liczba całkowita bez znaku
+	3. **`short`** - 16-bitowa liczba całkowita ze znakiem
+	4. **`ushort`** - 16-bitowa liczba całkowita bez znaku
+	5. **`int`** - 32-bitowa liczba całkowita ze znakiem
+	6. **`uint`** - 32-bitowa liczba całkowita bez znaku
+	7. **`long`** - 64-bitowa liczba całkowita ze znakiem
+	8. **`ulong`** - 64-bitowa liczba całkowita bez znaku
+3. **`float`** - liczba zmiennoprzecinkowa podwójnej precyzji
+4. **`string`** - ciąg znaków
+5. **`char`** - pojedynczy znak
+
+#### Klasy
+
+Programista ma możliwość tworzenia własnych prostych klas (słowo kluczowe `class`), w skład których mogą wchodzić zmienne oraz metody. Każda klasa jest typem referencyjnym.
+
+Język C? posiada **wbudowany słownik**, który w rzeczywistości jest klasą będącą częścią "biblioteki standardowej". Posiada zestaw metod umożliwiających operacje na nim.
+
+#### Wyjątki
+
+Dodatkowo, język C? wyróżnia **wyjątki jako osobny typ danych** (słowo kluczowe `exception`). **Wyjątki są typem wartościowym** - pomimo, że mogą być używane jedynie podczas obsługi wyjątków (co różni język C? od innych języków programowania, gdzie wyjątki to de facto zwykłe klasy), to podczas ich rzucenia ich wartość jest kopiowana od miejsca utworzenia do miejsca przechwycenia, a same w sobie są niemutowalne.
+
+C? posiada zestaw wbudowanych wyjątków:
+- `Exception`
+- `NullValueException`
+- `InvalidCastException`
+- `DivideByZeroException`
+- `IndexOutOfRangeException`
 
 ### Dane w programie
 
@@ -92,11 +207,11 @@ Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnali
 - błędy czasu wykonania
 - jak będą wyglądały komunikaty o błędach
 
+### Przykłady użycia języka
+
 ### Opis gramatyki EBNF
 
 - opis w postaci top-down
-
-### Przykłady użycia języka
 
 ## Realizacja projektu
 
