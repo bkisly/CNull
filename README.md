@@ -116,7 +116,7 @@ Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnali
 	- przypisania - `=`
 	- porównania - `<`, `<=`, `>`, `>=`, `==`, `!=`
 	- boolowskie - `&&`, `||`, `!`, `?`
-	- odwołania do znaku w ciągu - `[]`
+	- odwołania do znaku w ciągu - `[`, `]`
 	- wyłuskania - `.`
 3. **Identyfikatory**
 4. **Ograniczenia bloków kodu** - `{`, `}`
@@ -208,6 +208,109 @@ C? posiada zestaw wbudowanych wyjątków:
 - jak będą wyglądały komunikaty o błędach
 
 ### Przykłady użycia języka
+
+#### Zmienne, importowanie bibliotek, operacje na danych prymitywnych i interakcja z terminalem
+
+##### Sytuacje poprawne
+
+**1. Obliczenie sumy liczb podanych przez użytkownika**
+
+```csharp
+import CNull.Console;
+import CNull.Convert;
+
+int first = ConvertToInt(ReadLine("Podaj pierwsza liczbe: "));
+int second = ConvertToInt(ReadLine("Podaj druga liczbe: "));
+
+int result = first + second;
+WriteLine(result);
+```
+
+Wynik:
+```
+Podaj pierwsza liczbe: 30
+Podaj druga liczbe: 20
+50
+```
+
+**2. Złożona operacja matematyczna z niejawnymi konwersjami**
+
+```csharp
+import CNull.Console;
+
+int a = 23;
+short b = 14;
+
+int c = (b + a) * (2 - b) / 2;
+WriteLine(c);
+```
+
+Wynik:
+```
+-222
+```
+
+**3. Złożona operacja matematyczna z rzutowaniem typu**
+
+```csharp
+import CNull.Console;
+
+int a = 23;
+short b = 14;
+
+short c = (short)((b + a) * (2 - b) / 2);
+WriteLine(c);
+```
+
+Wynik:
+```
+-222
+```
+
+**4. Deklaracje zmiennych wraz i bez inicjalizacji oraz demonstracja typów danych**
+
+```csharp
+int a;
+a = 2000;
+a = -2000;
+
+short b = 0;
+b = 300;
+
+char c = 'A';
+c = '';
+string d = "Ala ma kota";
+d = '';
+
+bool e = true;
+e = false;
+
+float f = 2.1234355;
+f = -2.424244;
+f = 123123.123123;
+f = 0.123123;
+f = .12312313;
+
+a = null;
+b = null;
+c = null;
+d = null;
+e = null;
+f = null;
+```
+ 
+**5. Prezentacja różnych możliwych identyfikatorów**
+
+```csharp
+int someVariable;
+int _someVariable;
+int SOME_VARIABLE;
+int _;
+int ________;
+int someVariable1;
+int some_variable_1;
+int _12345;
+```
 
 ### Opis gramatyki EBNF
 
