@@ -209,15 +209,15 @@ C? posiada zestaw wbudowanych wyjątków:
 
 ### Przykłady użycia języka
 
-#### Zmienne, importowanie bibliotek, operacje na danych prymitywnych i interakcja z terminalem
+#### Przykłady elementarne - zmienne, importowanie bibliotek, operacje na danych prymitywnych i interakcja z terminalem
 
 ##### Sytuacje poprawne
 
 **1. Obliczenie sumy liczb podanych przez użytkownika**
 
 ```csharp
-import CNull.Console;
-import CNull.Convert;
+import CNull.Console.WriteLine;
+import CNull.Convert.ConvertToInt;
 
 int first = ConvertToInt(ReadLine("Podaj pierwsza liczbe: "));
 int second = ConvertToInt(ReadLine("Podaj druga liczbe: "));
@@ -310,6 +310,275 @@ int ________;
 int someVariable1;
 int some_variable_1;
 int _12345;
+```
+
+**6. Wyrażenia boolowskie**
+
+```csharp
+import CNull.Console.WriteLine;
+
+bool a = true;
+bool b = false;
+bool c = null;
+bool d = !(a || b) && a?;
+
+WriteLine(a?);
+WriteLine(c?);
+WriteLine(c);
+WriteLine(d);
+```
+
+Wynik:
+```
+true
+false
+null
+false
+```
+
+##### Sytuacje niepoprawne
+
+**1. Dyrektywy `import` niebędące na początku pliku**
+
+```csharp
+bool a = true;
+import CNull.Console.WriteLine;
+WriteLine(a);
+```
+
+Wynik:
+```
+C? error on line 2, column 1: Import statement must be placed at the top of the file.
+```
+
+**2. Użycie słowa kluczowego jako identyfikatora**
+
+```csharp
+int bool = 2;
+```
+
+Wynik:
+```
+C? error on line 1, column 5: Keywords cannot be used as identifiers.
+```
+
+**3. Odwołanie do wartości `null`**
+
+```csharp
+int a = 1;
+int b;
+
+int c = a + b;
+```
+
+Wynik:
+```
+C? unhandled exception (NullValueException - Tried to access null value in a non-nullable statement):
+	at Program.cnull (line 4)
+```
+
+#### Przykłady złożone - funkcje, instrukcje sterujące i obsługa wyjątków
+
+**1. Rekurencyjna funkcja silni z komentarzami i zasygnalizowaniem wynikiem `null` niepoprawnych danych wejściowych. Przykład z przepełnieniem stosu**
+
+```csharp
+import CNull.Console.WriteLine;
+
+ulong Factorial(uint n)
+{
+	if (!n?) // Check if the given value isn't null. Return null if yes.
+	{
+		return null;
+	}
+
+	if (n == 0 || n == 1)
+	{
+		return 1;
+	}
+	else
+	{
+		return n * Factorial(n - 1);
+	}
+}
+
+WriteLine(Factorial(0));
+WriteLine(Factorial(1));
+WriteLine(Factorial(5));
+WriteLine(Factorial(null));
+WriteLine(Factorial(1000000000));
+```
+
+Wynik:
+```
+1
+1
+120
+null
+C? unhandled exception (StackOverflowException - Stack overflow):
+	at Program.cnull (line 24)
+	at Program.cnull (line 16)
+```
+
+**2. Definicja własnego wyjątku, rzucenie go w przykładowej funkcji oraz jego obsługa.
+
+```csharp
+import CNull.Console.WriteLine;
+import CNull.Convert.ConvertToString;
+
+exception MyCustomException
+{
+	int InvalidValue;
+}
+
+void Foo(int a, int b)
+{
+	if (b > a)
+	{
+		throw new MyCustomException(b);
+	}
+}
+
+try
+{
+	Foo(20, 10);
+	Foo(10, 10);
+	Foo(10, 20);
+	Foo(10, 40);
+	Foo(null, null);
+}
+catch (MyCustomException ex)
+{
+	WriteLine("Invalid value was: " + ConvertToString(ex.InvalidValue));
+}
+
+Foo(null, 20);
+```
+
+Wynik:
+```
+Invalid value was: 20
+C? unhandled exception (NullValueException - Tried to access null value in a non-nullable statement):
+	at Program.cs (line 28)
+	at Program.cs (line 11)
+```
+
+
+**3. Przekazywanie przez wartość typów prymitywnych**
+
+```csharp
+import CNull.Console.WriteLine;
+
+int a = 20;
+
+void Process(int value)
+{
+	while (value <= 50)
+	{
+		value = value + 1;
+	}
+
+	WriteLine(value);
+}
+
+Process(a);
+WriteLine(a);
+```
+
+Wynik:
+```
+50
+20
+```
+
+**4. Operacje na słowniku**
+
+```csharp
+import CNull.Console.WriteLine;
+
+Dictionary<int, bool> dict;
+
+WriteLine(dict.Count());
+
+dict.Add(1, true);
+dict.Add(2, false);
+dict.Add(3, null);
+
+WriteLine(dict.Count());
+WriteLine(dict.Get(1));
+WriteLine(dict.Get(3));
+WriteLine(dict.Get(200));
+
+dict.Add(null, null);
+```
+
+Wynik:
+```
+0
+3
+true
+null
+null
+C? unhandled exception (NullValueException - Cannot add a dictionary entry with null key):
+	at Program.cnull (line 16)
+```
+
+**5. Wielokrotne, zagnieżdżone wywołania funkcji razem z przekazywaniem argumentu przez wartość**
+
+```csharp
+import CNull.Console.WriteLine;
+
+int a = 20;
+
+int A(int val)
+{
+	if (val < 10)
+	{
+		return 5;
+	}
+
+	return val + 40;
+}
+
+int B(int val)
+{
+	int counter = 0;
+	while (counter < 5)
+	{
+		val = val + 1;
+
+		if (val > 50)
+		{
+			return val;
+		}
+
+		counter = counter + 1;
+	}
+
+	return A(val);
+}
+
+int C(int val)
+{
+	if (val > 20)
+	{
+		return A(val);
+	}
+
+	return B(val);
+}
+
+WriteLine(C(100));
+WriteLine(C(10));
+WriteLine(C(a));
+WriteLine(a);
+```
+
+Wynik:
+```
+140
+55
+65
+20
 ```
 
 ### Opis gramatyki EBNF
