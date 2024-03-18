@@ -1,0 +1,73 @@
+(*Start symbol and essential elements*)
+
+document                        = { import_directive }, { declaration_or_instruction };
+
+import_directive                = 'import', identifier, { '.', identifier }, ';';
+
+declaration_or_instruction      = class_definition
+                                | exception_definition
+                                | function_definition
+                                | basic_statement;
+
+(*Complex types*)
+
+class_definition                = 'class', identifier, embedded_class_statement;
+exception_definition            = 'exception', identifier, embedded_exception_statement;
+
+embedded_class_statement        = '{', { variable_statement | function_definition }, '}';
+embedded_exception_statement    = '{', { variable_statement }, '}';
+
+(*Functions, methods and types*)
+
+function_definition             = return_type, identifier, '(', { parameter_list }, ')' embedded_function_statement;
+
+return_type                     = 'void'
+                                | type_name;
+
+type_name                       = primitive_type
+                                | dict_type
+                                | identifier;
+
+primitive_type                  = 'bool' | 'sbyte' | 'byte' | 'short' | 'ushort' | 'int'
+                                | 'uint' | 'long' | 'ulong' | 'char' | 'string' | 'float';
+
+dict_type                       = 'dict', '<', type_name, ',', type_name, '>';
+
+(*Statements*)
+
+basic_statement                 = variable_statement
+                                | expression
+                                | if_statement
+                                | loop_statement
+                                | throw_statement
+                                | try_statement;
+
+embedded_function_statement     = ;
+embedded_statement              = ;
+
+(*- Variables*)
+
+variable_statement              = variable_declaration
+                                | variable_assignment;
+
+variable_declaration            = type_name, identifier, ';'
+                                | type_name, identifier, '=', expression, ';';
+
+variable_assignment             = identifier, '=', expression, ';';
+
+(*- If statement*)
+
+if_statement                    = 'if', '(', boolean_expression, ')', embedded_statement,
+                                [ 'else', embedded_statement ];
+
+(*- Loop statements*)
+
+loop_statement                  = while_statement;
+while_statement                 = 'while', '(', boolean_expression, ')', embedded_statement;
+
+(*- Exceptions-related statements*)
+
+throw_statement                 = 'throw', new_expression, ';';
+
+try_statement                   = 'try', embedded_statement, catch_clause, { catch_clause };
+catch_clause                    = 'catch', '(', identifier, [identifier], ')', embedded_statement;
