@@ -583,7 +583,9 @@ Wynik:
 
 ### Opis gramatyki EBNF
 
-- opis w postaci top-down
+#### Warstwa leksykalna
+
+
 
 ## Realizacja projektu
 

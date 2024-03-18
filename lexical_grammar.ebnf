@@ -1,0 +1,80 @@
+NULL        = 'null';
+TRUE        = 'true';
+FALSE       = 'false';
+
+(*Start symbols*)
+
+input           = { input_section };
+input_section   = { input_element }, new_line;
+input_element   = whitespace |
+                  comment |
+                  token;
+
+(*Line terminators*)
+new_line            = new_line_character |
+                      '\u000D\u000A';   (*CRLF*)
+
+new_line_character  = '\u000D' |  (*carriage return*)
+                      '\u000A' |  (*line feed*)
+                      '\u0085' |  (*next line*)
+                      '\u2028' |  (*line separator*)
+                      '\u2029';  (*paragraph separator*)
+
+(*Character types*)
+input_character     = ? all visible characters ? - new_line_character;
+letter              = 'a' | ... | 'z' | 'A' | ... | 'Z';
+number_but_zero     = '1' | ... | '9';
+number              = '0' | number_but_zero;
+underscore          = '_';
+whitespace          = ? all whitespace characters ?;
+
+(*Tokens types*)
+comment             = '//', { input_character };
+token               = identifier |
+                      keyword |
+                      literal |
+                      operator_or_punctor;
+
+(*Keywords*)
+keyword             = 'bool' | 'sbyte' | 'byte' | 'ushort' | 'short' | 'uint' | 'int' | 'ulong' | 'long' | 'float' | 'string' | 'char' | 'dict' |
+                      'if' | 'else' | 'while' | 'continue' | 'break' | 'void' | 'return' | 'class' | 'exception' | 'throw' | 'try' | 'catch' |
+                      TRUE | FALSE | NULL | 'import';
+
+(*Identifiers*)
+identifier                  = identifier_start_character, { identifier_part_character };
+identifier_start_character  = letter | 
+                              underscore;
+identifier_part_character   = letter |
+                              underscore |
+                              number;
+
+(*Literals*)
+literal             = boolean_literal |
+                      integer_literal |
+                      real_literal |
+                      character_literal |
+                      string_literal;
+
+boolean_literal     = TRUE | FALSE | NULL;
+
+integer_literal     = number |
+                      number_but_zero, { number } |
+                      NULL;
+
+real_literal        = [ (number | number_but_zero, { number }) ], '.', number_but_zero, { number_but_zero } |
+                      NULL;
+
+character           = ? all characters but "'", \ and new_line_character ?;
+character_literal   = '\'', [ character ], '\'' |
+                      NULL;
+
+string_literal      = '"', { character }, '"' |
+                      NULL;
+
+(*Operators and punctors*)
+
+operator_or_punctor = '+' | '-' | '*' | '/' | '%' | '=' |
+                      '{' | '}' | '[' | ']' | '(' | ')' |
+                      '.' | ',' | ';' | '&&' | '||' |
+                      '>' | '<' | '>=' | '<=' | '==' | '!=' | '?' | '!' |
+                      '+=' | '-=' | '*=' | '/=' | '%=' | '++' | '--';
