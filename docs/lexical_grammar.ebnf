@@ -48,10 +48,10 @@ keyword                     = 'bool' | 'sbyte' | 'byte' | 'ushort' | 'short' | '
 
 identifier                  = identifier_start_character, { identifier_part_character };
 identifier_start_character  = letter
-                              | underscore;
+                            | underscore;
 identifier_part_character   = letter
-                              | underscore
-                              | number;
+                            | underscore
+                            | number;
 
 (*Literals*)
 
