@@ -54,13 +54,13 @@ variable_assignment             = identifier, '=', expression, ';';
 
 (*- If statement*)
 
-if_statement                    = 'if', '(', boolean_expression, ')', embedded_statement,
-                                [ 'else', embedded_statement ];
+if_statement                    = 'if', '(', expression, ')', embedded_statement,
+                                [ { 'else', 'if', '(', expression, ')', embedded_statement }, 'else', embedded_statement ];
 
 (*- Loop statements*)
 
 loop_statement                  = while_statement;
-while_statement                 = 'while', '(', boolean_expression, ')', embedded_statement;
+while_statement                 = 'while', '(', expression, ')', embedded_statement;
 
 (*- Exceptions-related statements*)
 

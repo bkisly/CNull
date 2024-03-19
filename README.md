@@ -22,7 +22,7 @@ Cele przyświecające powstaniu języka C?:
 - **Domyślna akceptacja wartości *null*** przez wszystkie definiowane typy, w tym wszystkie typy prymitywne.
 - Wbudowana **kolekcja danych (słownik)**, będąca przykładem typu złożonego, posiadająca własny interfejs umożliwiający dodawanie, usuwanie, wyszukiwanie i sortowanie elementów. **Klucz w takim słowniku nie może mieć wartości *null***.
 - **Sygnalizowanie błędów przy próbie operacji na wartości *null*** (tj. rzucenie wyjątku `NullValueException` w czasie wykonania programu).
-- **Możliwość obsługi wyjątków** w blokach *try-catch*, znanych z innych języków programowania. Dodatkowo, możliwe jest utworzenie bloku *finally* - ma on tę samą funkcję, jak ten znany z języka C#.
+- **Możliwość obsługi wyjątków** w blokach *try-catch*, znanych z innych języków programowania. 
 - **Programista może tworzyć własne typy wyjątków.** Wyjątki są osobnym typem danych. Mogą one zawierać pola, ale nie mogą zawierać metod. Mogą być one używane jedynie zgodnie ze swoim przeznaczeniem (tj. jedynie rzucane w instrukcjach `throw` oraz obsługiwane w blokach `catch`)
 - **Możliwość agregowania zmiennych i funkcji w klasy**, jednak bez zapewnienia mechanizmów znanych z typowych języków obiektowych (tj. dziedziczenia, hermetyzacji i polimorfizmu). Klasy w języku C? służą jedynie agregacji danych i funkcji oraz możliwości tworzenia prostych obiektów. Mechanizm ten jest niezbędny do tego, aby można było tworzyć czytelne w użyciu złożone typy danych (jak ww. wbudowany słownik).
 - **Możliwość importowania klas, funkcji oraz wyjątków z innych plików**, na takiej samej zasadzie jak w przypadku języka Python.
@@ -74,60 +74,6 @@ Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnali
     - funckje
     - bloki try-catch-finally
     - klasy%%
-
-#### Wykaz leksemów
-
-1. **Słowa kluczowe**
-	- typy danych/zwracane z funkcji lub metody
-		- `bool`
-		- `char`
-		- `string`
-		- `sbyte`
-		- `byte`
-		- `short`
-		- `ushort`
-		- `int`
-		- `uint`
-		- `long`
-		- `ulong`
-		- `void`
-	- stałe
-		- `null`
-		- `true`
-		- `false`
-	- instrukcje sterujące
-		- `if`
-		- `else`
-		- `while`
-		- `return`
-		- `throw`
-		- `try`
-		- `catch`
-		- `finally`
-	- deklaracje typów złożonych
-		- `class`		
-		- `exception`
-	- pozostałe
-		- `new`
-		- `import`
-2. **Operatory**
-	- matematyczne - `+`, `-`, `*`, `/`
-	- priorytetu - `(`, `)`
-	- przypisania - `=`
-	- porównania - `<`, `<=`, `>`, `>=`, `==`, `!=`
-	- boolowskie - `&&`, `||`, `!`, `?`
-	- odwołania do znaku w ciągu - `[`, `]`
-	- wyłuskania - `.`
-3. **Identyfikatory**
-4. **Ograniczenia bloków kodu** - `{`, `}`
-5. **Komentarz** - `// ...`
-6. **Oddzielenie argumentów/parametrów funkcji** - `,`
-7. **Koniec instrukcji** - `;`
-8. **Stałe**
-	- liczbowe
-	- tekstowe
-	- znakowe
-	- określone ww. słowami kluczowymi
 
 #### Literały, identyfikatory i operatory
 
@@ -181,7 +127,7 @@ Język C? posiada **wbudowany słownik**, który w rzeczywistości jest klasą b
 
 #### Wyjątki
 
-Dodatkowo, język C? wyróżnia **wyjątki jako osobny typ danych** (słowo kluczowe `exception`). **Wyjątki są typem wartościowym** - pomimo, że mogą być używane jedynie podczas obsługi wyjątków (co różni język C? od innych języków programowania, gdzie wyjątki to de facto zwykłe klasy), to podczas ich rzucenia ich wartość jest kopiowana od miejsca utworzenia do miejsca przechwycenia, a same w sobie są niemutowalne.
+Dodatkowo, język C? wyróżnia **wyjątki jako osobny typ danych** (słowo kluczowe `exception`). **Wyjątki są typem wartościowym** - pomimo, że mogą być używane jedynie podczas obsługi wyjątków (co różni język C? od innych języków programowania, w których wyjątki to de facto zwykłe klasy), to podczas ich rzucenia ich wartość jest kopiowana od miejsca utworzenia do miejsca przechwycenia, a same w sobie są niemutowalne.
 
 C? posiada zestaw wbudowanych wyjątków:
 - `Exception`
@@ -192,12 +138,18 @@ C? posiada zestaw wbudowanych wyjątków:
 
 ### Dane w programie
 
-- opis typowania
-- określenie zasad przekazywania argumentów
-- określenie zasad konwersji (jawnych i niejawnych)
-- określenie zasad zakresu zmiennych
-- określenie zasad przeciążania funkcji
-- określenie zasad przykrywania zmiennych
+- Typowanie w języku C? jest **silne i statyczne**
+- Argumenty do funkcji przekazywane są w zależności od ich typu:
+	- typy prymitywne - **przez wartość**
+	- typy złożone - **przez referencję**
+- **Konwersje typów**:
+	- mogą następować niejawnie, kiedy typ o mniejszym zakresie ma zostać zrzutowany do typu o większym zakresie
+	- muszą następować jawnie (przez rzutowanie), kiedy typ o większym zakresie wartości ma zostać przypisany do zmiennej typu o mniejszym zakresie wartości
+	- konwersja niejawna może następować między typami `char` oraz `byte` (niskopoziomowo są tożsame)
+- **Zakres zmiennej** jest ograniczony do bloku kodu, w której jest zdefiniowana, a także do bloków podrzędnych
+- **Funkcje/metody mogą być przeciążane** w obrębie pliku albo klasy. Przeciążone metody muszą mieć co najmniej różny typ zwracany lub różne listy parametrów
+- **Przykrywanie zmiennych** może występować podczas zdefiniowania zmiennej lokalnej w funkcji, kiedy już zdefiniowano zmienną o tej samej nazwie w pliku. Wówczas w danym kontekście brana pod uwagę jest ta zmienna, która jest na najniższym poziomie zagnieżdżenia. Nie można redefiniować pól i zmiennych lokalnych.
+- W przypadku importowania elementów o tych samych nazwach, należy odnosić się do nich po pełnej nazwie (tj. razem z nazwą modułu).
 
 ### Obsługa błędów
 
