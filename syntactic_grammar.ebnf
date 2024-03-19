@@ -14,12 +14,11 @@ declaration_or_instruction      = class_definition
 class_definition                = 'class', identifier, embedded_class_statement;
 exception_definition            = 'exception', identifier, embedded_exception_statement;
 
-embedded_class_statement        = '{', { variable_statement | function_definition }, '}';
-embedded_exception_statement    = '{', { variable_statement }, '}';
-
 (*Functions, methods and types*)
 
-function_definition             = return_type, identifier, '(', { parameter_list }, ')' embedded_function_statement;
+function_definition             = return_type, identifier, '(', [ parameter_list ], ')' embedded_function_statement;
+parameter_list                  = parameter, { ',', parameter };
+parameter                       = type_name, identifier;
 
 return_type                     = 'void'
                                 | type_name;
@@ -36,14 +35,12 @@ dict_type                       = 'dict', '<', type_name, ',', type_name, '>';
 (*Statements*)
 
 basic_statement                 = variable_statement
-                                | expression
+                                | expression_statement
                                 | if_statement
                                 | loop_statement
-                                | throw_statement
                                 | try_statement;
 
-embedded_function_statement     = ;
-embedded_statement              = ;
+expression_statement            = expression, ';';
 
 (*- Variables*)
 
@@ -67,7 +64,86 @@ while_statement                 = 'while', '(', boolean_expression, ')', embedde
 
 (*- Exceptions-related statements*)
 
-throw_statement                 = 'throw', new_expression, ';';
-
 try_statement                   = 'try', embedded_statement, catch_clause, { catch_clause };
-catch_clause                    = 'catch', '(', identifier, [identifier], ')', embedded_statement;
+catch_clause                    = 'catch', '(', identifier, [ identifier ], ')', embedded_statement;
+
+(*- Embedded statements*)
+
+embedded_class_statement        = '{', { variable_declaration | function_definition }, '}';
+embedded_exception_statement    = '{', { variable_declaration }, '}';
+
+embedded_function_statement     = '{', { function_statement }, '}';
+function_statement              = basic_statement
+                                | return_statement;
+return_statement                = 'return', unary_expression, ';';
+
+
+embedded_statement              = '{', { basic_statement }, '}';
+
+(*Expressions*)
+
+expression                      = non_assignment_expression
+                                | assignment;
+
+assignment                      = unary_expression, assignment_operator, expression;
+assignment_operator             = '=' | '+=' | '-=' | '*=' | '/=' | '%=';
+
+non_assignment_expression       = declaration_expression
+                                | conditional_expression
+                                | throw_expression;
+
+declaration_expression          = type_name, identifier;
+throw_expression                = 'throw', new_expression;
+
+conditional_expression          = conditional_or_expression;
+conditional_or_expression       = conditional_and_expression
+                                | conditional_or_expression, '||', conditional_and_expression;
+conditional_and_expression      = equality_expression
+                                | conditional_and_expression, '&&', equality_expression;
+equality_expression             = relational_expression
+                                | equality_expression, '==', relational_expression
+                                | equality_expression, '!=', relational_expression;
+relational_expression           = relational_expression, '<', additive_expression
+                                | relational_expression, '>', additive_expression
+                                | relational_expression, '<=', additive_expression
+                                | relational_expression, '>=', additive_expression;
+
+additive_expression             = multiplicative_expression
+                                | additive_expression, '+', multiplicative_expression
+                                | additive_expression, '-', multiplicative_expression;
+multiplicative_expression       = unary_expression
+                                | multiplicative_expression, '*', unary_expression
+                                | multiplicative_expression, '/', unary_expression
+                                | multiplicative_expression, '%', unary_expression;
+
+unary_expression                = primary_expression
+                                | '+', unary_expression
+                                | '-', unary_expression
+                                | '!', unary_expression
+                                | unary_expression, '?'
+                                | cast_expression;
+
+cast_expression                 = '(', type_name, ')', unary_expression;
+
+primary_expression              = literal
+                                | identifier
+                                | parenthesised_expression
+                                | member_access
+                                | invocation_expression
+                                | character_access
+                                | post_increment_expression
+                                | post_decrement_expression
+                                | new_expression;
+
+parenthesised_expression        = '(', expression, ')';
+
+member_access                   = primary_expression, '.', identifier;
+invocation_expression           = primary_expression, '(', [ argument_list ], ')';
+argument_list                   = unary_expression, { unary_expression };
+
+character_access                = primary_expression, '[', unary_expression, ']';
+
+post_increment_expression       = primary_expression, '++';
+post_decrement_expression       = primary_expression, '--';
+
+new_expression                  = 'new', type_name, '(', [ argument_list ], ')';
