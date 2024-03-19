@@ -153,11 +153,28 @@ C? posiada zestaw wbudowanych wyjątków:
 
 ### Obsługa błędów
 
-- błędy na poziomie leksera
-- błędy na poziomie parsera
-- błędy semantyczne
-- błędy czasu wykonania
-- jak będą wyglądały komunikaty o błędach
+Błędy będą obsługiwane przez osobny moduł projektu. Każde wystąpienie błędu w danym module interpretera (np. lekserze, parserze czy samym interpreterze) będzie sygnalizowane zgłoszeniem zdarzenia, którego obsługa zostanie oddelegowana do modułu obsługi błędów. Na podstawie informacji przekazanych w zdarzeniu podejmowane będą odpowiednie działania, jak np. wyświetlenie informacji na ekranie, zapis do logu itp.
+
+Obsługiwane rodzaje błędów:
+1. **Błędy na poziomie leksera** - sygnalizowane wtedy, kiedy dany leksem nie został rozpoznany, ma nieprawidłową długość itp.
+2. **Błędy na poziomie parsera** - sygnalizowane wtedy, kiedy wykryta zostanie nieprawidłowa składnia programu (tj. taka niezdefiniowana w gramatyce).
+3. **Błędy na poziomie interpretera** - sygnalizowane podczas wykrycia instrukcji nieprawidłowej semantycznie (np. próba przypisania wartości wyrażenia boolowskiego do zmiennej typu `string`).
+4. **Błędy czasu wykonania** - sygnalizowane w momencie wykrycia nieprawidłowej operacji w trakcie wykonania programu (np. próba dzielenia przez zero, odwołanie do wartości `null`, nieprawidłowe rzutowanie).
+
+Komunikaty o błędach sformatowane będą w następujący sposób:
+- dla błędów wykrytych przed wykonaniem:
+
+```bash
+C? error: [komunikat o błędzie]
+	in [nazwa pliku] (line [nr linii], column [nr kolumny])
+```
+
+- dla błędów czasu wykonania (nieobsłużonych wyjątków) - wypisanie stosu wywołań:
+
+```
+C? unhandled exception ([nazwa typu wyjątku] - [komunikat z wyjątku]):
+	at [nazwa pliku + pełna nazwa klasy/metody jeśli dotyczy] (line [nr linii])
+```
 
 ### Przykłady użycia języka
 
@@ -447,20 +464,20 @@ Wynik:
 ```csharp
 import CNull.Console.WriteLine;
 
-Dictionary<int, bool> dict;
+dict<int, bool> d;
 
 WriteLine(dict.Count());
 
-dict.Add(1, true);
-dict.Add(2, false);
-dict.Add(3, null);
+d.Add(1, true);
+d.Add(2, false);
+d.Add(3, null);
 
-WriteLine(dict.Count());
-WriteLine(dict.Get(1));
-WriteLine(dict.Get(3));
-WriteLine(dict.Get(200));
+WriteLine(d.Count());
+WriteLine(d.Get(1));
+WriteLine(d.Get(3));
+WriteLine(d.Get(200));
 
-dict.Add(null, null);
+d.Add(null, null);
 ```
 
 Wynik:
@@ -537,7 +554,11 @@ Wynik:
 
 #### Warstwa leksykalna
 
+Opis gramatyki na poziomie leksykalnym znajduje się w pliku [lexical_grammar.ebnf](docs/lexical_grammar.ebnf).
 
+#### Warstwa składniowa
+
+Opis gramatyki na poziomie składni znajduje się w pliku [syntactic_grammar.ebnf](docs/syntactic_grammar.ebnf).
 
 ## Realizacja projektu
 
