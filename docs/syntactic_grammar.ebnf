@@ -1,22 +1,22 @@
 (*Start symbol and essential elements*)
 
-document                        = { import_directive }, { declaration_or_instruction };
+document                        = { import_directive }, { instruction };
 
 import_directive                = 'import', identifier, { '.', identifier }, ';';
 
-declaration_or_instruction      = class_definition
+instruction                     = class_definition
                                 | exception_definition
                                 | function_definition
                                 | basic_statement;
 
 (*Complex types*)
 
-class_definition                = 'class', identifier, embedded_class_statement;
-exception_definition            = 'exception', identifier, embedded_exception_statement;
+class_definition                = 'class', identifier, block_class_statement;
+exception_definition            = 'exception', identifier, block_exception_statement;
 
 (*Functions, methods and types*)
 
-function_definition             = return_type, identifier, '(', [ parameter_list ], ')' embedded_function_statement;
+function_definition             = return_type, identifier, '(', [ parameter_list ], ')' block_function_statement;
 parameter_list                  = parameter, { ',', parameter };
 parameter                       = type_name, identifier;
 
@@ -44,41 +44,43 @@ expression_statement            = expression, ';';
 
 (*- Variables*)
 
-variable_statement              = variable_declaration
-                                | variable_assignment;
+variable_statement              = variable_declaration;
 
 variable_declaration            = type_name, identifier, ';'
-                                | type_name, identifier, '=', expression, ';';
-
-variable_assignment             = identifier, '=', expression, ';';
+                                | type_name, identifier, '=', non_assignment_expression, ';';
 
 (*- If statement*)
 
-if_statement                    = 'if', '(', expression, ')', embedded_statement,
-                                [ { 'else', 'if', '(', expression, ')', embedded_statement }, 'else', embedded_statement ];
+if_statement                    = 'if', '(', expression, ')', block_statement,
+                                [ 'else', ( if_statement | block_statement ) ];
 
 (*- Loop statements*)
 
 loop_statement                  = while_statement;
-while_statement                 = 'while', '(', expression, ')', embedded_statement;
+while_statement                 = 'while', '(', expression, ')', block_loop_statement;
 
 (*- Exceptions-related statements*)
 
-try_statement                   = 'try', embedded_statement, catch_clause, { catch_clause };
-catch_clause                    = 'catch', '(', identifier, [ identifier ], ')', embedded_statement;
+try_statement                   = 'try', block_statement, catch_clause, { catch_clause };
+catch_clause                    = 'catch', '(', identifier, [ identifier ], ')', block_statement;
 
-(*- Embedded statements*)
+(*- block statements*)
 
-embedded_class_statement        = '{', { variable_declaration | function_definition }, '}';
-embedded_exception_statement    = '{', { variable_declaration }, '}';
+block_class_statement           = '{', { variable_declaration | function_definition }, '}';
+block_exception_statement       = '{', { variable_declaration }, '}';
 
-embedded_function_statement     = '{', { function_statement }, '}';
+block_function_statement        = '{', { function_statement }, '}';
+block_loop_statement            = '{', { basic_statement | jump_loop_statement }, '}';
+
 function_statement              = basic_statement
                                 | return_statement;
+
 return_statement                = 'return', unary_expression, ';';
+jump_loop_statement             = 'continue', ';'
+                                | 'break', ';';
 
 
-embedded_statement              = '{', { basic_statement }, '}';
+block_statement                 = '{', { basic_statement }, '}';
 
 (*Expressions*)
 
@@ -88,11 +90,9 @@ expression                      = non_assignment_expression
 assignment                      = unary_expression, assignment_operator, expression;
 assignment_operator             = '=' | '+=' | '-=' | '*=' | '/=' | '%=';
 
-non_assignment_expression       = declaration_expression
-                                | conditional_expression
+non_assignment_expression       = conditional_expression
                                 | throw_expression;
 
-declaration_expression          = type_name, identifier;
 throw_expression                = 'throw', new_expression;
 
 conditional_expression          = conditional_or_expression;

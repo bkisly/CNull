@@ -65,16 +65,6 @@ Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnali
 
 ### Elementy języka
 
-%%- struktura programu (z jakich elementów może się składać program)
-- omówienie poszczególnych elementów języka
-
-    - literały (w tym stałe liczbowe, operatory)
-    - typy danych
-    - zmienne, wyrażenia
-    - funckje
-    - bloki try-catch-finally
-    - klasy%%
-
 #### Literały, identyfikatory i operatory
 
 1. **Stałe**
@@ -550,6 +540,44 @@ Wynik:
 20
 ```
 
+**6. Definicja klasy i przekazywanie przez referencję typu złożonego.**
+
+```csharp
+import CNull.Console.WriteLine;
+import CNull.Convert.ConvertToString;
+
+class Person
+{
+	int Age = 20;
+	string Name;
+
+	string IntroduceMyself()
+	{
+		if(Age? || Name?)
+		{
+			return null;
+		}
+
+		return "Hi, my name is " + Name + " and I'm " + ConvertToString(Age) + " years old.";
+	}
+}
+
+Person p = new Person;
+
+void SetPersonInfo(Person person, int age, string name)
+{
+	person.Age = age;
+	person.Name = name;
+}
+
+SetPersonInfo(p, 10, "Bruce");
+WriteLine(p.IntroduceMyself());
+```
+
+Wynik:
+```
+Hi, my name is Bruce and I'm 10 years old.
+```
 ### Opis gramatyki EBNF
 
 #### Warstwa leksykalna
@@ -564,11 +592,51 @@ Opis gramatyki na poziomie składni znajduje się w pliku [syntactic_grammar.ebn
 
 ### Struktura projektu
 
-- z jakich elementów logicznych będzie się składał projekt (w tym z jakich projektów C#-owych, jakich bibliotek klas)
-- rozpisanie komunikacji między poszczególnymi elementami
+Projekt C? będzie zrealizowany w języku C# w formie modularnej. Każdy moduł realizowany jest przez osobny projekt biblioteki klas C# albo aplikację konsolową jako warstwa front-end.
+
+Główne moduły składające się na projekt:
+- **`CNull.DataAccess`** - biblioteka klas realizująca dostęp do danych oraz udostępnianie ich lekserowi w zunifikowanej formie nadającej się do przeprowadzenia analizy leksykalnej. Główne elementy składające się na tę bibliotekę:
+	- Interfejs pobierania znaków ze źródła udostępniany lekserowi
+	- Klasa realizująca dostęp do danych z plików i ich przetwarzanie z pomocą strumieni
+	- Elementy pomocnicze dla warstwy dostępu do danych
+	- Zdarzenia błędów charakterystyczne dla procesu dostępu do danych
+- **`CNull.Lexer`** - biblioteka klas realizująca analizę leksykalną, tworzenie tokenów i udostępnianie ich parserowi w formie nadającej się do przeprowadzenia analizy składniowej. Główne elementy składające się na tę bibliotekę:
+	- Analizator leksykalny (w tym jego interfejs udostępniany parserowi)
+	- Generyczna implementacja tokenu
+	- Enumeracje i mapy dla typów tokenów
+	- Zdarzenia błędów charakterystyczne dla analizy leksykalnej
+	- Elementy pomocnicze dla analizatora leksykalnego
+- **`CNull.Parser`** - biblioteka klas realizująca analizę składniową, tworzenie drzewa rozbioru składniowego i udostępnienie go w formie nadającej się do przeprowadzenia analizy semantycznej. Główne elementy składające się na tę bibliotekę:
+	- Analizator składniowy (w tym jego interfejs udostępniany analizatorowi semantycznemu)
+	- Abstrakcja pozwalająca na reprezentację drzewa tokenów
+	- Implementację proxy realizującego filtrowanie tokenów komentarzy
+	- Zdarzenia błędów charakterystyczne dla analizy składniowej
+	- Elementy pomocnicze dla analizatora składniowego
+- **`CNull.Semantics`** - biblioteka klas realizująca analizę semantyczną otrzymanego drzewa rozbioru składniowego i umożliwienie wykonanie programu interpreterowi w formie sekwencji instrukcji. Główne elementy składające się na tę bibliotekę:
+	- Analizator semantyczny (w tym jego interfejs udostępniany interpreterowi)
+	- Abstrakcję pozwalającą na reprezentację instrukcji
+	- Zdarzenia błędów charakterystyczne dla analizy semantycznej
+	- Elementy pomocnicze dla analizatora semantycznego
+- **`CNull.Interpreter`** - biblioteka klas stanowiąca implementację interpretera - w tym miejscu wykonywany jest program C?. Główne elementy składające się na tę bibliotekę:
+	- Interpreter (w tym jego interfejs udostępniany modułom klienckim, w tym wypadku aplikacji konsolowej)
+	- Zdarzenia błędów charakterystyczne dla interpretera
+	- Elementy pomocnicze dla interpretera
+- **`CNull`** - aplikacja konsolowa realizująca interakcję z użytkownikiem oraz obsługę jego poleceń. Posiada odwołanie do interpretera, któremu zleca wykonanie programu podanego przez użytkownika. Jej jedyną odpowiedzialnością jest obsługa CLI, wypisywanie błędów na ekran (zgłaszanych przez zdarzenia modułu obsługi błędów) oraz przekazywanie polecenia wykonania programu interpreterowi.
+
+Dodatkowe moduły:
+- **`CNull.ErrorHandler`** - moduł odpowiadający za obsługę błędów zgłaszanych przez poszczególne warstwy programu. Jego zadaniem jest subskrypcja zdarzeń za pośrednictwem agregatora zdarzeń, następnie ich obsługa (na którą mogą składać się jakiekolwiek dodatkowe czynności potrzebne przy ich obsłudze, np. zrzucanie pewnych informacji do logów) oraz przekazanie informacji o błędzie "front-endowi" w formie pojedynczego zdarzenia, z informacjami koniecznymi do realizacji wyświetlenia błędu.
+- **`CNull.Common`** - moduł zawierający elementy pomocnicze i wspólne dla wszystkich składników programu.
+
+Projekty testów:
+- **`CNull.UnitTests`** - testy jednostkowe
+- **`CNull.IntegrationTests`** - testy integracyjne
+
+Komunikacja między głównymi modułami następuje w taki sposób, że dany moduł ma powiązania jedynie z modułem znajdującym się bezpośrednio "pod nim" (tj. lekser może mieć zależność jedynie od DA, parser od leksera itd.). Każdy z modułów głównych ma dostęp do modułu obsługi błędów. Wszystkie moduły mają dostęp do modułu elementów wspólnych.
+
+Aby ułatwić testowanie oraz zarządzanie zależnościami, główne obiekty będą operować na interfejsach swoich zależności, a zarządzanie nimi będzie realizowane przez dependency injection.
 
 ### Testowanie
 
-- opis rodzajów testów
-- jakie przypadki testowe będą testowane
-- metodyka testów (użyte frameworki, jak umożliwimy testowalność komponentów)
+Jak w każdym złożonym projekcie, będzie można wyróżnić testy jednostkowe i integracyjne:
+- **testy jednostkowe** będą ściśle odseparowywać wszelkie zależności od testowanych elementów, aby zapewnić jak najlepszą izolację przypadków testowych od pozostałych elementów i zapewnić atomowość takich testów. W szczególności, źródło danych będzie mockowane i przekazywane będą dane w postaci stringów. Do mockowania wykorzystany zostanie framework *Moq*.
+- **testy integracyjne** będą sprawdzały poprawność współpracy kilku komponentów jednocześnie, od współpracy "w parach" (np. parsera z lekserem), jak i bardziej złożonej. 
