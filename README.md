@@ -378,7 +378,7 @@ C? unhandled exception (StackOverflowException - Stack overflow):
 	at Program.cnull (line 16)
 ```
 
-**2. Definicja własnego wyjątku, rzucenie go w przykładowej funkcji oraz jego obsługa.
+**2. Definicja własnego wyjątku, rzucenie go w przykładowej funkcji oraz jego obsługa.**
 
 ```csharp
 import CNull.Console.WriteLine;
