@@ -146,4 +146,4 @@ character_access                = primary_expression, '[', unary_expression, ']'
 post_increment_expression       = primary_expression, '++';
 post_decrement_expression       = primary_expression, '--';
 
-new_expression                  = 'new', type_name, '(', [ argument_list ], ')';
+new_expression                  = 'new', type_name, [ '(', argument_list, ')' ];
