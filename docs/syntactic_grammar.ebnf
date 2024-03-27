@@ -1,0 +1,149 @@
+(*Start symbol and essential elements*)
+
+document                        = { import_directive }, { instruction };
+
+import_directive                = 'import', identifier, { '.', identifier }, ';';
+
+instruction                     = class_definition
+                                | exception_definition
+                                | function_definition
+                                | basic_statement;
+
+(*Complex types*)
+
+class_definition                = 'class', identifier, block_class_statement;
+exception_definition            = 'exception', identifier, block_exception_statement;
+
+(*Functions, methods and types*)
+
+function_definition             = return_type, identifier, '(', [ parameter_list ], ')' block_function_statement;
+parameter_list                  = parameter, { ',', parameter };
+parameter                       = type_name, identifier;
+
+return_type                     = 'void'
+                                | type_name;
+
+type_name                       = primitive_type
+                                | dict_type
+                                | identifier;
+
+primitive_type                  = 'bool' | 'sbyte' | 'byte' | 'short' | 'ushort' | 'int'
+                                | 'uint' | 'long' | 'ulong' | 'char' | 'string' | 'float';
+
+dict_type                       = 'dict', '<', type_name, ',', type_name, '>';
+
+(*Statements*)
+
+basic_statement                 = variable_statement
+                                | expression_statement
+                                | if_statement
+                                | loop_statement
+                                | try_statement;
+
+expression_statement            = expression, ';';
+
+(*- Variables*)
+
+variable_statement              = variable_declaration;
+
+variable_declaration            = type_name, identifier, ';'
+                                | type_name, identifier, '=', non_assignment_expression, ';';
+
+(*- If statement*)
+
+if_statement                    = 'if', '(', expression, ')', block_statement,
+                                [ 'else', ( if_statement | block_statement ) ];
+
+(*- Loop statements*)
+
+loop_statement                  = while_statement;
+while_statement                 = 'while', '(', expression, ')', block_loop_statement;
+
+(*- Exceptions-related statements*)
+
+try_statement                   = 'try', block_statement, catch_clause, { catch_clause };
+catch_clause                    = 'catch', '(', identifier, [ identifier ], ')', block_statement;
+
+(*- block statements*)
+
+block_class_statement           = '{', { variable_declaration | function_definition }, '}';
+block_exception_statement       = '{', { variable_declaration }, '}';
+
+block_function_statement        = '{', { function_statement }, '}';
+block_loop_statement            = '{', { basic_statement | jump_loop_statement }, '}';
+
+function_statement              = basic_statement
+                                | return_statement;
+
+return_statement                = 'return', unary_expression, ';';
+jump_loop_statement             = 'continue', ';'
+                                | 'break', ';';
+
+
+block_statement                 = '{', { basic_statement }, '}';
+
+(*Expressions*)
+
+expression                      = non_assignment_expression
+                                | assignment;
+
+assignment                      = unary_expression, assignment_operator, expression;
+assignment_operator             = '=' | '+=' | '-=' | '*=' | '/=' | '%=';
+
+non_assignment_expression       = conditional_expression
+                                | throw_expression;
+
+throw_expression                = 'throw', new_expression;
+
+conditional_expression          = conditional_or_expression;
+conditional_or_expression       = conditional_and_expression
+                                | conditional_or_expression, '||', conditional_and_expression;
+conditional_and_expression      = equality_expression
+                                | conditional_and_expression, '&&', equality_expression;
+equality_expression             = relational_expression
+                                | equality_expression, '==', relational_expression
+                                | equality_expression, '!=', relational_expression;
+relational_expression           = relational_expression, '<', additive_expression
+                                | relational_expression, '>', additive_expression
+                                | relational_expression, '<=', additive_expression
+                                | relational_expression, '>=', additive_expression;
+
+additive_expression             = multiplicative_expression
+                                | additive_expression, '+', multiplicative_expression
+                                | additive_expression, '-', multiplicative_expression;
+multiplicative_expression       = unary_expression
+                                | multiplicative_expression, '*', unary_expression
+                                | multiplicative_expression, '/', unary_expression
+                                | multiplicative_expression, '%', unary_expression;
+
+unary_expression                = primary_expression
+                                | '+', unary_expression
+                                | '-', unary_expression
+                                | '!', unary_expression
+                                | unary_expression, '?'
+                                | cast_expression;
+
+cast_expression                 = '(', type_name, ')', unary_expression;
+
+primary_expression              = literal
+                                | identifier
+                                | parenthesised_expression
+                                | member_access
+                                | invocation_expression
+                                | character_access
+                                | post_increment_expression
+                                | post_decrement_expression
+                                | new_expression;
+
+parenthesised_expression        = '(', expression, ')';
+
+member_access                   = primary_expression, '.', identifier;
+invocation_expression           = primary_expression, '(', [ argument_list ], ')';
+argument_list                   = unary_expression, { unary_expression };
+
+character_access                = primary_expression, '[', unary_expression, ']';
+
+post_increment_expression       = primary_expression, '++';
+post_decrement_expression       = primary_expression, '--';
+
+new_expression                  = 'new', type_name, [ '(', argument_list, ')' ];
