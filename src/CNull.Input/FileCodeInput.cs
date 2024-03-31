@@ -6,57 +6,43 @@ namespace CNull.Input
     /// <summary>
     /// Class for handling code input from files.
     /// </summary>
-    internal class FileCodeInput : ICodeInput, IDisposable
+    internal class FileCodeInput : IRawCodeInput, IDisposable
     {
-        private StreamReader? _stream;
         private readonly ICoreComponentsMediator _mediator;
+        protected StreamReader? Stream;
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public char? CurrentCharacter { get; private set; }
 
-        /// <summary>
-        /// Creates a new instance of <see cref="FileCodeInput"/>.
-        /// </summary>
-        /// <param name="mediator">Mediator needed to receive an event about requested input source.</param>
         public FileCodeInput(ICoreComponentsMediator mediator)
         {
             _mediator = mediator;
             _mediator.InputSourceRequested += OnInputSourceRequested;
         }
 
+        public void MoveToNext()
+        {
+            if (Stream == null)
+                throw new NotImplementedException("Implement error when stream is not initialized and character is advanced.");
+
+            var character = Stream.Read();
+            CurrentCharacter = character == -1 ? null : (char)character;
+        }
+
+        public void Dispose()
+        {
+            Stream?.Dispose();
+        }
+
         private void OnInputSourceRequested(object? sender, InputSourceRequestedEventArgs e)
         {
             try
             {
-                _stream = new StreamReader(e.SourcePath);
+                Stream = new StreamReader(e.SourcePath);
             }
             catch (IOException ex)
             {
-                Console.WriteLine(ex);
-                throw;
+                throw new NotImplementedException("Implement error when reading a file failed.");
             }
-        }
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public void MoveToNext()
-        {
-            if (_stream == null)
-                throw new NotImplementedException("Implement error when stream is not initialized and character is advanced.");
-
-            var character = _stream.Read();
-            CurrentCharacter = character == -1 ? null : (char)character;
-        }
-
-        /// <summary>
-        /// Cleans up resources related to the file stream.
-        /// </summary>
-        public void Dispose()
-        {
-            _stream?.Dispose();
         }
     }
 }
