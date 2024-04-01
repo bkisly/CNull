@@ -3,7 +3,7 @@
     /// <summary>
     /// Contains constants and mappings for lexems.
     /// </summary>
-    internal static class Mappings
+    internal static class TokenHelpers
     {
         /// <summary>
         /// Maps literal keywords to corresponding token types.
@@ -40,5 +40,7 @@
             "{", "}", "(", ")", ".", ",", ";",
             "&&", "||", ">", "<", "<=", ">=", "==", "!=", "!", "?"
         };
+
+        public static bool IsTokenTerminator(char c) => char.IsWhiteSpace(c) || char.IsSymbol(c);
     }
 }
