@@ -1,4 +1,5 @@
 ﻿using CNull.ErrorHandler.Errors;
+using CNull.ErrorHandler.Events.Args;
 
 namespace CNull.ErrorHandler
 {
@@ -10,7 +11,7 @@ namespace CNull.ErrorHandler
         /// <summary>
         /// Event raised when an error occurred.
         /// </summary>
-        event EventHandler<ErrorEventArgs> ErrorOccurred;
+        event EventHandler<ErrorOccurredEventArgs> ErrorOccurred;
 
         /// <summary>
         /// Raises an error which occurred during interacting with the source.
