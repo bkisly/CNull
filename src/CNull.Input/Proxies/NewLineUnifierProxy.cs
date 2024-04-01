@@ -1,9 +1,9 @@
-﻿namespace CNull.Input
+﻿namespace CNull.Source.Proxies
 {
     /// <summary>
     /// Class responsible for unifying new line representation to '\n' form. Proxy layer between lexer and input.
     /// </summary>
-    internal class NewLineUnifierProxy(IRawCodeInput input) : ICodeInput
+    public class NewLineUnifierProxy(IRawCodeInput input) : ICodeInput
     {
         public char? CurrentCharacter => input.CurrentCharacter;
 
@@ -11,7 +11,7 @@
         {
             input.MoveToNext();
 
-            if(CurrentCharacter == '\r')
+            if (CurrentCharacter == '\r')
                 input.MoveToNext();
         }
     }

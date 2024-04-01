@@ -10,12 +10,12 @@ namespace CNull.Common.Mediators
         /// <summary>
         /// Event raised when input source has been given.
         /// </summary>
-        event EventHandler<InputSourceRequestedEventArgs> InputSourceRequested;
+        event EventHandler<FileInputRequestedEventArgs> FileInputRequested;
 
         /// <summary>
-        /// Raises InputSourceRequested event.
+        /// Raises FileInputRequested event.
         /// </summary>
         /// <param name="sourcePath">Path to the input source.</param>
-        void NotifyInputSourceRequested(string sourcePath);
+        void NotifyFileInputRequested(string sourcePath);
     }
 }

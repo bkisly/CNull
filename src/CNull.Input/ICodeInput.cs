@@ -1,4 +1,4 @@
-﻿namespace CNull.Input
+﻿namespace CNull.Source
 {
     /// <summary>
     /// Represents the source of a raw code.
@@ -16,5 +16,8 @@
         void MoveToNext();
     }
 
-    internal interface IRawCodeInput : ICodeInput;
+    /// <summary>
+    /// Represents a non filtered input code source.
+    /// </summary>
+    public interface IRawCodeInput : ICodeInput;
 }
