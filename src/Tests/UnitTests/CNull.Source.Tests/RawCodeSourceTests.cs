@@ -6,21 +6,21 @@ using CNull.Source.Tests.Helpers;
 
 namespace CNull.Source.Tests
 {
-    public class RawCodeSourceTests(CodeSourceDependenciesFixture dependenciesFixture) : IClassFixture<CodeSourceDependenciesFixture>
+    public class RawCodeSourceTests(CodeSourceFixture fixture) : IClassFixture<CodeSourceFixture>
     {
         [Theory, ClassData(typeof(StreamBufferReadsData))]
         public void CanAdvanceToNextCharacter(string testBuffer, int numberOfReads)
         {
             // Arrange
 
-            dependenciesFixture.Reset();
-            dependenciesFixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
-            dependenciesFixture.MockedBuffer = testBuffer;
+            fixture.Reset();
+            fixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
+            fixture.MockedBuffer = testBuffer;
 
             var codeInput = new RawCodeSource(
-                dependenciesFixture.InputRepositoryMock.Object, 
+                fixture.InputRepositoryMock.Object, 
                 null!, 
-                dependenciesFixture.MediatorMock.Object);
+                fixture.MediatorMock.Object);
             var results = new List<char?>();
 
             // Act
@@ -34,7 +34,7 @@ namespace CNull.Source.Tests
             // Assert
 
             Assert.Equal(numberOfReads, results.Count);
-            Assert.Equivalent(dependenciesFixture.GetExpectedStreamReads(testBuffer, numberOfReads), results);
+            Assert.Equivalent(fixture.GetExpectedStreamReads(testBuffer, numberOfReads), results);
         }
 
         [Theory, ClassData(typeof(StreamBufferReadsData))]
@@ -42,14 +42,14 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            dependenciesFixture.Reset();
-            dependenciesFixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
-            dependenciesFixture.MockedBuffer = testBuffer;
+            fixture.Reset();
+            fixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
+            fixture.MockedBuffer = testBuffer;
 
             var codeInput = new RawCodeSource(
-                dependenciesFixture.InputRepositoryMock.Object, 
+                fixture.InputRepositoryMock.Object, 
                 null!, 
-                dependenciesFixture.MediatorMock.Object);
+                fixture.MediatorMock.Object);
 
             // Act
 
@@ -68,13 +68,13 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            dependenciesFixture.Reset();
-            dependenciesFixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
+            fixture.Reset();
+            fixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
 
             var codeInput = new RawCodeSource(
-                dependenciesFixture.InputRepositoryMock.Object, 
+                fixture.InputRepositoryMock.Object, 
                 null!, 
-                dependenciesFixture.MediatorMock.Object);
+                fixture.MediatorMock.Object);
 
             // Act
 
@@ -90,16 +90,16 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            dependenciesFixture.Reset();
-            dependenciesFixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(false);
+            fixture.Reset();
+            fixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(false);
 
             var errorHandlerMock = new Mock<IErrorHandler>();
             errorHandlerMock.Setup(e => e.RaiseSourceError(It.IsAny<ISourceError>()));
 
             var codeInput = new RawCodeSource(
-                dependenciesFixture.InputRepositoryMock.Object, 
+                fixture.InputRepositoryMock.Object, 
                 errorHandlerMock.Object, 
-                dependenciesFixture.MediatorMock.Object);
+                fixture.MediatorMock.Object);
 
             // Act
 
@@ -117,24 +117,24 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            dependenciesFixture.Reset();
-            dependenciesFixture.InputRepositoryMock.Setup(r => r.SetupFileStream(It.IsAny<string>()));
-            dependenciesFixture.InputRepositoryMock.SetupGet(r => r.IsInitialized).Returns(true);
+            fixture.Reset();
+            fixture.InputRepositoryMock.Setup(r => r.SetupFileStream(It.IsAny<string>()));
+            fixture.InputRepositoryMock.SetupGet(r => r.IsInitialized).Returns(true);
 
             const string testPath = "Sample path";
             var codeInput = new RawCodeSource(
-                dependenciesFixture.InputRepositoryMock.Object, 
+                fixture.InputRepositoryMock.Object, 
                 null!,
-                dependenciesFixture.MediatorMock.Object);
+                fixture.MediatorMock.Object);
 
             // Act
 
-            dependenciesFixture.MediatorMock.Raise(m => m.FileInputRequested += null,
+            fixture.MediatorMock.Raise(m => m.FileInputRequested += null,
                 new FileInputRequestedEventArgs(testPath));
 
             // Assert
 
-            dependenciesFixture.InputRepositoryMock.Verify(r => r.SetupFileStream(testPath), Times.Once);
+            fixture.InputRepositoryMock.Verify(r => r.SetupFileStream(testPath), Times.Once);
         }
 
         [Fact]
@@ -142,24 +142,24 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            dependenciesFixture.Reset();
-            dependenciesFixture.InputRepositoryMock.
+            fixture.Reset();
+            fixture.InputRepositoryMock.
                 Setup(r => r.SetupFileStream(It.IsAny<string>()))
                 .Throws<IOException>();
-            dependenciesFixture.InputRepositoryMock.SetupGet(r => r.IsInitialized).Returns(false);
+            fixture.InputRepositoryMock.SetupGet(r => r.IsInitialized).Returns(false);
 
             var errorHandlerMock = new Mock<IErrorHandler>();
             errorHandlerMock.Setup(e => e.RaiseSourceError(It.IsAny<ISourceError>()));
 
             const string testPath = "Sample path";
             var codeInput = new RawCodeSource(
-                dependenciesFixture.InputRepositoryMock.Object, 
+                fixture.InputRepositoryMock.Object, 
                 errorHandlerMock.Object,
-                dependenciesFixture.MediatorMock.Object);
+                fixture.MediatorMock.Object);
 
             // Act
 
-            dependenciesFixture.MediatorMock.Raise(m => m.FileInputRequested += null,
+            fixture.MediatorMock.Raise(m => m.FileInputRequested += null,
                 new FileInputRequestedEventArgs(testPath));
 
             // Assert
