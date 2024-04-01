@@ -53,5 +53,24 @@ namespace CNull.Source.Tests
 
             Assert.Equal(numberOfReads <= testBuffer.Length ? testBuffer[numberOfReads - 1] : null, character);
         }
+
+        [Fact]
+        public void CanReadCurrentCharacterWithoutAdvancing()
+        {
+            // Arrange
+
+            repositoryFixture.Reset();
+            repositoryFixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
+
+            var codeInput = new RawCodeInput(repositoryFixture.InputRepositoryMock.Object);
+
+            // Act
+
+            var character = codeInput.CurrentCharacter;
+
+            // Assert
+
+            Assert.Null(character);
+        }
     }
 }
