@@ -17,7 +17,6 @@ namespace CNull.Lexer
         {
             _source = source;
             _errorHandler = errorHandler;
-
             _source.SourceInitialized += Source_SourceInitialized;
         }
 
@@ -34,12 +33,12 @@ namespace CNull.Lexer
             _state = GetNextState();
 
             if (_state == null)
-                return new Token(TokenType.End);
+                return CreateToken(new Token(TokenType.End));
 
             if (!_state.TryBuildToken(out var token))
                 throw new NotImplementedException("Implement an error when invalid token has been detected.");
 
-            return token;
+            return CreateToken(token);
         }
 
         private void SkipWhitespace()
@@ -48,14 +47,25 @@ namespace CNull.Lexer
                 return;
 
             // @TODO: verify whitespace limit
-            while(char.IsWhiteSpace(_source.CurrentCharacter.Value))
+            while (char.IsWhiteSpace(_source.CurrentCharacter.Value))
                 _source.MoveToNext();
+        }
+
+        private Token CreateToken(Token token)
+        {
+            LastToken = token;
+            return token;
         }
 
         private ILexerState? GetNextState()
         {
-            if(_source.CurrentCharacter == null)
+            if (_source.CurrentCharacter == null)
                 return null;
+
+            var currentCharacter = _source.CurrentCharacter.Value;
+
+            if (char.IsLetter(currentCharacter) || currentCharacter == '_')
+                return new IdentifierLexerState(_source);
 
             throw new NotImplementedException();
         }
