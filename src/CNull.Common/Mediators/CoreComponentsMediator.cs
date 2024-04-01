@@ -10,15 +10,15 @@ namespace CNull.Common.Mediators
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public event EventHandler<InputSourceRequestedEventArgs>? InputSourceRequested; 
+        public event EventHandler<FileInputRequestedEventArgs>? FileInputRequested; 
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
         /// <param name="sourcePath"><inheritdoc/></param>
-        public void NotifyInputSourceRequested(string sourcePath)
+        public void NotifyFileInputRequested(string sourcePath)
         {
-            InputSourceRequested?.Invoke(this, new InputSourceRequestedEventArgs(sourcePath));
+            FileInputRequested?.Invoke(this, new FileInputRequestedEventArgs(sourcePath));
         }
     }
 }
