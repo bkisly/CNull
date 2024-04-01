@@ -3,16 +3,27 @@
     /// <summary>
     /// Class responsible for unifying new line representation to '\n' form. Proxy layer between lexer and input.
     /// </summary>
-    public class NewLineUnifierProxy(IRawCodeSource source) : ICodeSource
+    public class NewLineUnifierProxy : ICodeSource
     {
-        public char? CurrentCharacter => source.CurrentCharacter;
+        private readonly IRawCodeSource _source;
+
+        public NewLineUnifierProxy(IRawCodeSource source)
+        {
+            _source = source;
+            _source.SourceInitialized += (_, _) => OnSourceInitialized();
+        }
+
+        public char? CurrentCharacter => _source.CurrentCharacter;
+        public event EventHandler? SourceInitialized;
 
         public void MoveToNext()
         {
-            source.MoveToNext();
+            _source.MoveToNext();
 
             if (CurrentCharacter == '\r')
-                source.MoveToNext();
+                _source.MoveToNext();
         }
+
+        private void OnSourceInitialized() => SourceInitialized?.Invoke(this, EventArgs.Empty);
     }
 }
