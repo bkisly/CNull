@@ -34,7 +34,7 @@ namespace CNull.Source.Tests
             // Assert
 
             Assert.Equal(numberOfReads, results.Count);
-            Assert.Equivalent(CodeSourceDependenciesFixture.GetExpectedStreamReads(testBuffer, numberOfReads), results);
+            Assert.Equivalent(dependenciesFixture.GetExpectedStreamReads(testBuffer, numberOfReads), results);
         }
 
         [Theory, ClassData(typeof(StreamBufferReadsData))]
