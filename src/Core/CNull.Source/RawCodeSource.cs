@@ -15,6 +15,9 @@ namespace CNull.Source
         private readonly IErrorHandler _errorHandler;
         private readonly ICoreComponentsMediator _coreComponentsMediator;
 
+        public char? CurrentCharacter { get; private set; }
+        public event EventHandler? SourceInitialized;
+
         public RawCodeSource(IInputRepository inputRepository, IErrorHandler errorHandler,
             ICoreComponentsMediator coreComponentsMediator)
         {
@@ -22,10 +25,8 @@ namespace CNull.Source
             _errorHandler = errorHandler;
             _coreComponentsMediator = coreComponentsMediator;
 
-            _coreComponentsMediator.FileInputRequested += OnFileInputRequested;
+            _coreComponentsMediator.FileInputRequested += Mediator_FileInputRequested;
         }
-
-        public char? CurrentCharacter { get; private set; }
 
         public void MoveToNext()
         {
@@ -38,16 +39,19 @@ namespace CNull.Source
 
         public void Dispose() => _inputRepository.Dispose();
 
-        private void OnFileInputRequested(object? sender, FileInputRequestedEventArgs e)
+        private void Mediator_FileInputRequested(object? sender, FileInputRequestedEventArgs e)
         {
             try
             {
                 _inputRepository.SetupFileStream(e.SourcePath);
+                OnSourceInitialized();
             }
             catch (IOException)
             {
                 _errorHandler.RaiseSourceError(new FileAccessError(e.SourcePath));
             }
         }
+
+        private void OnSourceInitialized() => SourceInitialized?.Invoke(this, EventArgs.Empty);
     }
 }

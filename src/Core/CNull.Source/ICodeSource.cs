@@ -5,6 +5,8 @@
     /// </summary>
     public interface ICodeSource
     {
+        event EventHandler SourceInitialized;
+
         /// <summary>
         /// Returns the currently loaded character from the input source.
         /// </summary>
