@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.Parser", "CNull.Parse
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.Lexer", "CNull.Lexer\CNull.Lexer.csproj", "{80F790FD-C11D-43AF-8E6F-14ED8DAC71B0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.Source", "CNull.Input\CNull.Source.csproj", "{EA0C65E5-3F38-4834-A3CA-D3EF96D45D27}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.Source", "CNull.Source\CNull.Source.csproj", "{EA0C65E5-3F38-4834-A3CA-D3EF96D45D27}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{418B8523-0AB0-4A2D-9471-852132032539}"
 EndProject
@@ -37,7 +37,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.Interpreter.Tests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.IntegrationTests", "CNull.IntegrationTests\CNull.IntegrationTests.csproj", "{DD28E100-2266-487E-BE2E-0CF26D9E1B2D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.Source.Tests", "CNull.Input.Tests\CNull.Source.Tests.csproj", "{272645F3-985C-4FEE-BB64-C906984BAE3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.Source.Tests", "CNull.Source.Tests\CNull.Source.Tests.csproj", "{272645F3-985C-4FEE-BB64-C906984BAE3B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
