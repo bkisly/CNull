@@ -1,4 +1,4 @@
-﻿namespace CNull.Source.Proxies
+﻿namespace CNull.Source
 {
     /// <summary>
     /// Class responsible for unifying new line representation to '\n' form. Proxy layer between lexer and input.

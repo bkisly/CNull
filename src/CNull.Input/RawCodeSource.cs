@@ -4,7 +4,7 @@ using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors.Source;
 using CNull.Source.Repositories;
 
-namespace CNull.Source.Raw
+namespace CNull.Source
 {
     /// <summary>
     /// Base class for handling raw code input logic.
