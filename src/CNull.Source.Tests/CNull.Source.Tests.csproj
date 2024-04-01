@@ -26,7 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CNull.Common\CNull.Common.csproj" />
     <ProjectReference Include="..\CNull.ErrorHandler\CNull.ErrorHandler.csproj" />
-    <ProjectReference Include="..\CNull.Input\CNull.Source.csproj" />
+    <ProjectReference Include="..\CNull.Source\CNull.Source.csproj" />
   </ItemGroup>
 
   <ItemGroup>
