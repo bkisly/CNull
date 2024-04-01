@@ -20,9 +20,6 @@ namespace CNull.Source.Raw
             CurrentCharacter = character == -1 ? null : (char)character;
         }
 
-        public void Dispose()
-        {
-            InputRepository.Dispose();
-        }
+        public void Dispose() => InputRepository.Dispose();
     }
 }
