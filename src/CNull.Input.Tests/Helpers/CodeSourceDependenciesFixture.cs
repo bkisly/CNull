@@ -1,16 +1,19 @@
-﻿using CNull.Source.Repositories;
+﻿using CNull.Common.Mediators;
+using CNull.Source.Repositories;
 
 namespace CNull.Source.Tests.Helpers
 {
-    public class RepositoryFixture
+    public class CodeSourceDependenciesFixture
     {
         public Mock<IInputRepository> InputRepositoryMock { get; private set; } = new();
+        public Mock<ICoreComponentsMediator> MediatorMock { get; private set; } = new();
+
         public string MockedBuffer { get; set; } = string.Empty;
 
         private bool EndOfStream => _currentPosition >= MockedBuffer.Length;
         private int _currentPosition;
 
-        public RepositoryFixture()
+        public CodeSourceDependenciesFixture()
         {
             Reset();
         }
@@ -22,6 +25,7 @@ namespace CNull.Source.Tests.Helpers
                 .Returns(() => !EndOfStream ? MockedBuffer[_currentPosition] : -1)
                 .Callback(AdvanceStream);
 
+            MediatorMock = new Mock<ICoreComponentsMediator>();
             MockedBuffer = string.Empty;
             _currentPosition = 0;
         }

@@ -11,10 +11,10 @@
         public bool IsInitialized { get; }
 
         /// <summary>
-        /// Instantiates a new <see cref="StreamReader"/> based on a given stream object.
+        /// Instantiates a new <see cref="StreamReader"/> for reading from a file.
         /// </summary>
-        /// <param name="stream"></param>
-        public void Setup(Stream stream);
+        /// <param name="path">Path to the file to read from.</param>
+        public void SetupFileStream(string path);
 
         /// <summary>
         /// Reads from the stream reader and returns the result of this operation.

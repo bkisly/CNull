@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents the source of a raw code.
     /// </summary>
-    public interface ICodeInput
+    public interface ICodeSource
     {
         /// <summary>
         /// Returns the currently loaded character from the input source.
@@ -19,5 +19,5 @@
     /// <summary>
     /// Represents a non filtered input code source.
     /// </summary>
-    public interface IRawCodeInput : ICodeInput;
+    public interface IRawCodeSource : ICodeSource;
 }
