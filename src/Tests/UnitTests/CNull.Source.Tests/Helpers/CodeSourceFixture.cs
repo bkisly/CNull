@@ -1,8 +1,12 @@
-﻿namespace CNull.Source.Tests.Helpers
+﻿using CNull.Common.Mediators;
+using CNull.Source.Repositories;
+
+namespace CNull.Source.Tests.Helpers
 {
     public class CodeSourceFixture : SourceFixture
     {
-        public Mock<IRawCodeSource> CodeSourceMock { get; private set; } = new();
+        public Mock<IInputRepository> InputRepositoryMock { get; private set; } = new();
+        public Mock<ICoreComponentsMediator> MediatorMock { get; private set; } = new();
 
         public CodeSourceFixture()
         {
@@ -11,15 +15,14 @@
 
         public sealed override void Reset()
         {
-            CodeSourceMock = new Mock<IRawCodeSource>();
-            CodeSourceMock.Setup(s => s.MoveToNext()).Callback(AdvanceStream);
-            CodeSourceMock.SetupGet(s => s.CurrentCharacter)
-                .Returns(() => !EndOfBuffer ? MockedBuffer[CurrentPosition] : null);
+            InputRepositoryMock = new Mock<IInputRepository>();
+            InputRepositoryMock.Setup(s => s.Read())
+                .Returns(() => !EndOfBuffer ? MockedBuffer[CurrentPosition] : -1)
+                .Callback(AdvanceStream);
 
+            MediatorMock = new Mock<ICoreComponentsMediator>();
             base.Reset();
+            CurrentPosition = 0;
         }
-
-        public override IEnumerable<char?> GetExpectedStreamReads(string buffer, int numberOfReads)
-            => base.GetExpectedStreamReads(buffer, numberOfReads).Where(c => c != '\r');
     }
 }
