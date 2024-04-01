@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\CNull.Common\CNull.Common.csproj" />
+    <ProjectReference Include="..\..\Common\CNull.ErrorHandler\CNull.ErrorHandler.csproj" />
+    <ProjectReference Include="..\CNull.Source\CNull.Source.csproj" />
+  </ItemGroup>
+
+</Project>

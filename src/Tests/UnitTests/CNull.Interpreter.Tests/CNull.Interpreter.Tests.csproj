@@ -24,13 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CNull.Common\CNull.Common.csproj" />
-    <ProjectReference Include="..\CNull.ErrorHandler\CNull.ErrorHandler.csproj" />
-    <ProjectReference Include="..\CNull.Input\CNull.Source.csproj" />
-    <ProjectReference Include="..\CNull.Interpreter\CNull.Interpreter.csproj" />
-    <ProjectReference Include="..\CNull.Lexer\CNull.Lexer.csproj" />
-    <ProjectReference Include="..\CNull.Parser\CNull.Parser.csproj" />
-    <ProjectReference Include="..\CNull.Semantics\CNull.Semantics.csproj" />
+    <ProjectReference Include="..\..\..\Common\CNull.Common\CNull.Common.csproj" />
+    <ProjectReference Include="..\..\..\Common\CNull.ErrorHandler\CNull.ErrorHandler.csproj" />
+    <ProjectReference Include="..\..\..\Core\CNull.Interpreter\CNull.Interpreter.csproj" />
   </ItemGroup>
 
 </Project>
