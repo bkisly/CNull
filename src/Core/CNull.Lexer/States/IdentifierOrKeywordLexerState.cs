@@ -18,8 +18,9 @@ namespace CNull.Lexer.States
                 return TokenFailed(out token);
 
             var tokenBuilt = false;
+            var correctToken = true;
 
-            while (!tokenBuilt)
+            while (!tokenBuilt && correctToken)
             {
                 var currentCharacter = Source.CurrentCharacter;
 
@@ -30,12 +31,16 @@ namespace CNull.Lexer.States
                     if ((!FirstCharacterBuilt && IsValidFirstCharacter(currentCharacter.Value)) ||
                         (FirstCharacterBuilt && IsValidCharacter(currentCharacter.Value)))
                         _tokenBuilder.Append(currentCharacter.Value);
-                    else return TokenFailed(out token);
+                    else correctToken = false;
+
+                    Source.MoveToNext();
                 }
 
-                Source.MoveToNext();
                 // @TODO: handle excessively long tokens
             }
+
+            if (!correctToken)
+                return TokenFailed(out token);
 
             var literalToken = _tokenBuilder.ToString();
             token = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType) 
