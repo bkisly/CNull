@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\..\Common\CNull.Common\CNull.Common.csproj" />
     <ProjectReference Include="..\..\..\Common\CNull.ErrorHandler\CNull.ErrorHandler.csproj" />
     <ProjectReference Include="..\..\..\Core\CNull.Lexer\CNull.Lexer.csproj" />
+    <ProjectReference Include="..\CNull.Source.Tests\CNull.Source.Tests.csproj" />
   </ItemGroup>
 
 </Project>

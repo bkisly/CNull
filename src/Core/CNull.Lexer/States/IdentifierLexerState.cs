@@ -10,6 +10,7 @@ namespace CNull.Lexer.States
     public class IdentifierLexerState(ICodeSource source) : ILexerState
     {
         private readonly StringBuilder _tokenBuilder = new();
+        private bool FirstCharacterBuilt => _tokenBuilder.Length > 0;
 
         public bool TryBuildToken(out Token token)
         {
@@ -17,26 +18,23 @@ namespace CNull.Lexer.States
                 return TokenFailed(out token);
 
             var tokenBuilt = false;
-            char? previousCharacter = null;
 
             while (!tokenBuilt)
             {
-                var currentCharacter = source.CurrentCharacter.Value;
+                var currentCharacter = source.CurrentCharacter;
 
                 if (TokenHelpers.IsTokenTerminator(currentCharacter))
                     tokenBuilt = true;
                 else
                 {
-                    if ((char.IsLetter(currentCharacter) || currentCharacter == '_') 
-                       && (!previousCharacter.HasValue || !char.IsDigit(previousCharacter.Value)))
-                        _tokenBuilder.Append(currentCharacter);
-                    else if (char.IsAsciiDigit(currentCharacter))
-                        _tokenBuilder.Append(currentCharacter);
+                    if ((!FirstCharacterBuilt && IsValidFirstCharacter(currentCharacter.Value)) ||
+                        (FirstCharacterBuilt && IsValidCharacter(currentCharacter.Value)))
+                        _tokenBuilder.Append(currentCharacter.Value);
                     else return TokenFailed(out token);
                 }
 
-                previousCharacter = currentCharacter;
                 source.MoveToNext();
+                // @TODO: handle excessively long tokens
             }
 
             var literalToken = _tokenBuilder.ToString();
@@ -53,5 +51,11 @@ namespace CNull.Lexer.States
             source.MoveToNext();
             return false;
         }
+
+        private static bool IsValidFirstCharacter(char character)
+            => char.IsLetter(character) || character == '_';
+
+        private static bool IsValidCharacter(char character)
+            => IsValidFirstCharacter(character) || char.IsAsciiDigit(character);
     }
 }
