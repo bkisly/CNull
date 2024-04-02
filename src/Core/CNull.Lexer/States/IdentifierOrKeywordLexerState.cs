@@ -10,32 +10,24 @@ namespace CNull.Lexer.States
     public class IdentifierOrKeywordLexerState(ICodeSource source) : LexerState(source)
     {
         private readonly StringBuilder _tokenBuilder = new();
+
         private bool FirstCharacterBuilt => _tokenBuilder.Length > 0;
+        private char? CurrentCharacter => source.CurrentCharacter;
 
         public override bool TryBuildToken(out Token token)
         {
-            if (Source.CurrentCharacter == null)
+            if (!CurrentCharacter.HasValue)
                 return TokenFailed(out token);
 
-            var tokenBuilt = false;
             var correctToken = true;
 
-            while (!tokenBuilt && correctToken)
+            while (!TokenHelpers.IsTokenTerminator(CurrentCharacter) && correctToken)
             {
-                var currentCharacter = Source.CurrentCharacter;
+                if (IsValidCharacter(CurrentCharacter.Value))
+                    _tokenBuilder.Append(CurrentCharacter.Value);
+                else correctToken = false;
 
-                if (TokenHelpers.IsTokenTerminator(currentCharacter))
-                    tokenBuilt = true;
-                else
-                {
-                    if ((!FirstCharacterBuilt && IsValidFirstCharacter(currentCharacter.Value)) ||
-                        (FirstCharacterBuilt && IsValidCharacter(currentCharacter.Value)))
-                        _tokenBuilder.Append(currentCharacter.Value);
-                    else correctToken = false;
-
-                    Source.MoveToNext();
-                }
-
+                Source.MoveToNext();
                 // @TODO: handle excessively long tokens
             }
 
@@ -53,7 +45,9 @@ namespace CNull.Lexer.States
         private static bool IsValidFirstCharacter(char character)
             => char.IsLetter(character) || character == '_';
 
-        private static bool IsValidCharacter(char character)
-            => IsValidFirstCharacter(character) || char.IsAsciiDigit(character);
+        private bool IsValidCharacter(char character)
+            => !FirstCharacterBuilt
+                ? IsValidFirstCharacter(character)
+                : IsValidFirstCharacter(character) || char.IsDigit(character);
     }
 }
