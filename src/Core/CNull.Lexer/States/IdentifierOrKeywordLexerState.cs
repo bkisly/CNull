@@ -41,6 +41,6 @@ namespace CNull.Lexer.States
         private bool IsValidCharacter(char character)
             => !FirstCharacterBuilt
                 ? IsValidFirstCharacter(character)
-                : IsValidFirstCharacter(character) || char.IsDigit(character);
+                : IsValidFirstCharacter(character) || char.IsAsciiDigit(character);
     }
 }
