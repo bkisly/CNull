@@ -21,4 +21,33 @@ namespace CNull.Lexer.Tests.Helpers
             Add(string.Join("", Enumerable.Repeat("a", 1000)), false, new Token(TokenType.End));
         }
     }
+
+    public class IdentifiersLastCharacterData : TheoryData<string, char?>
+    {
+        public IdentifiersLastCharacterData()
+        {
+            Add("", null);
+            Add("abcde-", '-');
+            Add("ABCDE/", '/');
+            Add("abc_DEF%", '%');
+            Add("abc_*DEF*", '*');
+            Add("_abcde", null);
+            Add("__;___", ';');
+            Add("_____1-", '-');
+            Add("_abcde_", null);
+            Add("sampleToken1234567890 = 1;", ' ');
+            Add("sampleToken1234567890_a__.SomeFurtherThing()", '.');
+            Add("sampleToken\n1234567890_a__.SomeFurtherThing()", '\n');
+            Add("1token();", '(');
+        }
+    }
+
+    public class KeywordsData : TheoryData<string, bool, Token>
+    {
+        public KeywordsData()
+        {
+            foreach (var literalToken in TokenHelpers.KeywordsToTokenTypes.Keys)
+                Add($"{literalToken}(some further things)", true, new Token(TokenHelpers.KeywordsToTokenTypes[literalToken]));
+        }
+    }
 }
