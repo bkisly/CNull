@@ -18,6 +18,7 @@ namespace CNull.Lexer.Tests.Helpers
             Add("sampleToken1234567890 = 1;", true, new Token<string>("sampleToken1234567890", TokenType.Identifier));
             Add("sampleToken1234567890_a__.SomeFurtherThing()", true, new Token<string>("sampleToken1234567890_a__", TokenType.Identifier));
             Add("1token", false, new Token(TokenType.Unknown));
+            Add(".token", false, new Token(TokenType.Unknown));
             Add(string.Join("", Enumerable.Repeat("a", 1000)), false, new Token(TokenType.Unknown));
         }
     }
@@ -48,6 +49,8 @@ namespace CNull.Lexer.Tests.Helpers
         {
             foreach (var literalToken in TokenHelpers.KeywordsToTokenTypes.Keys)
                 Add($"{literalToken}(some further things)", true, new Token(TokenHelpers.KeywordsToTokenTypes[literalToken]));
+
+            Add(" .??", false, new Token(TokenType.Unknown));
         }
     }
 }
