@@ -7,21 +7,21 @@ namespace CNull.Lexer.States
     /// <summary>
     /// State in which identifier or keyword is built.
     /// </summary>
-    public class IdentifierLexerState(ICodeSource source) : ILexerState
+    public class IdentifierOrKeywordLexerState(ICodeSource source) : LexerState(source)
     {
         private readonly StringBuilder _tokenBuilder = new();
         private bool FirstCharacterBuilt => _tokenBuilder.Length > 0;
 
-        public bool TryBuildToken(out Token token)
+        public override bool TryBuildToken(out Token token)
         {
-            if (source.CurrentCharacter == null)
+            if (Source.CurrentCharacter == null)
                 return TokenFailed(out token);
 
             var tokenBuilt = false;
 
             while (!tokenBuilt)
             {
-                var currentCharacter = source.CurrentCharacter;
+                var currentCharacter = Source.CurrentCharacter;
 
                 if (TokenHelpers.IsTokenTerminator(currentCharacter))
                     tokenBuilt = true;
@@ -33,7 +33,7 @@ namespace CNull.Lexer.States
                     else return TokenFailed(out token);
                 }
 
-                source.MoveToNext();
+                Source.MoveToNext();
                 // @TODO: handle excessively long tokens
             }
 
@@ -43,13 +43,6 @@ namespace CNull.Lexer.States
                 : new Token<string>(literalToken, TokenType.Identifier);
 
             return true;
-        }
-
-        private bool TokenFailed(out Token token)
-        {
-            token = new Token(TokenType.End);
-            source.MoveToNext();
-            return false;
         }
 
         private static bool IsValidFirstCharacter(char character)
