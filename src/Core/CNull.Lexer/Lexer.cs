@@ -66,7 +66,7 @@ namespace CNull.Lexer
 
             if (char.IsLetter(currentCharacter) || currentCharacter == '_')
                 return new IdentifierOrKeywordLexerState(_source);
-            if (char.IsDigit(currentCharacter))
+            if (char.IsAsciiDigit(currentCharacter))
                 return new NumericLexerState(_source);
             if (TokenHelpers.OperatorsAndPunctors.Select(o => o.First()).Contains(currentCharacter))
                 return new OperatorOrPunctorLexerState(_source);
