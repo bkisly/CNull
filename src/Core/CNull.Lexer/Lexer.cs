@@ -65,7 +65,9 @@ namespace CNull.Lexer
             var currentCharacter = _source.CurrentCharacter.Value;
 
             if (char.IsLetter(currentCharacter) || currentCharacter == '_')
-                return new IdentifierLexerState(_source);
+                return new IdentifierOrKeywordLexerState(_source);
+            if (char.IsDigit(currentCharacter))
+                return new NumericLexerState(_source);
 
             throw new NotImplementedException();
         }

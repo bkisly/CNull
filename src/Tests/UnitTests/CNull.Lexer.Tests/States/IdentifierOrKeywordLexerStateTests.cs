@@ -4,7 +4,7 @@ using CNull.Source.Tests.Helpers;
 
 namespace CNull.Lexer.Tests.States
 {
-    public class IdentifierLexerStateTests(NewLineProxyFixture fixture) : IClassFixture<NewLineProxyFixture>
+    public class IdentifierOrKeywordLexerStateTests(NewLineProxyFixture fixture) : IClassFixture<NewLineProxyFixture>
     {
         [Theory, ClassData(typeof(IdentifiersData))]
         public void CanBuildIdentifiers(string input, bool succeeded, Token token)
@@ -22,7 +22,7 @@ namespace CNull.Lexer.Tests.States
             fixture.MockedBuffer = input;
             fixture.CodeSourceMock.Object.MoveToNext();
 
-            var state = new IdentifierLexerState(fixture.CodeSourceMock.Object);
+            var state = new IdentifierOrKeywordLexerState(fixture.CodeSourceMock.Object);
 
             // Act
 
