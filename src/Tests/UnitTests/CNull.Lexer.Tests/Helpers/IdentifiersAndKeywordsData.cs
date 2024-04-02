@@ -6,7 +6,7 @@ namespace CNull.Lexer.Tests.Helpers
     {
         public IdentifiersData()
         {
-            Add("", false, new Token(TokenType.End));
+            Add("", false, new Token(TokenType.Unknown));
             Add("abcde-", true, new Token<string>("abcde", TokenType.Identifier));
             Add("ABCDE/", true, new Token<string>("ABCDE", TokenType.Identifier));
             Add("abc_DEF%", true, new Token<string>("abc_DEF", TokenType.Identifier));
@@ -17,8 +17,8 @@ namespace CNull.Lexer.Tests.Helpers
             Add("_abcde_", true, new Token<string>("_abcde_", TokenType.Identifier));
             Add("sampleToken1234567890 = 1;", true, new Token<string>("sampleToken1234567890", TokenType.Identifier));
             Add("sampleToken1234567890_a__.SomeFurtherThing()", true, new Token<string>("sampleToken1234567890_a__", TokenType.Identifier));
-            Add("1token", false, new Token(TokenType.End));
-            Add(string.Join("", Enumerable.Repeat("a", 1000)), false, new Token(TokenType.End));
+            Add("1token", false, new Token(TokenType.Unknown));
+            Add(string.Join("", Enumerable.Repeat("a", 1000)), false, new Token(TokenType.Unknown));
         }
     }
 

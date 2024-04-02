@@ -38,5 +38,6 @@
         CharLiteral,
         Comment,
         End,
+        Unknown,
     }
 }

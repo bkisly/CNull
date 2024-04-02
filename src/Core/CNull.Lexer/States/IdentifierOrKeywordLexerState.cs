@@ -10,29 +10,22 @@ namespace CNull.Lexer.States
     public class IdentifierOrKeywordLexerState(ICodeSource source) : LexerState(source)
     {
         private readonly StringBuilder _tokenBuilder = new();
-
         private bool FirstCharacterBuilt => _tokenBuilder.Length > 0;
-        private char? CurrentCharacter => source.CurrentCharacter;
 
         public override bool TryBuildToken(out Token token)
         {
             if (!CurrentCharacter.HasValue)
                 return TokenFailed(out token);
 
-            var correctToken = true;
-
-            while (!TokenHelpers.IsTokenTerminator(CurrentCharacter) && correctToken)
+            while (!TokenHelpers.IsTokenTerminator(CurrentCharacter))
             {
                 if (IsValidCharacter(CurrentCharacter.Value))
                     _tokenBuilder.Append(CurrentCharacter.Value);
-                else correctToken = false;
+                else return TokenFailed(out token);
 
                 Source.MoveToNext();
                 // @TODO: handle excessively long tokens
             }
-
-            if (!correctToken)
-                return TokenFailed(out token);
 
             var literalToken = _tokenBuilder.ToString();
             token = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType) 
