@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using CNull.Common.Extensions;
+﻿using CNull.Common.Extensions;
 using CNull.Lexer.Constants;
 using CNull.Source;
 
@@ -13,19 +12,20 @@ namespace CNull.Lexer.States
         private long _integerPart;
         private long _fractionPart;
 
+        private const int MaxFractionDigits = 18;
+
         public override bool TryBuildToken(out Token token)
         {
-            if (TokenHelpers.IsTokenTerminator(CurrentCharacter))
+            if (!CurrentCharacter.IsAsciiDigit())
                 return TokenFailed(out token);
 
             if (CurrentCharacter is '0')
             {
-                ProcessDigit(ref _integerPart, CurrentCharacter.Value);
-                if (CurrentCharacter is '0')
+                Source.MoveToNext();
+                if (CurrentCharacter.IsAsciiDigit())
                     return TokenFailed(out token);
             }
-
-            if(!TryBuildNumberPart(ref _integerPart, int.MaxValue))
+            else if (!TryBuildNumberPart(ref _integerPart, int.MaxValue))
                 return TokenFailed(out token);
 
             if (CurrentCharacter is not '.')
@@ -36,31 +36,31 @@ namespace CNull.Lexer.States
 
             Source.MoveToNext();
 
-            if(!TryBuildNumberPart(ref _fractionPart, long.MaxValue))
+            if(!TryBuildNumberPart(ref _fractionPart, maxDigits: MaxFractionDigits))
                 return TokenFailed(out token);
 
-            var fractionValue = _fractionPart / (float)Math.Pow(10, _fractionPart.Length());
-            token = new Token<float>(_integerPart + fractionValue, TokenType.FloatLiteral);
+            var fractionValue = _fractionPart / (decimal)Math.Pow(10, _fractionPart.Length());
+            token = new Token<float>(_integerPart + (float)fractionValue, TokenType.FloatLiteral);
             return true;
         }
 
-        private bool TryBuildNumberPart(ref long partValue, long maxValue)
+        private bool TryBuildNumberPart(ref long partValue, long maxValue = long.MaxValue, int maxDigits = int.MaxValue)
         {
-            while (!TokenHelpers.IsTokenTerminator(CurrentCharacter))
+            var digits = 0;
+
+            while (CurrentCharacter.IsAsciiDigit())
             {
-                if (!char.IsAsciiDigit(CurrentCharacter!.Value) || partValue > maxValue / 10)
+                var digitValue = CurrentCharacter!.Value - '0';
+                if (digits > maxDigits || partValue > (maxValue - digitValue) / 10)
                     return false;
 
-                ProcessDigit(ref partValue, CurrentCharacter.Value);
+                partValue = partValue * 10 + digitValue;
+                digits++;
+
+                source.MoveToNext();
             }
 
             return true;
-        }
-
-        private void ProcessDigit(ref long partValue, char character)
-        {
-            partValue = partValue * 10 + character - '0';
-            Source.MoveToNext();
         }
     }
 }
