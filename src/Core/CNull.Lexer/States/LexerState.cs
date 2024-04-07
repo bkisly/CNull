@@ -14,10 +14,12 @@ namespace CNull.Lexer.States
 
         public abstract bool TryBuildToken(out Token token);
 
-        protected bool TokenFailed(out Token token)
+        protected bool TokenFailed(out Token token, bool shouldSkipToken = true)
         {
+            if (shouldSkipToken)
+                SkipToken();
+
             token = Token.Unknown();
-            SkipToken();
             return false;
         }
 
