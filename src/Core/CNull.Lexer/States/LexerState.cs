@@ -10,7 +10,7 @@ namespace CNull.Lexer.States
     public abstract class LexerState(ICodeSource source) : ILexerState
     {
         protected ICodeSource Source = source;
-        protected char? CurrentCharacter => source.CurrentCharacter;
+        protected char? CurrentCharacter => Source.CurrentCharacter;
 
         public abstract bool TryBuildToken(out Token token);
 
