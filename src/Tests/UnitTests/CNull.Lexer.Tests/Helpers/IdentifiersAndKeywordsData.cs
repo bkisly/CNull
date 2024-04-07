@@ -6,7 +6,7 @@ namespace CNull.Lexer.Tests.Helpers
     {
         public IdentifiersData()
         {
-            Add("", false, new Token(TokenType.Unknown));
+            Add("", false, Token.Unknown());
             Add("abcde-", true, new Token<string>("abcde", TokenType.Identifier));
             Add("ABCDE/", true, new Token<string>("ABCDE", TokenType.Identifier));
             Add("abc_DEF%", true, new Token<string>("abc_DEF", TokenType.Identifier));
@@ -17,9 +17,9 @@ namespace CNull.Lexer.Tests.Helpers
             Add("_abcde_", true, new Token<string>("_abcde_", TokenType.Identifier));
             Add("sampleToken1234567890 = 1;", true, new Token<string>("sampleToken1234567890", TokenType.Identifier));
             Add("sampleToken1234567890_a__.SomeFurtherThing()", true, new Token<string>("sampleToken1234567890_a__", TokenType.Identifier));
-            Add("1token", false, new Token(TokenType.Unknown));
-            Add(".token", false, new Token(TokenType.Unknown));
-            Add(string.Join("", Enumerable.Repeat("a", 1000)), false, new Token(TokenType.Unknown));
+            Add("1token", false, Token.Unknown());
+            Add(".token", false, Token.Unknown());
+            Add(string.Join("", Enumerable.Repeat("a", 1000)), false, Token.Unknown());
         }
     }
 
@@ -50,7 +50,7 @@ namespace CNull.Lexer.Tests.Helpers
             foreach (var literalToken in TokenHelpers.KeywordsToTokenTypes.Keys)
                 Add($"{literalToken}(some further things)", true, new Token(TokenHelpers.KeywordsToTokenTypes[literalToken]));
 
-            Add(" .??", false, new Token(TokenType.Unknown));
+            Add(" .??", false, Token.Unknown());
         }
     }
 }

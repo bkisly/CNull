@@ -14,7 +14,7 @@ namespace CNull.Lexer.States
 
         public override bool TryBuildToken(out Token token)
         {
-            if (!CurrentCharacter.HasValue || TokenHelpers.IsTokenTerminator(CurrentCharacter))
+            if (!CurrentCharacter.HasValue || CurrentCharacter.IsTokenTerminator())
                 return TokenFailed(out token);
 
             do
@@ -26,7 +26,7 @@ namespace CNull.Lexer.States
                 Source.MoveToNext();
                 // @TODO: handle excessively long tokens
             } 
-            while (!TokenHelpers.IsTokenTerminator(CurrentCharacter));
+            while (!CurrentCharacter.IsTokenTerminator());
 
             var literalToken = _tokenBuilder.ToString();
             token = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType) 

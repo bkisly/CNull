@@ -68,10 +68,10 @@ namespace CNull.Lexer
                 return new IdentifierOrKeywordLexerState(_source);
             if (char.IsAsciiDigit(currentCharacter))
                 return new NumericLexerState(_source);
-            if (TokenHelpers.OperatorsAndPunctors.Select(o => o.First()).Contains(currentCharacter))
+            if (currentCharacter.IsOperatorCandidate())
                 return new OperatorOrPunctorLexerState(_source);
-
-            throw new NotImplementedException();
+            
+            return null;
         }
     }
 }
