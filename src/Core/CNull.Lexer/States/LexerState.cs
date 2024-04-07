@@ -16,14 +16,14 @@ namespace CNull.Lexer.States
 
         protected bool TokenFailed(out Token token)
         {
-            token = new Token(TokenType.Unknown);
+            token = Token.Unknown();
             SkipToken();
             return false;
         }
 
         protected virtual void SkipToken()
         {
-            while(!TokenHelpers.IsTokenTerminator(Source.CurrentCharacter))
+            while(!Source.CurrentCharacter.IsTokenTerminator())
                 Source.MoveToNext();
 
             // @TODO: handle situation when invalid token is too long

@@ -57,7 +57,7 @@ namespace CNull.Lexer.States
                 partValue = partValue * 10 + digitValue;
                 digits++;
 
-                source.MoveToNext();
+                Source.MoveToNext();
             }
 
             return true;

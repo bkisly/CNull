@@ -41,7 +41,28 @@
             "&&", "||", ">", "<", "<=", ">=", "==", "!=", "!", "?"
         };
 
-        public static bool IsTokenTerminator(char? c) =>
+        private static readonly char[] OperatorsFirstCharacters = OperatorsAndPunctors.Select(o => o.First()).Distinct().ToArray();
+
+        /// <summary>
+        /// Determines whether given character can terminate a token.
+        /// </summary>
+        /// <param name="c">Checked character.</param>
+        /// <returns></returns>
+        public static bool IsTokenTerminator(this char? c) =>
             !c.HasValue || (!char.IsLetter(c.Value) && !char.IsNumber(c.Value) && c.Value != '_');
+
+        /// <summary>
+        /// Determines whether given character can be a starting point to build an operator.
+        /// </summary>
+        /// <param name="c">Checked character.</param>
+        /// <returns></returns>
+        public static bool IsOperatorCandidate(this char? c) => c.HasValue && IsOperatorCandidate(c.Value);
+
+        /// <summary>
+        /// Determines whether given character can be a starting point to build an operator.
+        /// </summary>
+        /// <param name="c">Checked character.</param>
+        /// <returns></returns>
+        public static bool IsOperatorCandidate(this char c) => OperatorsFirstCharacters.Contains(c);
     }
 }
