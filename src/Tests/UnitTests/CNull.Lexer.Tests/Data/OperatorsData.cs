@@ -1,6 +1,6 @@
 ﻿using CNull.Lexer.Constants;
 
-namespace CNull.Lexer.Tests.Helpers
+namespace CNull.Lexer.Tests.Data
 {
     internal class OperatorsData : TheoryData<string, bool, Token>
     {

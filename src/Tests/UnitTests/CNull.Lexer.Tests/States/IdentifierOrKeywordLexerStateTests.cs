@@ -1,5 +1,5 @@
 ﻿using CNull.Lexer.States;
-using CNull.Lexer.Tests.Helpers;
+using CNull.Lexer.Tests.Data;
 using CNull.Source.Tests.Helpers;
 
 namespace CNull.Lexer.Tests.States
