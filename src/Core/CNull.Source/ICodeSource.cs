@@ -13,6 +13,11 @@
         char? CurrentCharacter { get; }
 
         /// <summary>
+        /// Determines whether currently loaded character is recognized as a new line sequence part.
+        /// </summary>
+        bool IsCurrentCharacterNewLine { get; }
+
+        /// <summary>
         /// Advances to the next character from the input source.
         /// </summary>
         void MoveToNext();

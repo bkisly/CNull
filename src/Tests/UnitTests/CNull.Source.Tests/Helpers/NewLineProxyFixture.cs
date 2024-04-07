@@ -15,6 +15,8 @@
             CodeSourceMock.Setup(s => s.MoveToNext()).Callback(AdvanceStream);
             CodeSourceMock.SetupGet(s => s.CurrentCharacter)
                 .Returns(() => !EndOfBuffer ? MockedBuffer[CurrentPosition] : null);
+            CodeSourceMock.SetupGet(s => s.IsCurrentCharacterNewLine)
+                .Returns(() => EndOfBuffer || MockedBuffer[CurrentPosition] == '\n');
 
             base.Reset();
         }

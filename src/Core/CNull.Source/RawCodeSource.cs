@@ -16,6 +16,8 @@ namespace CNull.Source
         private readonly ICoreComponentsMediator _coreComponentsMediator;
 
         public char? CurrentCharacter { get; private set; }
+        public bool IsCurrentCharacterNewLine => CurrentCharacter.HasValue && Environment.NewLine.Contains(CurrentCharacter.Value);
+
         public event EventHandler? SourceInitialized;
 
         public RawCodeSource(IInputRepository inputRepository, IErrorHandler errorHandler,

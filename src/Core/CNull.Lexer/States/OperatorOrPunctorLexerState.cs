@@ -27,10 +27,7 @@ namespace CNull.Lexer.States
             }
 
             if (doubleOperatorCandidate == "//")
-            {
-                Source.MoveToNext();
                 return commentLexerState.TryBuildToken(out token);
-            }
 
             if (!TokenHelpers.OperatorsAndPunctors.Contains(_operator)) 
                 return TokenFailed(out token);

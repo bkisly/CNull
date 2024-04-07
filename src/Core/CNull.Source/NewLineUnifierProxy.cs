@@ -14,6 +14,7 @@
         }
 
         public char? CurrentCharacter => _source.CurrentCharacter;
+        public bool IsCurrentCharacterNewLine => _source.CurrentCharacter == '\n';
         public event EventHandler? SourceInitialized;
 
         public void MoveToNext()
