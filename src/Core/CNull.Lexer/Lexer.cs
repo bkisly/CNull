@@ -68,10 +68,9 @@ namespace CNull.Lexer
                 return new IdentifierOrKeywordLexerState(_source);
             if (char.IsAsciiDigit(currentCharacter))
                 return new NumericLexerState(_source);
-            if (currentCharacter.IsOperatorCandidate())
-                return new OperatorOrPunctorLexerState(_source);
-            
-            return null;
+            return currentCharacter.IsOperatorCandidate() 
+                ? new OperatorOrPunctorLexerState(_source, new CommentLexerState(_source)) 
+                : null;
         }
     }
 }
