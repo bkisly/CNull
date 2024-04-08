@@ -1,5 +1,6 @@
 ﻿using CNull.ErrorHandler;
 using CNull.Lexer.Constants;
+using CNull.Lexer.Factories;
 using CNull.Lexer.States;
 using CNull.Source;
 
@@ -8,14 +9,16 @@ namespace CNull.Lexer
     public class Lexer : ILexer
     {
         private readonly ICodeSource _source;
+        private readonly ILexerStateFactory _stateFactory;
         private readonly IErrorHandler _errorHandler;
         private ILexerState? _state;
 
         public Token? LastToken { get; private set; }
 
-        public Lexer(ICodeSource source, IErrorHandler errorHandler)
+        public Lexer(ICodeSource source, ILexerStateFactory stateFactory, IErrorHandler errorHandler)
         {
             _source = source;
+            _stateFactory = stateFactory;
             _errorHandler = errorHandler;
             _source.SourceInitialized += Source_SourceInitialized;
         }
@@ -59,18 +62,7 @@ namespace CNull.Lexer
 
         private ILexerState? GetNextState()
         {
-            if (_source.CurrentCharacter == null)
-                return null;
-
-            var currentCharacter = _source.CurrentCharacter.Value;
-
-            if (char.IsLetter(currentCharacter) || currentCharacter == '_')
-                return new IdentifierOrKeywordLexerState(_source);
-            if (char.IsAsciiDigit(currentCharacter))
-                return new NumericLexerState(_source);
-            return currentCharacter.IsOperatorCandidate() 
-                ? new OperatorOrPunctorLexerState(_source, new CommentLexerState(_source)) 
-                : null;
+            return _source.CurrentCharacter == null ? null : _stateFactory.Create(_source.CurrentCharacter.Value);
         }
     }
 }

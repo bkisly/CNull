@@ -35,13 +35,15 @@
         /// <summary>
         /// Contains a collection of recognizable operators and punctors.
         /// </summary>
-        public static readonly string[] OperatorsAndPunctors = {
+        public static readonly string[] OperatorsAndPunctors =
+        {
             "+", "-", "*", "/", "%", "=",
             "{", "}", "(", ")", ".", ",", ";",
             "&&", "||", ">", "<", "<=", ">=", "==", "!=", "!", "?"
         };
 
-        private static readonly char[] OperatorsFirstCharacters = OperatorsAndPunctors.Select(o => o.First()).Distinct().ToArray();
+        private static readonly char[] OperatorsFirstCharacters =
+            OperatorsAndPunctors.Select(o => o.First()).Distinct().ToArray();
 
         /// <summary>
         /// Determines whether given character can terminate a token.
@@ -64,5 +66,27 @@
         /// <param name="c">Checked character.</param>
         /// <returns></returns>
         public static bool IsOperatorCandidate(this char c) => OperatorsFirstCharacters.Contains(c);
+
+        /// <summary>
+        /// Tries to build a character previously marked by escape sequence.
+        /// </summary>
+        /// <param name="c">Sequence marker.</param>
+        /// <param name="result">Build character, assigned if building succeeded.</param>
+        /// <returns></returns>
+        public static bool TryBuildEscapeSequence(char c, ref char result)
+        {
+            char? sequence = c switch
+            {
+                '\'' or '"' or '\\' => c,
+                'n' => '\n',
+                't' => '\t',
+                _ => null
+            };
+
+            if (!sequence.HasValue) return false;
+
+            result = sequence.Value;
+            return true;
+        }
     }
 }
