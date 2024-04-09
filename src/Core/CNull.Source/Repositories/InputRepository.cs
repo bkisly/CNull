@@ -2,12 +2,14 @@
 {
     internal class InputRepository : IInputRepository
     {
-        private StreamReader? _streamReader;
+        private TextReader? _reader;
 
-        public bool IsInitialized => _streamReader != null;
-        public void SetupFileStream(string path) => _streamReader = new StreamReader(path);
+        public bool IsInitialized => _reader != null;
 
-        public int Read() => _streamReader?.Read() ?? throw new InvalidOperationException("Tried to read from non-initialized stream.");
-        public void Dispose() => _streamReader?.Dispose();
+        public void SetupStream(TextReader reader) => _reader = reader;
+        public void SetupFileStream(string path) => _reader = new StreamReader(path);
+
+        public int Read() => _reader?.Read() ?? throw new InvalidOperationException("Tried to read from non-initialized stream.");
+        public void Dispose() => _reader?.Dispose();
     }
 }
