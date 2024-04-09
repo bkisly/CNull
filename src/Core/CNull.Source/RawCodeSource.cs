@@ -79,7 +79,7 @@ namespace CNull.Source
             else if (CurrentCharacter != '\r')
             {
                 if (_position == default)
-                    _position = new Position(1, 1);
+                    _position = Position.FirstCharacter;
                 else _position.ColumnNumber++;
             }
         }

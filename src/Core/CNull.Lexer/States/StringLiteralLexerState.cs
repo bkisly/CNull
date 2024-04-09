@@ -47,7 +47,7 @@ namespace CNull.Lexer.States
             } 
 
             Source.MoveToNext();
-            token = new Token<string>(_builder.ToString(), TokenType.StringLiteral);
+            token = new Token<string>(_builder.ToString(), TokenType.StringLiteral, TokenPosition);
             return true;
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace CNull.Source.Tests.Helpers
+﻿using CNull.Common;
+
+namespace CNull.Source.Tests.Helpers
 {
     public class NewLineProxyFixture : SourceFixture
     {
@@ -11,14 +13,21 @@
 
         public sealed override void Reset()
         {
+            base.Reset();
+            FirstRead = false;
+
             CodeSourceMock = new Mock<IRawCodeSource>();
-            CodeSourceMock.Setup(s => s.MoveToNext()).Callback(AdvanceStream);
+            CodeSourceMock.Setup(s => s.MoveToNext()).Callback(() =>
+            {
+                FirstRead = true;
+                AdvanceStream();
+            });
             CodeSourceMock.SetupGet(s => s.CurrentCharacter)
                 .Returns(() => !EndOfBuffer ? MockedBuffer[CurrentPosition] : null);
             CodeSourceMock.SetupGet(s => s.IsCurrentCharacterNewLine)
                 .Returns(() => EndOfBuffer || MockedBuffer[CurrentPosition] == '\n');
-
-            base.Reset();
+            CodeSourceMock.SetupGet(s => s.Position)
+                .Returns(() => FirstRead ? Position.FirstCharacter : default);
         }
 
         public override IEnumerable<char?> GetExpectedStreamReads(string buffer, int numberOfReads)

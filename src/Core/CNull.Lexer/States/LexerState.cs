@@ -1,4 +1,5 @@
-﻿using CNull.Lexer.Constants;
+﻿using CNull.Common;
+using CNull.Lexer.Constants;
 using CNull.Source;
 
 namespace CNull.Lexer.States
@@ -11,6 +12,7 @@ namespace CNull.Lexer.States
     {
         protected ICodeSource Source = source;
         protected char? CurrentCharacter => Source.CurrentCharacter;
+        protected readonly Position TokenPosition = source.Position;
 
         public abstract bool TryBuildToken(out Token token);
 
@@ -19,7 +21,7 @@ namespace CNull.Lexer.States
             if (shouldSkipToken)
                 SkipToken();
 
-            token = Token.Unknown();
+            token = Token.Unknown(TokenPosition);
             return false;
         }
 

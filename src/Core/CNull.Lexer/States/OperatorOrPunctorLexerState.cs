@@ -22,7 +22,7 @@ namespace CNull.Lexer.States
             if (TokenHelpers.OperatorsAndPunctors.Contains(doubleOperatorCandidate))
             {
                 Source.MoveToNext();
-                token = new Token<string>(doubleOperatorCandidate, TokenType.OperatorOrPunctor);
+                token = new Token<string>(doubleOperatorCandidate, TokenType.OperatorOrPunctor, TokenPosition);
                 return true;
             }
 
@@ -32,7 +32,7 @@ namespace CNull.Lexer.States
             if (!TokenHelpers.OperatorsAndPunctors.Contains(_operator)) 
                 return TokenFailed(out token);
 
-            token = new Token<string>(_operator, TokenType.OperatorOrPunctor);
+            token = new Token<string>(_operator, TokenType.OperatorOrPunctor, TokenPosition);
             return true;
         }
     }

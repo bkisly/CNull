@@ -44,7 +44,7 @@ namespace CNull.Lexer.States
                 return TokenFailed(out token);
 
             Source.MoveToNext();
-            token = new Token<char>(literalContent, TokenType.CharLiteral);
+            token = new Token<char>(literalContent, TokenType.CharLiteral, TokenPosition);
             return true;
         }
     }

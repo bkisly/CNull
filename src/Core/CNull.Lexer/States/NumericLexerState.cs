@@ -30,7 +30,7 @@ namespace CNull.Lexer.States
 
             if (CurrentCharacter is not '.')
             {
-                token = new Token<int>((int)_integerPart, TokenType.IntegerLiteral);
+                token = new Token<int>((int)_integerPart, TokenType.IntegerLiteral, TokenPosition);
                 return true;
             }
 
@@ -40,7 +40,7 @@ namespace CNull.Lexer.States
                 return TokenFailed(out token);
 
             var fractionValue = _fractionPart / (decimal)Math.Pow(10, _fractionPart.Length());
-            token = new Token<float>(_integerPart + (float)fractionValue, TokenType.FloatLiteral);
+            token = new Token<float>(_integerPart + (float)fractionValue, TokenType.FloatLiteral, TokenPosition);
             return true;
         }
 

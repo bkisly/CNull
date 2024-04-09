@@ -22,7 +22,7 @@ namespace CNull.Lexer.States
             }
 
             Source.MoveToNext();
-            token = new Token<string>(_builder.ToString(), TokenType.Comment);
+            token = new Token<string>(_builder.ToString(), TokenType.Comment, TokenPosition);
             return true;
         }
     }

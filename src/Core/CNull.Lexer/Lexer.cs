@@ -36,7 +36,7 @@ namespace CNull.Lexer
             _state = GetNextState();
 
             if (_state == null)
-                return CreateToken(new Token(TokenType.End));
+                return CreateToken(new Token(TokenType.End, _source.Position));
 
             if (!_state.TryBuildToken(out var token))
                 throw new NotImplementedException("Implement an error when invalid token has been detected.");
