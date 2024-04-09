@@ -1,22 +1,22 @@
 ﻿using CNull.Lexer.States;
 using CNull.Lexer.Tests.Data;
-using CNull.Source.Tests.Helpers;
+using CNull.Lexer.Tests.Fixtures;
 
 namespace CNull.Lexer.Tests.States
 {
-    public class OperatorOrPunctorLexerStateTests(NewLineProxyFixture fixture) : IClassFixture<NewLineProxyFixture>
+    public class OperatorOrPunctorLexerStateTests(LexerStateFixture fixture) : IClassFixture<LexerStateFixture>
     {
         [Theory, ClassData(typeof(OperatorsData))]
         public void CanBuildOperators(string input, bool expectedResult, Token expectedToken)
             => StateTestsCore.TestTokensCreation(input, expectedResult, expectedToken,
-                new OperatorOrPunctorLexerState(fixture.CodeSourceMock.Object,
-                    new CommentLexerState(fixture.CodeSourceMock.Object)), fixture);
+                new OperatorOrPunctorLexerState(fixture.ServicesContainerMock.Object,
+                    new CommentLexerState(fixture.ServicesContainerMock.Object)), fixture);
 
         [Theory, ClassData(typeof(OperatorsLastCharacterData))]
         public void CanFinishAtProperCharacter(string input, char? expectedCharacter)
             => StateTestsCore.TestFinishedCharacter(input, expectedCharacter,
-                new OperatorOrPunctorLexerState(fixture.CodeSourceMock.Object,
-                    new CommentLexerState(fixture.CodeSourceMock.Object)), fixture);
+                new OperatorOrPunctorLexerState(fixture.ServicesContainerMock.Object,
+                    new CommentLexerState(fixture.ServicesContainerMock.Object)), fixture);
 
         [Fact]
         public void CanSwitchToCommentState()
@@ -31,7 +31,7 @@ namespace CNull.Lexer.Tests.States
             Token discardedToken;
             commentStateMock.Setup(s => s.TryBuildToken(out discardedToken)).Returns(true);
 
-            var state = new OperatorOrPunctorLexerState(fixture.CodeSourceMock.Object, commentStateMock.Object);
+            var state = new OperatorOrPunctorLexerState(fixture.ServicesContainerMock.Object, commentStateMock.Object);
 
             // Act
 

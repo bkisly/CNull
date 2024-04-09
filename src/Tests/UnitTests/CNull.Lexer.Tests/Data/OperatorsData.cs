@@ -29,11 +29,11 @@ namespace CNull.Lexer.Tests.Data
                 Add($"{op}something();", 's');
 
             Add(" something", ' ');
-            Add("something.", '.');
+            Add("something.", 's');
             Add("+++", '+');
             Add("-=", '=');
             Add("'asacassaa", '\'');
-            Add("123123", null);
+            Add("123123", '1');
             Add("", null);
             Add("&&", null);
             Add("&&&", '&');

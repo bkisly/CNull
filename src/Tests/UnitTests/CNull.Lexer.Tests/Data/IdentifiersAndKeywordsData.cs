@@ -20,7 +20,7 @@ namespace CNull.Lexer.Tests.Data
             Add("sampleToken1234567890_a__.SomeFurtherThing()", true, new Token<string>("sampleToken1234567890_a__", TokenType.Identifier, Position.FirstCharacter));
             Add("1token", false, Token.Unknown(Position.FirstCharacter));
             Add(".token", false, Token.Unknown(Position.FirstCharacter));
-            Add(string.Join("", Enumerable.Repeat("a", 1000)), false, Token.Unknown(Position.FirstCharacter));
+            Add(string.Join("", Enumerable.Repeat("a", 1500)), false, Token.Unknown(Position.FirstCharacter));
         }
     }
 
