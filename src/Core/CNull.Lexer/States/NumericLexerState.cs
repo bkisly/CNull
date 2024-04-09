@@ -1,4 +1,7 @@
-﻿using CNull.Common.Extensions;
+﻿using CNull.Common.Configuration;
+using CNull.Common.Extensions;
+using CNull.ErrorHandler;
+using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
 using CNull.Source;
 
@@ -7,26 +10,27 @@ namespace CNull.Lexer.States
     /// <summary>
     /// State in which integer or floating-point literal is built.
     /// </summary>
-    public class NumericLexerState(ICodeSource source) : LexerState(source)
+    public class NumericLexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) 
+        : LexerState(source, errorHandler, configuration)
     {
         private long _integerPart;
         private long _fractionPart;
 
-        private const int MaxFractionDigits = 18;
+        private readonly int _maxFractionDigits = long.MaxValue.Length() - 1;
 
         public override bool TryBuildToken(out Token token)
         {
             if (!CurrentCharacter.IsAsciiDigit())
-                return TokenFailed(out token);
+                return TokenFailed(out token, new InvalidTokenStartCharacter(TokenPosition), false);
 
             if (CurrentCharacter is '0')
             {
                 Source.MoveToNext();
                 if (CurrentCharacter.IsAsciiDigit())
-                    return TokenFailed(out token);
+                    return TokenFailed(out token, new PrefixedZeroError(TokenPosition));
             }
-            else if (!TryBuildNumberPart(ref _integerPart, int.MaxValue))
-                return TokenFailed(out token);
+            else if (!TryBuildNumberPart(ref _integerPart, int.MaxValue, configuration.MaxTokenLength))
+                return TokenFailed(out token, new NumericValueOverflowError(TokenPosition));
 
             if (CurrentCharacter is not '.')
             {
@@ -36,8 +40,8 @@ namespace CNull.Lexer.States
 
             Source.MoveToNext();
 
-            if(!TryBuildNumberPart(ref _fractionPart, maxDigits: MaxFractionDigits))
-                return TokenFailed(out token);
+            if(!TryBuildNumberPart(ref _fractionPart, maxDigits: _maxFractionDigits))
+                return TokenFailed(out token, new NumericValueOverflowError(TokenPosition));
 
             var fractionValue = _fractionPart / (decimal)Math.Pow(10, _fractionPart.Length());
             token = new Token<float>(_integerPart + (float)fractionValue, TokenType.FloatLiteral, TokenPosition);

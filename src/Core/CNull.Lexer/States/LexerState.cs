@@ -1,6 +1,8 @@
 ﻿using CNull.Common;
+using CNull.Common.Configuration;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
+using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
 using CNull.Source;
 
@@ -10,7 +12,7 @@ namespace CNull.Lexer.States
     /// Base class for lexer states that interact with the source.
     /// </summary>
     /// <param name="source"></param>
-    public abstract class LexerState(ICodeSource source, IErrorHandler errorHandler) : ILexerState
+    public abstract class LexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) : ILexerState
     {
         protected ICodeSource Source = source;
         protected char? CurrentCharacter => Source.CurrentCharacter;
@@ -30,10 +32,14 @@ namespace CNull.Lexer.States
 
         protected virtual void SkipToken()
         {
-            while(!Source.CurrentCharacter.IsTokenTerminator())
-                Source.MoveToNext();
+            var counter = 0;
+            while (!Source.CurrentCharacter.IsTokenTerminator())
+            {
+                if (++counter > configuration.MaxTokenLength)
+                    errorHandler.RaiseCompilationError(new InvalidTokenLengthError(TokenPosition, configuration.MaxTokenLength));
 
-            // @TODO: handle situation when invalid token is too long
+                Source.MoveToNext();
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using CNull.ErrorHandler;
+﻿using CNull.Common.Configuration;
+using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
 using CNull.Source;
@@ -9,7 +10,8 @@ namespace CNull.Lexer.States
     /// Represents a state in which char literal is built.
     /// </summary>
     /// <param name="source"></param>
-    public class CharLiteralLexerState(ICodeSource source, IErrorHandler errorHandler) : LexerState(source, errorHandler)
+    public class CharLiteralLexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) 
+        : LexerState(source, errorHandler, configuration)
     {
         public override bool TryBuildToken(out Token token)
         {

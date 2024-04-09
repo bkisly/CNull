@@ -1,4 +1,7 @@
 ﻿using System.Text;
+using CNull.Common.Configuration;
+using CNull.ErrorHandler;
+using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
 using CNull.Source;
 
@@ -7,7 +10,8 @@ namespace CNull.Lexer.States
     /// <summary>
     /// State in which identifier or keyword is built.
     /// </summary>
-    public class IdentifierOrKeywordLexerState(ICodeSource source) : LexerState(source)
+    public class IdentifierOrKeywordLexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) 
+        : LexerState(source, errorHandler, configuration)
     {
         private readonly StringBuilder _tokenBuilder = new();
         private bool FirstCharacterBuilt => _tokenBuilder.Length > 0;
@@ -15,16 +19,20 @@ namespace CNull.Lexer.States
         public override bool TryBuildToken(out Token token)
         {
             if (!CurrentCharacter.HasValue || CurrentCharacter.IsTokenTerminator())
-                return TokenFailed(out token);
+                return TokenFailed(out token, new InvalidTokenStartCharacter(TokenPosition), false);
 
+            var lengthCounter = 0;
             do
             {
+                if (++lengthCounter > configuration.MaxIdentifierLength)
+                    return TokenFailed(out token,
+                        new InvalidTokenLengthError(TokenPosition, configuration.MaxIdentifierLength), false);
+
                 if (IsValidCharacter(CurrentCharacter.Value))
                     _tokenBuilder.Append(CurrentCharacter.Value);
-                else return TokenFailed(out token);
+                else return TokenFailed(out token, new InvalidIdentifierError(TokenPosition));
 
                 Source.MoveToNext();
-                // @TODO: handle excessively long tokens
             } 
             while (!CurrentCharacter.IsTokenTerminator());
 

@@ -10,6 +10,6 @@
         /// <summary>
         /// Returns the amount of decimal digits in the number.
         /// </summary>
-        public static long Length(this long l) => l.ToString().Length;
+        public static int Length(this long l) => l.ToString().Length;
     }
 }
