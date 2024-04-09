@@ -1,4 +1,6 @@
-﻿using CNull.Lexer.Constants;
+﻿using CNull.ErrorHandler;
+using CNull.ErrorHandler.Errors.Compilation;
+using CNull.Lexer.Constants;
 using CNull.Source;
 
 namespace CNull.Lexer.States
@@ -7,12 +9,12 @@ namespace CNull.Lexer.States
     /// Represents a state in which char literal is built.
     /// </summary>
     /// <param name="source"></param>
-    public class CharLiteralLexerState(ICodeSource source) : LexerState(source)
+    public class CharLiteralLexerState(ICodeSource source, IErrorHandler errorHandler) : LexerState(source, errorHandler)
     {
         public override bool TryBuildToken(out Token token)
         {
             if (Source.CurrentCharacter != '\'')
-                return TokenFailed(out token, false);
+                return TokenFailed(out token, new InvalidTokenStartCharacter(TokenPosition), false);
 
             Source.MoveToNext();
 
@@ -22,26 +24,26 @@ namespace CNull.Lexer.States
             switch (Source.CurrentCharacter)
             {
                 case '\'' or null:
-                    return TokenFailed(out token);
+                    return TokenFailed(out token, new EmptyCharLiteralError(TokenPosition));
                 case '\\':
                     isEscapeSequence = true;
                     Source.MoveToNext();
                     break;
                 default:
                     if (Source.IsCurrentCharacterNewLine)
-                        return TokenFailed(out token);
+                        return TokenFailed(out token, new LineBreakedTextLiteralError(TokenPosition));
                     break;
             }
 
             if (!isEscapeSequence)
                 literalContent = Source.CurrentCharacter.Value;
             else if (!TokenHelpers.TryBuildEscapeSequence(Source.CurrentCharacter.Value, ref literalContent))
-                return TokenFailed(out token);
+                return TokenFailed(out token, new InvalidEscapeSequenceError(TokenPosition));
 
             Source.MoveToNext();
 
             if (Source.CurrentCharacter != '\'')
-                return TokenFailed(out token);
+                return TokenFailed(out token, new UnterminatedCharLiteral(TokenPosition));
 
             Source.MoveToNext();
             token = new Token<char>(literalContent, TokenType.CharLiteral, TokenPosition);
