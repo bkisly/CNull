@@ -10,12 +10,7 @@ namespace CNull.Source.Tests.Helpers
         public Mock<IErrorHandler> ErrorHandlerMock { get; private set; } = new();
         public Mock<ICompilerConfiguration> CompilerConfigurationMock { get; private set; } = new();
 
-        public NewLineProxyFixture()
-        {
-            Reset();
-        }
-
-        public sealed override void Reset()
+        public override void Reset()
         {
             base.Reset();
             FirstRead = false;

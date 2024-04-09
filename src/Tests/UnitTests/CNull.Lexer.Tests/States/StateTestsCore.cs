@@ -1,11 +1,12 @@
 ﻿using CNull.Lexer.States;
+using CNull.Lexer.Tests.Fixtures;
 using CNull.Source.Tests.Helpers;
 
 namespace CNull.Lexer.Tests.States
 {
     internal class StateTestsCore
     {
-        public static void TestTokensCreation(string input, bool expectedResult, Token expectedToken, ILexerState state, NewLineProxyFixture fixture)
+        public static void TestTokensCreation(string input, bool expectedResult, Token expectedToken, ILexerState state, LexerStateFixture fixture)
         {
             // Arrange
 
@@ -23,7 +24,7 @@ namespace CNull.Lexer.Tests.States
             Assert.Equivalent(expectedToken, token);
         }
 
-        public static void TestFinishedCharacter(string input, char? expectedCharacter, ILexerState state, NewLineProxyFixture fixture)
+        public static void TestFinishedCharacter(string input, char? expectedCharacter, ILexerState state, LexerStateFixture fixture)
         {
             // Arrange
 
