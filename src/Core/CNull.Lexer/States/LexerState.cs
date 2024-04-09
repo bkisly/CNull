@@ -4,6 +4,7 @@ using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
 using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
+using CNull.Lexer.ServicesContainers;
 using CNull.Source;
 
 namespace CNull.Lexer.States
@@ -11,12 +12,22 @@ namespace CNull.Lexer.States
     /// <summary>
     /// Base class for lexer states that interact with the source.
     /// </summary>
-    /// <param name="source"></param>
-    public abstract class LexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) : ILexerState
+    public abstract class LexerState : ILexerState
     {
-        protected ICodeSource Source = source;
+        protected ICodeSource Source;
+        protected IErrorHandler ErrorHandler;
+        protected ICompilerConfiguration Configuration;
+
         protected char? CurrentCharacter => Source.CurrentCharacter;
-        protected readonly Position TokenPosition = source.Position;
+        protected readonly Position TokenPosition;
+
+        protected LexerState(ILexerStateServicesContainer lexerStateServices)
+        {
+            Source = lexerStateServices.CodeSource;
+            ErrorHandler = lexerStateServices.ErrorHandler;
+            Configuration = lexerStateServices.CompilerConfiguration;
+            TokenPosition = Source.Position;
+        }
 
         public abstract bool TryBuildToken(out Token token);
 
@@ -25,7 +36,7 @@ namespace CNull.Lexer.States
             if (shouldSkipToken)
                 SkipToken();
 
-            errorHandler.RaiseCompilationError(error);
+            ErrorHandler.RaiseCompilationError(error);
             token = Token.Unknown(TokenPosition);
             return false;
         }
@@ -35,8 +46,8 @@ namespace CNull.Lexer.States
             var counter = 0;
             while (!Source.CurrentCharacter.IsTokenTerminator())
             {
-                if (++counter > configuration.MaxTokenLength)
-                    errorHandler.RaiseCompilationError(new InvalidTokenLengthError(TokenPosition, configuration.MaxTokenLength));
+                if (++counter > Configuration.MaxTokenLength)
+                    ErrorHandler.RaiseCompilationError(new InvalidTokenLengthError(TokenPosition, Configuration.MaxTokenLength));
 
                 Source.MoveToNext();
             }

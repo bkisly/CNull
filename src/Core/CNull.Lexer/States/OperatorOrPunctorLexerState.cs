@@ -1,16 +1,13 @@
-﻿using CNull.Common.Configuration;
-using CNull.ErrorHandler;
-using CNull.ErrorHandler.Errors.Compilation;
+﻿using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
-using CNull.Source;
+using CNull.Lexer.ServicesContainers;
 
 namespace CNull.Lexer.States
 {
     /// <summary>
     /// Represents a state in which operator or punctor is built.
     /// </summary>
-    public class OperatorOrPunctorLexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration, ILexerState commentLexerState) 
-        : LexerState(source, errorHandler, configuration)
+    public class OperatorOrPunctorLexerState(ILexerStateServicesContainer servicesContainer, ILexerState commentLexerState) : LexerState(servicesContainer)
     {
         private string _operator = string.Empty;
 

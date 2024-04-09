@@ -1,18 +1,14 @@
 ﻿using System.Text;
-using CNull.Common.Configuration;
-using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
-using CNull.Source;
+using CNull.Lexer.ServicesContainers;
 
 namespace CNull.Lexer.States
 {
     /// <summary>
     /// Represents a state in which string literal is built.
     /// </summary>
-    /// <param name="source"></param>
-    public class StringLiteralLexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) 
-        : LexerState(source, errorHandler, configuration)
+    public class StringLiteralLexerState(ILexerStateServicesContainer servicesContainer) : LexerState(servicesContainer)
     {
         private readonly StringBuilder _builder = new();
 
@@ -27,9 +23,9 @@ namespace CNull.Lexer.States
             var lengthCounter = 0;
             while (Source.CurrentCharacter != '"' || (isEscapeSequence && Source.CurrentCharacter == '"'))
             {
-                if (++lengthCounter > configuration.MaxStringLiteralLength)
+                if (++lengthCounter > Configuration.MaxStringLiteralLength)
                     return TokenFailed(out token,
-                        new InvalidTokenLengthError(TokenPosition, configuration.MaxStringLiteralLength), false);
+                        new InvalidTokenLengthError(TokenPosition, Configuration.MaxStringLiteralLength), false);
 
                 if (!Source.CurrentCharacter.HasValue || Source.IsCurrentCharacterNewLine)
                     return TokenFailed(out token, new LineBreakedTextLiteralError(TokenPosition));
