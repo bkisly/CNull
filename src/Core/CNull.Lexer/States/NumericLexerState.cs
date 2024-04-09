@@ -1,17 +1,14 @@
-﻿using CNull.Common.Configuration;
-using CNull.Common.Extensions;
-using CNull.ErrorHandler;
+﻿using CNull.Common.Extensions;
 using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
-using CNull.Source;
+using CNull.Lexer.ServicesContainers;
 
 namespace CNull.Lexer.States
 {
     /// <summary>
     /// State in which integer or floating-point literal is built.
     /// </summary>
-    public class NumericLexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) 
-        : LexerState(source, errorHandler, configuration)
+    public class NumericLexerState(ILexerStateServicesContainer servicesContainer) : LexerState(servicesContainer)
     {
         private long _integerPart;
         private long _fractionPart;
@@ -29,7 +26,7 @@ namespace CNull.Lexer.States
                 if (CurrentCharacter.IsAsciiDigit())
                     return TokenFailed(out token, new PrefixedZeroError(TokenPosition));
             }
-            else if (!TryBuildNumberPart(ref _integerPart, int.MaxValue, configuration.MaxTokenLength))
+            else if (!TryBuildNumberPart(ref _integerPart, int.MaxValue, Configuration.MaxTokenLength))
                 return TokenFailed(out token, new NumericValueOverflowError(TokenPosition));
 
             if (CurrentCharacter is not '.')

@@ -1,17 +1,13 @@
-﻿using CNull.Common.Configuration;
-using CNull.ErrorHandler;
-using CNull.ErrorHandler.Errors.Compilation;
+﻿using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
-using CNull.Source;
+using CNull.Lexer.ServicesContainers;
 
 namespace CNull.Lexer.States
 {
     /// <summary>
     /// Represents a state in which char literal is built.
     /// </summary>
-    /// <param name="source"></param>
-    public class CharLiteralLexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) 
-        : LexerState(source, errorHandler, configuration)
+    public class CharLiteralLexerState(ILexerStateServicesContainer servicesContainer) : LexerState(servicesContainer)
     {
         public override bool TryBuildToken(out Token token)
         {

@@ -1,6 +1,9 @@
-﻿using CNull.ErrorHandler;
+﻿using CNull.Common.Configuration;
+using CNull.ErrorHandler;
+using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
 using CNull.Lexer.Factories;
+using CNull.Lexer.ServicesContainers;
 using CNull.Lexer.States;
 using CNull.Source;
 
@@ -11,15 +14,17 @@ namespace CNull.Lexer
         private readonly ICodeSource _source;
         private readonly ILexerStateFactory _stateFactory;
         private readonly IErrorHandler _errorHandler;
+        private readonly ICompilerConfiguration _configuration;
         private ILexerState? _state;
 
         public Token? LastToken { get; private set; }
 
-        public Lexer(ICodeSource source, ILexerStateFactory stateFactory, IErrorHandler errorHandler)
+        public Lexer(ILexerStateServicesContainer servicesContainer, ILexerStateFactory stateFactory)
         {
-            _source = source;
+            _source = servicesContainer.CodeSource;
             _stateFactory = stateFactory;
-            _errorHandler = errorHandler;
+            _errorHandler = servicesContainer.ErrorHandler;
+            _configuration = servicesContainer.CompilerConfiguration;
             _source.SourceInitialized += Source_SourceInitialized;
         }
 
@@ -38,9 +43,7 @@ namespace CNull.Lexer
             if (_state == null)
                 return CreateToken(new Token(TokenType.End, _source.Position));
 
-            if (!_state.TryBuildToken(out var token))
-                throw new NotImplementedException("Implement an error when invalid token has been detected.");
-
+            _state.TryBuildToken(out var token);
             return CreateToken(token);
         }
 
@@ -49,9 +52,17 @@ namespace CNull.Lexer
             if (_source.CurrentCharacter == null)
                 return;
 
-            // @TODO: verify whitespace limit
+            var lengthCounter = 0;
             while (char.IsWhiteSpace(_source.CurrentCharacter.Value))
+            {
+                if (++lengthCounter > _configuration.MaxWhitespaceLength)
+                {
+                    _errorHandler.RaiseCompilationError(new InvalidTokenLengthError(_source.Position, _configuration.MaxWhitespaceLength));
+                    return;
+                }
+
                 _source.MoveToNext();
+            }
         }
 
         private Token CreateToken(Token token)

@@ -15,7 +15,7 @@ namespace CNull.ErrorHandler
 
         public void RaiseCompilationError(ICompilationError error)
         {
-            var messageHeader = $"C? error (line: {error.LineNumber}, column: {error.ColumnNumber}): {nameof(error)}{Environment.NewLine}";
+            var messageHeader = $"C? error (line: {error.Position.LineNumber}, column: {error.Position.ColumnNumber}): {nameof(error)}{Environment.NewLine}";
             OnErrorOccurred($"{messageHeader}{error.Message}");
         }
 

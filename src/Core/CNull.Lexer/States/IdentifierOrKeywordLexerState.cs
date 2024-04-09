@@ -1,17 +1,14 @@
 ﻿using System.Text;
-using CNull.Common.Configuration;
-using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
-using CNull.Source;
+using CNull.Lexer.ServicesContainers;
 
 namespace CNull.Lexer.States
 {
     /// <summary>
     /// State in which identifier or keyword is built.
     /// </summary>
-    public class IdentifierOrKeywordLexerState(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) 
-        : LexerState(source, errorHandler, configuration)
+    public class IdentifierOrKeywordLexerState(ILexerStateServicesContainer servicesContainer) : LexerState(servicesContainer)
     {
         private readonly StringBuilder _tokenBuilder = new();
         private bool FirstCharacterBuilt => _tokenBuilder.Length > 0;
@@ -24,9 +21,9 @@ namespace CNull.Lexer.States
             var lengthCounter = 0;
             do
             {
-                if (++lengthCounter > configuration.MaxIdentifierLength)
+                if (++lengthCounter > Configuration.MaxIdentifierLength)
                     return TokenFailed(out token,
-                        new InvalidTokenLengthError(TokenPosition, configuration.MaxIdentifierLength), false);
+                        new InvalidTokenLengthError(TokenPosition, Configuration.MaxIdentifierLength), false);
 
                 if (IsValidCharacter(CurrentCharacter.Value))
                     _tokenBuilder.Append(CurrentCharacter.Value);

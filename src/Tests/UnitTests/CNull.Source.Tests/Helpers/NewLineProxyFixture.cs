@@ -1,10 +1,14 @@
 ﻿using CNull.Common;
+using CNull.Common.Configuration;
+using CNull.ErrorHandler;
 
 namespace CNull.Source.Tests.Helpers
 {
     public class NewLineProxyFixture : SourceFixture
     {
         public Mock<IRawCodeSource> CodeSourceMock { get; private set; } = new();
+        public Mock<IErrorHandler> ErrorHandlerMock { get; private set; } = new();
+        public Mock<ICompilerConfiguration> CompilerConfigurationMock { get; private set; } = new();
 
         public NewLineProxyFixture()
         {
@@ -17,6 +21,9 @@ namespace CNull.Source.Tests.Helpers
             FirstRead = false;
 
             CodeSourceMock = new Mock<IRawCodeSource>();
+            ErrorHandlerMock = new Mock<IErrorHandler>();
+            CompilerConfigurationMock = new Mock<ICompilerConfiguration>();
+
             CodeSourceMock.Setup(s => s.MoveToNext()).Callback(() =>
             {
                 FirstRead = true;
