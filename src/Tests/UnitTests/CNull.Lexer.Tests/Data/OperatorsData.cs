@@ -1,4 +1,5 @@
-﻿using CNull.Lexer.Constants;
+﻿using CNull.Common;
+using CNull.Lexer.Constants;
 
 namespace CNull.Lexer.Tests.Data
 {
@@ -7,16 +8,16 @@ namespace CNull.Lexer.Tests.Data
         public OperatorsData()
         {
             foreach (var op in TokenHelpers.OperatorsAndPunctors)
-                Add($"{op}something();", true, new Token<string>(op, TokenType.OperatorOrPunctor));
+                Add($"{op}something();", true, new Token<string>(op, TokenType.OperatorOrPunctor, Position.FirstCharacter));
 
-            Add(" something", false, Token.Unknown());
-            Add("+++", true, new Token<string>("+", TokenType.OperatorOrPunctor));
-            Add("-=", true, new Token<string>("-", TokenType.OperatorOrPunctor));
-            Add("'asacassaa", false, Token.Unknown());
-            Add("123123", false, Token.Unknown());
-            Add("", false, Token.Unknown());
-            Add("/=", true, new Token<string>("/", TokenType.OperatorOrPunctor));
-            Add("!==>abcde", true, new Token<string>("!=", TokenType.OperatorOrPunctor));
+            Add(" something", false, Token.Unknown(Position.FirstCharacter));
+            Add("+++", true, new Token<string>("+", TokenType.OperatorOrPunctor, Position.FirstCharacter));
+            Add("-=", true, new Token<string>("-", TokenType.OperatorOrPunctor, Position.FirstCharacter));
+            Add("'asacassaa", false, Token.Unknown(Position.FirstCharacter));
+            Add("123123", false, Token.Unknown(Position.FirstCharacter));
+            Add("", false, Token.Unknown(Position.FirstCharacter));
+            Add("/=", true, new Token<string>("/", TokenType.OperatorOrPunctor, Position.FirstCharacter));
+            Add("!==>abcde", true, new Token<string>("!=", TokenType.OperatorOrPunctor, Position.FirstCharacter));
         }
     }
 

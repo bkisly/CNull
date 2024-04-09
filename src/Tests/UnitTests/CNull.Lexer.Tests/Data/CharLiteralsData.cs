@@ -1,4 +1,5 @@
-﻿using CNull.Lexer.Constants;
+﻿using CNull.Common;
+using CNull.Lexer.Constants;
 
 namespace CNull.Lexer.Tests.Data
 {
@@ -6,16 +7,16 @@ namespace CNull.Lexer.Tests.Data
     {
         public CharLiteralsData()
         {
-            Add("'A' == something", true, new Token<char>('A', TokenType.CharLiteral));
-            Add("'\\'' == something", true, new Token<char>('\'', TokenType.CharLiteral));
-            Add("'\\n' == something", true, new Token<char>('\n', TokenType.CharLiteral));
-            Add("'\\t' == something", true, new Token<char>('\t', TokenType.CharLiteral));
-            Add(@"'\\' == something", true, new Token<char>('\\', TokenType.CharLiteral));
-            Add("'\\\"' == something", true, new Token<char>('"', TokenType.CharLiteral));
-            Add("'' == something", false, Token.Unknown());
-            Add("'AB' == something", false, Token.Unknown());
-            Add("'\n' == something", false, Token.Unknown());
-            Add("ABCDE == something", false, Token.Unknown());
+            Add("'A' == something", true, new Token<char>('A', TokenType.CharLiteral, Position.FirstCharacter));
+            Add("'\\'' == something", true, new Token<char>('\'', TokenType.CharLiteral, Position.FirstCharacter));
+            Add("'\\n' == something", true, new Token<char>('\n', TokenType.CharLiteral, Position.FirstCharacter));
+            Add("'\\t' == something", true, new Token<char>('\t', TokenType.CharLiteral, Position.FirstCharacter));
+            Add(@"'\\' == something", true, new Token<char>('\\', TokenType.CharLiteral, Position.FirstCharacter));
+            Add("'\\\"' == something", true, new Token<char>('"', TokenType.CharLiteral, Position.FirstCharacter));
+            Add("'' == something", false, Token.Unknown(Position.FirstCharacter));
+            Add("'AB' == something", false, Token.Unknown(Position.FirstCharacter));
+            Add("'\n' == something", false, Token.Unknown(Position.FirstCharacter));
+            Add("ABCDE == something", false, Token.Unknown(Position.FirstCharacter));
         }
     }
 

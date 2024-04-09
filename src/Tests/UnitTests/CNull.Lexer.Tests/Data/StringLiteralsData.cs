@@ -1,4 +1,5 @@
-﻿using CNull.Lexer.Constants;
+﻿using CNull.Common;
+using CNull.Lexer.Constants;
 
 namespace CNull.Lexer.Tests.Data
 {
@@ -6,13 +7,13 @@ namespace CNull.Lexer.Tests.Data
     {
         public StringLiteralsData()
         {
-            Add("\"sample literal\" next things", true, new Token<string>("sample literal", TokenType.StringLiteral));
-            Add("\"sample \"literal\".get(1)", true, new Token<string>("sample ", TokenType.StringLiteral));
-            Add("\"sample ", false, Token.Unknown());
-            Add("\"sample \n\"", false, Token.Unknown());
-            Add("\"some literal, \\n\\t\"", true, new Token<string>("some literal, \n\t", TokenType.StringLiteral));
-            Add("\"\"", true, new Token<string>(string.Empty, TokenType.StringLiteral));
-            Add("123123123.()", false, Token.Unknown());
+            Add("\"sample literal\" next things", true, new Token<string>("sample literal", TokenType.StringLiteral, Position.FirstCharacter));
+            Add("\"sample \"literal\".get(1)", true, new Token<string>("sample ", TokenType.StringLiteral, Position.FirstCharacter));
+            Add("\"sample ", false, Token.Unknown(Position.FirstCharacter));
+            Add("\"sample \n\"", false, Token.Unknown(Position.FirstCharacter));
+            Add("\"some literal, \\n\\t\"", true, new Token<string>("some literal, \n\t", TokenType.StringLiteral, Position.FirstCharacter));
+            Add("\"\"", true, new Token<string>(string.Empty, TokenType.StringLiteral, Position.FirstCharacter));
+            Add("123123123.()", false, Token.Unknown(Position.FirstCharacter));
         }
     }
 

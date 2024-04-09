@@ -1,4 +1,5 @@
-﻿using CNull.Lexer.Constants;
+﻿using CNull.Common;
+using CNull.Lexer.Constants;
 
 namespace CNull.Lexer.Tests.Data
 {
@@ -6,11 +7,11 @@ namespace CNull.Lexer.Tests.Data
     {
         public CommentsData()
         {
-            Add(" some nice comment", true, new Token<string>("some nice comment", TokenType.Comment));
-            Add("some nice comment", true, new Token<string>("some nice comment", TokenType.Comment));
-            Add("\t\tsome\nnice comment", true, new Token<string>("some", TokenType.Comment));
-            Add("\nsomenice comment", true, new Token<string>("", TokenType.Comment));
-            Add("///////////////", true, new Token<string>("///////////////", TokenType.Comment));
+            Add(" some nice comment", true, new Token<string>("some nice comment", TokenType.Comment, Position.FirstCharacter));
+            Add("some nice comment", true, new Token<string>("some nice comment", TokenType.Comment, Position.FirstCharacter));
+            Add("\t\tsome\nnice comment", true, new Token<string>("some", TokenType.Comment, Position.FirstCharacter));
+            Add("\nsomenice comment", true, new Token<string>("", TokenType.Comment, Position.FirstCharacter));
+            Add("///////////////", true, new Token<string>("///////////////", TokenType.Comment, Position.FirstCharacter));
         }
     }
 

@@ -6,11 +6,13 @@
 
         protected int CurrentPosition;
         protected bool EndOfBuffer => CurrentPosition >= MockedBuffer.Length;
+        protected bool FirstRead;
 
         public virtual void Reset()
         {
             MockedBuffer = string.Empty;
             CurrentPosition = -1;
+            FirstRead = false;
         }
 
         public virtual IEnumerable<char?> GetExpectedStreamReads(string buffer, int numberOfReads)
@@ -28,7 +30,11 @@
         {
             if (EndOfBuffer)
                 CurrentPosition = MockedBuffer.Length;
-            else CurrentPosition++;
+            else
+            {
+                FirstRead = true;
+                CurrentPosition++;
+            }
         }
     }
 }

@@ -30,8 +30,8 @@ namespace CNull.Lexer.States
 
             var literalToken = _tokenBuilder.ToString();
             token = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType) 
-                ? new Token(tokenType) 
-                : new Token<string>(literalToken, TokenType.Identifier);
+                ? new Token(tokenType, TokenPosition) 
+                : new Token<string>(literalToken, TokenType.Identifier, TokenPosition);
 
             return true;
         }

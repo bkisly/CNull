@@ -1,4 +1,5 @@
-﻿using CNull.Lexer.Constants;
+﻿using CNull.Common;
+using CNull.Lexer.Constants;
 
 namespace CNull.Lexer.Tests.Data
 {
@@ -6,20 +7,20 @@ namespace CNull.Lexer.Tests.Data
     {
         public IdentifiersData()
         {
-            Add("", false, Token.Unknown());
-            Add("abcde-", true, new Token<string>("abcde", TokenType.Identifier));
-            Add("ABCDE/", true, new Token<string>("ABCDE", TokenType.Identifier));
-            Add("abc_DEF%", true, new Token<string>("abc_DEF", TokenType.Identifier));
-            Add("abc_DEF*", true, new Token<string>("abc_DEF", TokenType.Identifier));
-            Add("_abcde", true, new Token<string>("_abcde", TokenType.Identifier));
-            Add("_____", true, new Token<string>("_____", TokenType.Identifier));
-            Add("_____1-", true, new Token<string>("_____1", TokenType.Identifier));
-            Add("_abcde_", true, new Token<string>("_abcde_", TokenType.Identifier));
-            Add("sampleToken1234567890 = 1;", true, new Token<string>("sampleToken1234567890", TokenType.Identifier));
-            Add("sampleToken1234567890_a__.SomeFurtherThing()", true, new Token<string>("sampleToken1234567890_a__", TokenType.Identifier));
-            Add("1token", false, Token.Unknown());
-            Add(".token", false, Token.Unknown());
-            Add(string.Join("", Enumerable.Repeat("a", 1000)), false, Token.Unknown());
+            Add("", false, Token.Unknown(Position.FirstCharacter));
+            Add("abcde-", true, new Token<string>("abcde", TokenType.Identifier, Position.FirstCharacter));
+            Add("ABCDE/", true, new Token<string>("ABCDE", TokenType.Identifier, Position.FirstCharacter));
+            Add("abc_DEF%", true, new Token<string>("abc_DEF", TokenType.Identifier, Position.FirstCharacter));
+            Add("abc_DEF*", true, new Token<string>("abc_DEF", TokenType.Identifier, Position.FirstCharacter));
+            Add("_abcde", true, new Token<string>("_abcde", TokenType.Identifier, Position.FirstCharacter));
+            Add("_____", true, new Token<string>("_____", TokenType.Identifier, Position.FirstCharacter));
+            Add("_____1-", true, new Token<string>("_____1", TokenType.Identifier, Position.FirstCharacter));
+            Add("_abcde_", true, new Token<string>("_abcde_", TokenType.Identifier, Position.FirstCharacter));
+            Add("sampleToken1234567890 = 1;", true, new Token<string>("sampleToken1234567890", TokenType.Identifier, Position.FirstCharacter));
+            Add("sampleToken1234567890_a__.SomeFurtherThing()", true, new Token<string>("sampleToken1234567890_a__", TokenType.Identifier, Position.FirstCharacter));
+            Add("1token", false, Token.Unknown(Position.FirstCharacter));
+            Add(".token", false, Token.Unknown(Position.FirstCharacter));
+            Add(string.Join("", Enumerable.Repeat("a", 1000)), false, Token.Unknown(Position.FirstCharacter));
         }
     }
 
@@ -48,9 +49,9 @@ namespace CNull.Lexer.Tests.Data
         public KeywordsData()
         {
             foreach (var literalToken in TokenHelpers.KeywordsToTokenTypes.Keys)
-                Add($"{literalToken}(some further things)", true, new Token(TokenHelpers.KeywordsToTokenTypes[literalToken]));
+                Add($"{literalToken}(some further things)", true, new Token(TokenHelpers.KeywordsToTokenTypes[literalToken], Position.FirstCharacter));
 
-            Add(" .??", false, Token.Unknown());
+            Add(" .??", false, Token.Unknown(Position.FirstCharacter));
         }
     }
 }
