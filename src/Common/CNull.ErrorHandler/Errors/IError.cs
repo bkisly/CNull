@@ -1,4 +1,6 @@
-﻿namespace CNull.ErrorHandler.Errors
+﻿using CNull.Common;
+
+namespace CNull.ErrorHandler.Errors
 {
     /// <summary>
     /// Base error interface.
@@ -22,14 +24,9 @@
     public interface ICompilationError : IError
     {
         /// <summary>
-        /// Number of the line at which the error occurred.
+        /// Position at which the error occurred.
         /// </summary>
-        int LineNumber { get; init; }
-
-        /// <summary>
-        /// Number of the column at which the error occurred.
-        /// </summary>
-        int ColumnNumber { get; init; }
+        Position Position { get; }
     }
 
     /// <summary>
