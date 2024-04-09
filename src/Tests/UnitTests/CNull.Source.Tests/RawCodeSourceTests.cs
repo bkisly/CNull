@@ -1,3 +1,4 @@
+using CNull.Common;
 using CNull.Common.Events.Args;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
@@ -166,6 +167,28 @@ namespace CNull.Source.Tests
 
             errorHandlerMock.Verify(e => e.RaiseSourceError(
                 It.Is<FileAccessError>(error => error.FilePath == new FileAccessError(testPath).FilePath)), Times.Once);
+        }
+
+        [Theory, ClassData(typeof(PositionCounterData))]
+        public void CanCountPosition(string input, int numberOfReads, Position expectedPosition)
+        {
+            // Arrange
+
+            var reader = new StringReader(input);
+            fixture.Reset();
+            fixture.InputRepositoryMock.Setup(r => r.Read()).Returns(reader.Read);
+            fixture.InputRepositoryMock.SetupGet(r => r.IsInitialized).Returns(true);
+
+            var source = new RawCodeSource(fixture.InputRepositoryMock.Object, new Mock<IErrorHandler>().Object, fixture.MediatorMock.Object);
+
+            // Act
+
+            for (var i = 0; i < numberOfReads; i++)
+                source.MoveToNext();
+
+            // Assert
+
+            Assert.Equal(expectedPosition, source.Position);
         }
     }
 }

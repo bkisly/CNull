@@ -1,4 +1,6 @@
-﻿namespace CNull.Source
+﻿using CNull.Common;
+
+namespace CNull.Source
 {
     /// <summary>
     /// Represents the source of a raw code.
@@ -16,6 +18,11 @@
         /// Determines whether currently loaded character is recognized as a new line sequence part.
         /// </summary>
         bool IsCurrentCharacterNewLine { get; }
+
+        /// <summary>
+        /// Current position in the analyzed code.
+        /// </summary>
+        Position Position { get; }
 
         /// <summary>
         /// Advances to the next character from the input source.

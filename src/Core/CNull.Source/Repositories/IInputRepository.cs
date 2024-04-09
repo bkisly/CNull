@@ -11,6 +11,12 @@
         public bool IsInitialized { get; }
 
         /// <summary>
+        /// Sets up the reader based on the given reader object.
+        /// </summary>
+        /// <param name="reader">The reader object.</param>
+        public void SetupStream(TextReader reader);
+
+        /// <summary>
         /// Instantiates a new <see cref="StreamReader"/> for reading from a file.
         /// </summary>
         /// <param name="path">Path to the file to read from.</param>
