@@ -13,32 +13,31 @@ namespace CNull.Lexer.States
         private readonly StringBuilder _tokenBuilder = new();
         private bool FirstCharacterBuilt => _tokenBuilder.Length > 0;
 
-        public override bool TryBuildToken(out Token token)
+        public override Token BuildToken()
         {
             if (!CurrentCharacter.HasValue || CurrentCharacter.IsTokenTerminator())
-                return TokenFailed(out token, new InvalidTokenStartCharacter(TokenPosition), false);
+                return TokenFailed(new InvalidTokenStartCharacter(TokenPosition), false);
 
             var lengthCounter = 0;
             do
             {
                 if (++lengthCounter > Configuration.MaxIdentifierLength)
-                    return TokenFailed(out token,
-                        new InvalidTokenLengthError(TokenPosition, Configuration.MaxIdentifierLength), false);
+                    return TokenFailed(new InvalidTokenLengthError(TokenPosition, Configuration.MaxIdentifierLength), false);
 
                 if (IsValidCharacter(CurrentCharacter.Value))
                     _tokenBuilder.Append(CurrentCharacter.Value);
-                else return TokenFailed(out token, new InvalidIdentifierError(TokenPosition));
+                else return TokenFailed(new InvalidIdentifierError(TokenPosition));
 
                 Source.MoveToNext();
             } 
             while (!CurrentCharacter.IsTokenTerminator());
 
             var literalToken = _tokenBuilder.ToString();
-            token = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType) 
+            var token = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType) 
                 ? new Token(tokenType, TokenPosition) 
                 : new Token<string>(literalToken, TokenType.Identifier, TokenPosition);
 
-            return true;
+            return token;
         }
 
         private static bool IsValidFirstCharacter(char character)

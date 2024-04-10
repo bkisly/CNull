@@ -1,4 +1,6 @@
-﻿using CNull.Lexer.States;
+﻿using CNull.Common;
+using CNull.Lexer.Constants;
+using CNull.Lexer.States;
 using CNull.Lexer.Tests.Data;
 using CNull.Lexer.Tests.Fixtures;
 
@@ -28,19 +30,18 @@ namespace CNull.Lexer.Tests.States
             fixture.CodeSourceMock.Object.MoveToNext();
 
             var commentStateMock = new Mock<ILexerState>();
-            Token discardedToken;
-            commentStateMock.Setup(s => s.TryBuildToken(out discardedToken)).Returns(true);
+            commentStateMock.Setup(s => s.BuildToken()).Returns(new Token(TokenType.Comment, Position.FirstCharacter));
 
             var state = new OperatorOrPunctorLexerState(fixture.ServicesContainerMock.Object, commentStateMock.Object);
 
             // Act
 
-            var result = state.TryBuildToken(out var token);
+            var token = state.BuildToken();
 
             // Assert
 
-            Assert.True(result);
-            commentStateMock.Verify(s => s.TryBuildToken(out discardedToken), Times.Once);
+            Assert.Equal(TokenType.Comment, token.TokenType);
+            commentStateMock.Verify(s => s.BuildToken(), Times.Once);
         }
     }
 }

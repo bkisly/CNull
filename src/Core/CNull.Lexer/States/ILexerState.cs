@@ -6,10 +6,9 @@
     public interface ILexerState
     {
         /// <summary>
-        /// Tries to build a valid token.
+        /// Builds a token accordingly to the current state.
         /// </summary>
-        /// <param name="token">Token, which was built.</param>
-        /// <returns><c>true</c> if building succeeded, <c>false</c> otherwise.</returns>
-        bool TryBuildToken(out Token token);
+        /// <returns>The built token.</returns>
+        Token BuildToken();
     }
 }

@@ -43,7 +43,7 @@ namespace CNull.Lexer
             if (_state == null)
                 return CreateToken(new Token(TokenType.End, _source.Position));
 
-            _state.TryBuildToken(out var token);
+            var token = _state.BuildToken();
             return CreateToken(token);
         }
 

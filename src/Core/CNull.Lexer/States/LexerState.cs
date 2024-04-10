@@ -29,16 +29,15 @@ namespace CNull.Lexer.States
             TokenPosition = Source.Position;
         }
 
-        public abstract bool TryBuildToken(out Token token);
+        public abstract Token BuildToken();
 
-        protected bool TokenFailed(out Token token, ICompilationError error, bool shouldSkipToken = true)
+        protected Token TokenFailed(ICompilationError error, bool shouldSkipToken = true)
         {
             if (shouldSkipToken)
                 SkipToken();
 
             ErrorHandler.RaiseCompilationError(error);
-            token = Token.Unknown(TokenPosition);
-            return false;
+            return Token.Unknown(TokenPosition);
         }
 
         protected virtual void SkipToken()
