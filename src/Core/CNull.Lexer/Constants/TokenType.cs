@@ -30,8 +30,35 @@
 
         #endregion
 
+        #region Operators and punctors
+
+        PlusOperator,
+        MinusOperator,
+        AsteriskOperator,
+        SlashOperator,
+        PercentOperator,
+        AssignmentOperator,
+        OpenBlockOperator,
+        CloseBlockOperator,
+        LeftParenthesisOperator,
+        RightParenthesisOperator,
+        DotOperator,
+        CommaOperator,
+        SemicolonOperator,
+        AndOperator,
+        OrOperator,
+        GreaterThanOperator,
+        LessThanOperator,
+        GreaterThanOrEqualOperator,
+        LessThanOrEqualOperator,
+        EqualOperator,
+        NotEqualOperator,
+        NegationOperator,
+        IsNullOperator,
+
+        #endregion
+
         Identifier,
-        OperatorOrPunctor,
         StringLiteral,
         IntegerLiteral,
         FloatLiteral,

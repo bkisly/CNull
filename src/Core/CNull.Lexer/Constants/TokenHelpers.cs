@@ -33,14 +33,39 @@
         };
 
         /// <summary>
+        /// Maps literal operators to their corresponding token types.
+        /// </summary>
+        public static readonly Dictionary<string, TokenType> OperatorsToTokenTypes = new()
+        {
+            { "+", TokenType.PlusOperator },
+            { "-", TokenType.MinusOperator },
+            { "*", TokenType.AsteriskOperator },
+            { "/", TokenType.SlashOperator },
+            { "%", TokenType.PercentOperator },
+            { "=", TokenType.AssignmentOperator },
+            { "{", TokenType.OpenBlockOperator },
+            { "}", TokenType.CloseBlockOperator },
+            { "(", TokenType.LeftParenthesisOperator },
+            { ")", TokenType.RightParenthesisOperator },
+            { ".", TokenType.DotOperator },
+            { ",", TokenType.CommaOperator },
+            { ";", TokenType.SemicolonOperator },
+            { "&&", TokenType.AndOperator },
+            { "||", TokenType.OrOperator },
+            { ">", TokenType.GreaterThanOperator },
+            { "<", TokenType.LessThanOperator },
+            { ">=", TokenType.GreaterThanOrEqualOperator },
+            { "<=", TokenType.LessThanOrEqualOperator },
+            { "==", TokenType.EqualOperator },
+            { "!=", TokenType.NotEqualOperator },
+            { "!", TokenType.NegationOperator },
+            { "?", TokenType.IsNullOperator },
+        };
+
+        /// <summary>
         /// Contains a collection of recognizable operators and punctors.
         /// </summary>
-        public static readonly string[] OperatorsAndPunctors =
-        {
-            "+", "-", "*", "/", "%", "=",
-            "{", "}", "(", ")", ".", ",", ";",
-            "&&", "||", ">", "<", "<=", ">=", "==", "!=", "!", "?"
-        };
+        public static readonly string[] OperatorsAndPunctors = OperatorsToTokenTypes.Keys.ToArray();
 
         private static readonly char[] OperatorsFirstCharacters =
             OperatorsAndPunctors.Select(o => o.First()).Distinct().ToArray();

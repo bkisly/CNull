@@ -32,12 +32,13 @@ namespace CNull.Lexer
         {
             LastToken = null;
             _state = null;
-            _source.MoveToNext();
         }
 
         public Token GetNextToken()
         {
-            SkipWhitespace();
+            if (!TrySkipWhitespace())
+                return Token.Unknown(_source.Position);
+
             _state = GetNextState();
 
             if (_state == null)
@@ -47,10 +48,10 @@ namespace CNull.Lexer
             return CreateToken(token);
         }
 
-        private void SkipWhitespace()
+        private bool TrySkipWhitespace()
         {
             if (_source.CurrentCharacter == null)
-                return;
+                return true;
 
             var lengthCounter = 0;
             while (char.IsWhiteSpace(_source.CurrentCharacter.Value))
@@ -58,11 +59,13 @@ namespace CNull.Lexer
                 if (++lengthCounter > _configuration.MaxWhitespaceLength)
                 {
                     _errorHandler.RaiseCompilationError(new InvalidTokenLengthError(_source.Position, _configuration.MaxWhitespaceLength));
-                    return;
+                    return false;
                 }
 
                 _source.MoveToNext();
             }
+
+            return true;
         }
 
         private Token CreateToken(Token token)

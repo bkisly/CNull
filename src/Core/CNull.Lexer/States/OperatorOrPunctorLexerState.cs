@@ -23,7 +23,7 @@ namespace CNull.Lexer.States
             if (TokenHelpers.OperatorsAndPunctors.Contains(doubleOperatorCandidate))
             {
                 Source.MoveToNext();
-                return new Token<string>(doubleOperatorCandidate, TokenType.OperatorOrPunctor, TokenPosition);
+                return new Token(TokenHelpers.OperatorsToTokenTypes[doubleOperatorCandidate], TokenPosition);
             }
 
             if (doubleOperatorCandidate == "//")
@@ -31,7 +31,7 @@ namespace CNull.Lexer.States
 
             return !TokenHelpers.OperatorsAndPunctors.Contains(_operator) 
                 ? TokenFailed(new UnknownOperatorError(TokenPosition)) 
-                : new Token<string>(_operator, TokenType.OperatorOrPunctor, TokenPosition);
+                : new Token(TokenHelpers.OperatorsToTokenTypes[_operator], TokenPosition);
         }
     }
 }
