@@ -12,10 +12,10 @@ namespace CNull.Lexer.States
     {
         private readonly StringBuilder _builder = new();
 
-        public override bool TryBuildToken(out Token token)
+        public override Token BuildToken()
         {
             if (Source.CurrentCharacter != '"')
-                return TokenFailed(out token, new InvalidTokenStartCharacter(TokenPosition), false);
+                return TokenFailed(new InvalidTokenStartCharacter(TokenPosition), false);
 
             Source.MoveToNext();
             var isEscapeSequence = false;
@@ -24,18 +24,17 @@ namespace CNull.Lexer.States
             while (Source.CurrentCharacter != '"' || (isEscapeSequence && Source.CurrentCharacter == '"'))
             {
                 if (++lengthCounter > Configuration.MaxStringLiteralLength)
-                    return TokenFailed(out token,
-                        new InvalidTokenLengthError(TokenPosition, Configuration.MaxStringLiteralLength), false);
+                    return TokenFailed(new InvalidTokenLengthError(TokenPosition, Configuration.MaxStringLiteralLength), false);
 
                 if (!Source.CurrentCharacter.HasValue || Source.IsCurrentCharacterNewLine)
-                    return TokenFailed(out token, new LineBreakedTextLiteralError(TokenPosition));
+                    return TokenFailed(new LineBreakedTextLiteralError(TokenPosition));
 
                 if (isEscapeSequence)
                 {
                     char sequenceCharacter = default;
 
                     if(!TokenHelpers.TryBuildEscapeSequence(Source.CurrentCharacter.Value, ref sequenceCharacter))
-                        return TokenFailed(out token, new InvalidEscapeSequenceError(TokenPosition));
+                        return TokenFailed(new InvalidEscapeSequenceError(TokenPosition));
 
                     _builder.Append(sequenceCharacter);
                     isEscapeSequence = false;
@@ -51,8 +50,7 @@ namespace CNull.Lexer.States
             } 
 
             Source.MoveToNext();
-            token = new Token<string>(_builder.ToString(), TokenType.StringLiteral, TokenPosition);
-            return true;
+            return new Token<string>(_builder.ToString(), TokenType.StringLiteral, TokenPosition);
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using CNull.Lexer.States;
+﻿using CNull.Lexer.Constants;
+using CNull.Lexer.States;
 using CNull.Lexer.Tests.Fixtures;
-using CNull.Source.Tests.Helpers;
 
 namespace CNull.Lexer.Tests.States
 {
@@ -16,11 +16,11 @@ namespace CNull.Lexer.Tests.States
 
             // Act
 
-            var result = state.TryBuildToken(out var token);
+            var token = state.BuildToken();
 
             // Assert
 
-            Assert.Equal(expectedResult, result);
+            Assert.Equal(expectedResult, token.TokenType != TokenType.Unknown);
             Assert.Equivalent(expectedToken, token);
         }
 
@@ -34,7 +34,7 @@ namespace CNull.Lexer.Tests.States
 
             // Act
 
-            state.TryBuildToken(out _);
+            state.BuildToken();
 
             // Assert
 

@@ -15,34 +15,30 @@ namespace CNull.Lexer.States
 
         private readonly int _maxFractionDigits = long.MaxValue.Length() - 1;
 
-        public override bool TryBuildToken(out Token token)
+        public override Token BuildToken()
         {
             if (!CurrentCharacter.IsAsciiDigit())
-                return TokenFailed(out token, new InvalidTokenStartCharacter(TokenPosition), false);
+                return TokenFailed(new InvalidTokenStartCharacter(TokenPosition), false);
 
             if (CurrentCharacter is '0')
             {
                 Source.MoveToNext();
                 if (CurrentCharacter.IsAsciiDigit())
-                    return TokenFailed(out token, new PrefixedZeroError(TokenPosition));
+                    return TokenFailed(new PrefixedZeroError(TokenPosition));
             }
             else if (!TryBuildNumberPart(ref _integerPart, int.MaxValue, Configuration.MaxTokenLength))
-                return TokenFailed(out token, new NumericValueOverflowError(TokenPosition));
+                return TokenFailed(new NumericValueOverflowError(TokenPosition));
 
             if (CurrentCharacter is not '.')
-            {
-                token = new Token<int>((int)_integerPart, TokenType.IntegerLiteral, TokenPosition);
-                return true;
-            }
+                return new Token<int>((int)_integerPart, TokenType.IntegerLiteral, TokenPosition);
 
             Source.MoveToNext();
 
             if(!TryBuildNumberPart(ref _fractionPart, maxDigits: _maxFractionDigits))
-                return TokenFailed(out token, new NumericValueOverflowError(TokenPosition));
+                return TokenFailed(new NumericValueOverflowError(TokenPosition));
 
             var fractionValue = _fractionPart / (decimal)Math.Pow(10, _fractionPart.Length());
-            token = new Token<float>(_integerPart + (float)fractionValue, TokenType.FloatLiteral, TokenPosition);
-            return true;
+            return new Token<float>(_integerPart + (float)fractionValue, TokenType.FloatLiteral, TokenPosition);
         }
 
         private bool TryBuildNumberPart(ref long partValue, long maxValue = long.MaxValue, int maxDigits = int.MaxValue)

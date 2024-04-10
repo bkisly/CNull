@@ -13,7 +13,7 @@ namespace CNull.Lexer.States
     {
         private readonly StringBuilder _builder = new();
 
-        public override bool TryBuildToken(out Token token)
+        public override Token BuildToken()
         {
             while (Source.CurrentCharacter.IsWhiteSpace() && !Source.IsCurrentCharacterNewLine)
                 Source.MoveToNext();
@@ -22,15 +22,14 @@ namespace CNull.Lexer.States
             while (Source is { IsCurrentCharacterNewLine: false, CurrentCharacter: not null })
             {
                 if (++lengthCounter > Configuration.MaxCommentLength)
-                    return TokenFailed(out token, new InvalidTokenLengthError(TokenPosition, Configuration.MaxCommentLength), false);
+                    return TokenFailed(new InvalidTokenLengthError(TokenPosition, Configuration.MaxCommentLength), false);
 
                 _builder.Append(Source.CurrentCharacter);
                 Source.MoveToNext();
             }
 
             Source.MoveToNext();
-            token = new Token<string>(_builder.ToString(), TokenType.Comment, TokenPosition);
-            return true;
+            return new Token<string>(_builder.ToString(), TokenType.Comment, TokenPosition);
         }
     }
 }

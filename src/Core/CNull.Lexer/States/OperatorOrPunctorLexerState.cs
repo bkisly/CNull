@@ -11,10 +11,10 @@ namespace CNull.Lexer.States
     {
         private string _operator = string.Empty;
 
-        public override bool TryBuildToken(out Token token)
+        public override Token BuildToken()
         {
             if (!CurrentCharacter.IsOperatorCandidate())
-                return TokenFailed(out token, new InvalidTokenStartCharacter(TokenPosition), false);
+                return TokenFailed(new InvalidTokenStartCharacter(TokenPosition), false);
 
             _operator += CurrentCharacter;
             Source.MoveToNext();
@@ -23,18 +23,15 @@ namespace CNull.Lexer.States
             if (TokenHelpers.OperatorsAndPunctors.Contains(doubleOperatorCandidate))
             {
                 Source.MoveToNext();
-                token = new Token<string>(doubleOperatorCandidate, TokenType.OperatorOrPunctor, TokenPosition);
-                return true;
+                return new Token<string>(doubleOperatorCandidate, TokenType.OperatorOrPunctor, TokenPosition);
             }
 
             if (doubleOperatorCandidate == "//")
-                return commentLexerState.TryBuildToken(out token);
+                return commentLexerState.BuildToken();
 
-            if (!TokenHelpers.OperatorsAndPunctors.Contains(_operator)) 
-                return TokenFailed(out token, new UnknownOperatorError(TokenPosition));
-
-            token = new Token<string>(_operator, TokenType.OperatorOrPunctor, TokenPosition);
-            return true;
+            return !TokenHelpers.OperatorsAndPunctors.Contains(_operator) 
+                ? TokenFailed(new UnknownOperatorError(TokenPosition)) 
+                : new Token<string>(_operator, TokenType.OperatorOrPunctor, TokenPosition);
         }
     }
 }

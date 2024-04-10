@@ -9,10 +9,10 @@ namespace CNull.Lexer.States
     /// </summary>
     public class CharLiteralLexerState(ILexerStateServicesContainer servicesContainer) : LexerState(servicesContainer)
     {
-        public override bool TryBuildToken(out Token token)
+        public override Token BuildToken()
         {
             if (Source.CurrentCharacter != '\'')
-                return TokenFailed(out token, new InvalidTokenStartCharacter(TokenPosition), false);
+                return TokenFailed(new InvalidTokenStartCharacter(TokenPosition), false);
 
             Source.MoveToNext();
 
@@ -22,30 +22,29 @@ namespace CNull.Lexer.States
             switch (Source.CurrentCharacter)
             {
                 case '\'' or null:
-                    return TokenFailed(out token, new EmptyCharLiteralError(TokenPosition));
+                    return TokenFailed(new EmptyCharLiteralError(TokenPosition));
                 case '\\':
                     isEscapeSequence = true;
                     Source.MoveToNext();
                     break;
                 default:
                     if (Source.IsCurrentCharacterNewLine)
-                        return TokenFailed(out token, new LineBreakedTextLiteralError(TokenPosition));
+                        return TokenFailed(new LineBreakedTextLiteralError(TokenPosition));
                     break;
             }
 
             if (!isEscapeSequence)
                 literalContent = Source.CurrentCharacter.Value;
             else if (!TokenHelpers.TryBuildEscapeSequence(Source.CurrentCharacter.Value, ref literalContent))
-                return TokenFailed(out token, new InvalidEscapeSequenceError(TokenPosition));
+                return TokenFailed( new InvalidEscapeSequenceError(TokenPosition));
 
             Source.MoveToNext();
 
             if (Source.CurrentCharacter != '\'')
-                return TokenFailed(out token, new UnterminatedCharLiteral(TokenPosition));
+                return TokenFailed(new UnterminatedCharLiteral(TokenPosition));
 
             Source.MoveToNext();
-            token = new Token<char>(literalContent, TokenType.CharLiteral, TokenPosition);
-            return true;
+            return new Token<char>(literalContent, TokenType.CharLiteral, TokenPosition);
         }
     }
 }
