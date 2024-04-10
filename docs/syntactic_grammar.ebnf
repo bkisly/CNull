@@ -59,29 +59,25 @@ return_statement                = 'return', unary_expression, ';';
 
 (*Expressions*)
 
-expression                      = non_assignment_expression
+expression                      = conditional_or_expression
                                 | assignment;
 
 assignment                      = unary_expression, assignment_operator, expression;
 assignment_operator             = '=';
 
-non_assignment_expression       = conditional_expression
-                                | throw_expression;
-
 throw_expression                = 'throw', new_expression;
 
-conditional_expression          = conditional_or_expression;
 conditional_or_expression       = conditional_and_expression
                                 | conditional_or_expression, '||', conditional_and_expression;
 conditional_and_expression      = relational_expression
                                 | conditional_and_expression, '&&', relational_expression;
 relational_expression           = additive_expression
-                                | relational_expression, '<', additive_expression
-                                | relational_expression, '>', additive_expression
-                                | relational_expression, '<=', additive_expression
-                                | relational_expression, '>=', additive_expression
-                                | relational_expression, '==', additive_expression
-                                | relational_expression, '!=', additive_expression;
+                                | additive_expression, '<', additive_expression
+                                | additive_expression, '>', additive_expression
+                                | additive_expression, '<=', additive_expression
+                                | additive_expression, '>=', additive_expression
+                                | additive_expression, '==', additive_expression
+                                | additive_expression, '!=', additive_expression;
 
 additive_expression             = multiplicative_expression
                                 | additive_expression, '+', multiplicative_expression
