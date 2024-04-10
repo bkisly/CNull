@@ -58,6 +58,7 @@ namespace CNull.Source
             try
             {
                 _inputRepository.SetupFileStream(e.SourcePath);
+                MoveToNext();
                 OnSourceInitialized();
             }
             catch (IOException)

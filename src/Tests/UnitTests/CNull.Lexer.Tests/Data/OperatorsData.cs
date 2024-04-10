@@ -7,17 +7,17 @@ namespace CNull.Lexer.Tests.Data
     {
         public OperatorsData()
         {
-            foreach (var op in TokenHelpers.OperatorsAndPunctors)
-                Add($"{op}something();", true, new Token<string>(op, TokenType.OperatorOrPunctor, Position.FirstCharacter));
+            foreach (var op in TokenHelpers.OperatorsToTokenTypes)
+                Add($"{op.Key}something();", true, new Token(op.Value, Position.FirstCharacter));
 
             Add(" something", false, Token.Unknown(Position.FirstCharacter));
-            Add("+++", true, new Token<string>("+", TokenType.OperatorOrPunctor, Position.FirstCharacter));
-            Add("-=", true, new Token<string>("-", TokenType.OperatorOrPunctor, Position.FirstCharacter));
+            Add("+++", true, new Token(TokenType.PlusOperator, Position.FirstCharacter));
+            Add("-=", true, new Token(TokenType.MinusOperator, Position.FirstCharacter));
             Add("'asacassaa", false, Token.Unknown(Position.FirstCharacter));
             Add("123123", false, Token.Unknown(Position.FirstCharacter));
             Add("", false, Token.Unknown(Position.FirstCharacter));
-            Add("/=", true, new Token<string>("/", TokenType.OperatorOrPunctor, Position.FirstCharacter));
-            Add("!==>abcde", true, new Token<string>("!=", TokenType.OperatorOrPunctor, Position.FirstCharacter));
+            Add("/=", true, new Token(TokenType.SlashOperator, Position.FirstCharacter));
+            Add("!==>abcde", true, new Token(TokenType.NotEqualOperator, Position.FirstCharacter));
         }
     }
 
