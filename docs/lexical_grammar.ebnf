@@ -40,9 +40,8 @@ token                       = identifier
 
 (*Keywords*)
 
-keyword                     = 'bool' | 'sbyte' | 'byte' | 'ushort' | 'short' | 'uint' | 'int' | 'ulong'
-                            | 'long' | 'float' | 'string' | 'char' | 'dict' | 'if' | 'else' | 'while' 
-                            | 'continue' | 'break' | 'void' | 'return' | 'class' | 'exception' | 'throw' 
+keyword                     = 'bool' | 'int' | 'ulong' | 'float' | 'string' | 'char' | 'dict' | 'if' | 'else' | 'while' 
+                            | 'continue' | 'break' | 'void' | 'return' | 'throw' 
                             | 'try' | 'catch' | TRUE | FALSE | NULL | 'import';
 
 (*Identifiers*)
@@ -84,7 +83,6 @@ string_literal              = '"', { ( character | escape_sequence ) }, '"'
 (*Operators and punctors*)
 
 operator_or_punctor         = '+' | '-' | '*' | '/' | '%' | '='
-                            | '{' | '}' | '[' | ']' | '(' | ')'
+                            | '{' | '}' | '(' | ')'
                             | '.' | ',' | ';' | '&&' | '||'
-                            | '>' | '<' | '>=' | '<=' | '==' | '!=' | '?' | '!'
-                            | '+=' | '-=' | '*=' | '/=' | '%=' | '++' | '--';
+                            | '>' | '<' | '>=' | '<=' | '==' | '!=' | '?' | '!';
