@@ -19,7 +19,6 @@ namespace CNull.ErrorHandler
         /// <param name="error">Error to raise.</param>
         void RaiseSourceError(ISourceError error);
 
-
         /// <summary>
         /// Raises an error which occurred during static analysis of the code.
         /// </summary>
