@@ -1,6 +1,6 @@
 ﻿namespace CNull.Source.Repositories
 {
-    internal class InputRepository : IInputRepository
+    public class InputRepository : IInputRepository
     {
         private TextReader? _reader;
 
