@@ -18,14 +18,12 @@ Cele przyświecające powstaniu języka C?:
 - Dostępne są **instrukcje warunkowe *if-else*, pętla *while***.
 - Możliwość **dodawania komentarzy jednolinijkowych**
 - **Programista może tworzyć własne funkcje**, w których może definiować zmienne lokalne.
-- Struktura kodu napisanego w języku C? przypomina tę znaną z języka Python (tzn. w pliku źródłowym mogą być zarówno instrukcje, jak i deklaracje funkcji oraz klas).
-- **Domyślna akceptacja wartości *null*** przez wszystkie definiowane typy, w tym wszystkie typy prymitywne.
+- Struktura kodu napisanego w języku C? przypomina tę znaną z języka C/C++.
+- **Domyślna akceptacja wartości *null*** przez wszystkie typy, w tym wszystkie typy prymitywne.
 - Wbudowana **kolekcja danych (słownik)**, będąca przykładem typu złożonego, posiadająca własny interfejs umożliwiający dodawanie, usuwanie, wyszukiwanie i sortowanie elementów. **Klucz w takim słowniku nie może mieć wartości *null***.
-- **Sygnalizowanie błędów przy próbie operacji na wartości *null*** (tj. rzucenie wyjątku `NullValueException` w czasie wykonania programu).
-- **Możliwość obsługi wyjątków** w blokach *try-catch*, znanych z innych języków programowania. 
-- **Programista może tworzyć własne typy wyjątków.** Wyjątki są osobnym typem danych. Mogą one zawierać pola, ale nie mogą zawierać metod. Mogą być one używane jedynie zgodnie ze swoim przeznaczeniem (tj. jedynie rzucane w instrukcjach `throw` oraz obsługiwane w blokach `catch`)
-- **Możliwość agregowania zmiennych i funkcji w klasy**, jednak bez zapewnienia mechanizmów znanych z typowych języków obiektowych (tj. dziedziczenia, hermetyzacji i polimorfizmu). Klasy w języku C? służą jedynie agregacji danych i funkcji oraz możliwości tworzenia prostych obiektów. Mechanizm ten jest niezbędny do tego, aby można było tworzyć czytelne w użyciu złożone typy danych (jak ww. wbudowany słownik).
-- **Możliwość importowania klas, funkcji oraz wyjątków z innych plików**, na takiej samej zasadzie jak w przypadku języka Python.
+- **Sygnalizowanie błędów przy próbie operacji na wartości *null***.
+- **Możliwość obsługi wyjątków** w blokach *try-catch*, znanych z innych języków programowania. Wyjątki w C? są jedynie komunikatami tekstowymi (tj. można "rzucać stringa")
+- **Możliwość importowania funkcji z innych plików**, na takiej samej zasadzie jak w przypadku języka Python.
 
 ### Wymagania niefunkcjonalne
 
@@ -70,22 +68,21 @@ Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnali
 1. **Stałe**
 	- **stałe liczbowe** - interpretowane w formacie dziesiętnym. Niedozwolone jest poprzedzanie stałych zerami.
 		- całkowitoliczbowe - `0, -250, 12345`
-		- zmiennoprzecinkowe - `0.24`, `-1.4567`, `1234.5678`, `.290`. W przypadku stałych zmiennoprzecinkowych nieposiadających części całkowitej dozwolone jest pominięcie zera na początku.
+		- zmiennoprzecinkowe - `0.24`, `-1.4567`, `1234.5678`, `0.290`. 
 	- **stałe tekstowe** - ujmowane znakiem cudzysłowu - `"przykładowy tekst"`, `"Ala ma kota"`
 	- **stałe znakowe** - ujmowane znakiem apostrofu. Mogą zawierać jedynie pojedynczy znak - `'a', 'A', 'h'`
 	- **stałe boolowskie** - `true`, `false`
 	- **stała wartości pustej** - `null`
-2. **Identyfikatory** - mogą zawierać jedynie litery, znaki podkreślenia oraz cyfry (z czego cyfry nie może być znakiem rozpoczynającym identyfikator). Zasady tworzenia identyfikatorów są takie same dla zmiennych, klas, funkcji, metod oraz wyjątków. Maksymalna długość identyfikatora wynosi 256 znaków. `myVariable`, `MYVARIABLE`, `My_Variable`, `_myVariable1`, `____`. 
+2. **Identyfikatory** - mogą zawierać jedynie litery, znaki podkreślenia oraz cyfry (z czego cyfry nie może być znakiem rozpoczynającym identyfikator). Zasady tworzenia identyfikatorów są takie same dla zmiennych i funkcji. Maksymalna długość identyfikatora wynosi 256 znaków. `myVariable`, `MYVARIABLE`, `My_Variable`, `_myVariable1`, `____`. 
 3. **Operatory**
-	- **matematyczne** - `+`, `-`, `*`, `/`
+	- **matematyczne** - `+`, `-`, `*`, `/`, `%`
 	- **priorytetu** - `(`, `)`
 	- **przypisania** - `=`
 	- **porównania** - `<`, `<=`, `>`, `>=`, `==`, `!=`
 	- **boolowskie** - `&&`, `||`, `!`, `?` (sprawdzenie, czy wartość jest pusta)
-	- **odwołania do znaku w ciągu** - `[]`
 	- **wyłuskania** - `.`
-1. **Oznaczenie granic bloku kodu** - `{`, `}`
-2. **Komentarze** - `// przykładowy komentarz jednolinijkowy`
+4. **Oznaczenie granic bloku kodu** - `{`, `}`
+5. **Komentarze** - `// przykładowy komentarz jednolinijkowy`
 
 ### Typy danych
 
@@ -96,35 +93,14 @@ Język C? jest typowany **statycznie i silnie**. Domyślnie, **każdy typ danych
 #### Typy wartościowe
 
 1. **`bool`** - typ boolowski
-2. **Typy całkowitoliczbowe**
-	1. **`sbyte`** - 8-bitowa liczba całkowita ze znakiem
-	2. **`byte`** - 8-bitowa liczba całkowita bez znaku
-	3. **`short`** - 16-bitowa liczba całkowita ze znakiem
-	4. **`ushort`** - 16-bitowa liczba całkowita bez znaku
-	5. **`int`** - 32-bitowa liczba całkowita ze znakiem
-	6. **`uint`** - 32-bitowa liczba całkowita bez znaku
-	7. **`long`** - 64-bitowa liczba całkowita ze znakiem
-	8. **`ulong`** - 64-bitowa liczba całkowita bez znaku
-3. **`float`** - liczba zmiennoprzecinkowa podwójnej precyzji
+2. **`int`** - typ całkowitoliczbowy (32-bitowa liczba całkowita ze znakiem)
+3. **`float`** - liczba zmiennoprzecinkowa pojedynczej precyzji
 4. **`string`** - ciąg znaków
 5. **`char`** - pojedynczy znak
 
-#### Klasy
-
-Programista ma możliwość tworzenia własnych prostych klas (słowo kluczowe `class`), w skład których mogą wchodzić zmienne oraz metody. Każda klasa jest typem referencyjnym.
-
-Język C? posiada **wbudowany słownik**, który w rzeczywistości jest klasą będącą częścią "biblioteki standardowej". Posiada zestaw metod umożliwiających operacje na nim.
-
 #### Wyjątki
 
-Dodatkowo, język C? wyróżnia **wyjątki jako osobny typ danych** (słowo kluczowe `exception`). **Wyjątki są typem wartościowym** - pomimo, że mogą być używane jedynie podczas obsługi wyjątków (co różni język C? od innych języków programowania, w których wyjątki to de facto zwykłe klasy), to podczas ich rzucenia ich wartość jest kopiowana od miejsca utworzenia do miejsca przechwycenia, a same w sobie są niemutowalne.
-
-C? posiada zestaw wbudowanych wyjątków:
-- `Exception`
-- `NullValueException`
-- `InvalidCastException`
-- `DivideByZeroException`
-- `IndexOutOfRangeException`
+Wyjątki w C? są de facto stringami, które można rzucać i obsługiwać tak, jak standardowe wyjątki. Zdefiniowany jest zestaw kilku standardowych wyjątków, które są rzucane np. w przypadku nieprawidłowego rzutowania lub odwołania do wartości `null`.
 
 ### Dane w programie
 
@@ -133,23 +109,20 @@ C? posiada zestaw wbudowanych wyjątków:
 	- typy prymitywne - **przez wartość**
 	- typy złożone - **przez referencję**
 - **Konwersje typów**:
-	- mogą następować niejawnie, kiedy typ o mniejszym zakresie ma zostać zrzutowany do typu o większym zakresie
-	- muszą następować jawnie (przez rzutowanie), kiedy typ o większym zakresie wartości ma zostać przypisany do zmiennej typu o mniejszym zakresie wartości
-	- konwersja niejawna może następować między typami `char` oraz `byte` (niskopoziomowo są tożsame)
+	- następują niejawnie, ponieważ **operator przypisania jednocześnie jest w stanie wykonać rzutowanie w razie potrzeby**. Np. chcąc przypisać wartość typu `float` do typu `int`, zostanie ona automatycznie zrzutowana do typu docelowego, a jeśli to się nie powiedzie, to rzucony zostanie wyjątek.
 - **Zakres zmiennej** jest ograniczony do bloku kodu, w której jest zdefiniowana, a także do bloków podrzędnych
-- **Funkcje/metody mogą być przeciążane** w obrębie pliku albo klasy. Przeciążone metody muszą mieć co najmniej różny typ zwracany lub różne listy parametrów
+- **Funkcje mogą być przeciążane** w obrębie pliku. Przeciążone metody muszą mieć co najmniej różny typ zwracany lub różne listy parametrów
 - **Przykrywanie zmiennych** może występować podczas zdefiniowania zmiennej lokalnej w funkcji, kiedy już zdefiniowano zmienną o tej samej nazwie w pliku. Wówczas w danym kontekście brana pod uwagę jest ta zmienna, która jest na najniższym poziomie zagnieżdżenia. Nie można redefiniować pól i zmiennych lokalnych.
 - W przypadku importowania elementów o tych samych nazwach, należy odnosić się do nich po pełnej nazwie (tj. razem z nazwą modułu).
 
 ### Obsługa błędów
 
-Błędy będą obsługiwane przez osobny moduł projektu. Każde wystąpienie błędu w danym module interpretera (np. lekserze, parserze czy samym interpreterze) będzie sygnalizowane zgłoszeniem zdarzenia, którego obsługa zostanie oddelegowana do modułu obsługi błędów. Na podstawie informacji przekazanych w zdarzeniu podejmowane będą odpowiednie działania, jak np. wyświetlenie informacji na ekranie, zapis do logu itp.
+Błędy będą obsługiwane przez osobny moduł projektu. Każde wystąpienie błędu w danym module interpretera (np. lekserze, parserze czy samym interpreterze) będzie sygnalizowane zgłoszeniem błędu, którego obsługa zostanie oddelegowana do modułu obsługi błędów. Na podstawie informacji przekazanych w błędzie podejmowane będą odpowiednie działania, jak np. wyświetlenie informacji na ekranie, zapis do logu itp.
 
 Obsługiwane rodzaje błędów:
-1. **Błędy na poziomie leksera** - sygnalizowane wtedy, kiedy dany leksem nie został rozpoznany, ma nieprawidłową długość itp.
-2. **Błędy na poziomie parsera** - sygnalizowane wtedy, kiedy wykryta zostanie nieprawidłowa składnia programu (tj. taka niezdefiniowana w gramatyce).
-3. **Błędy na poziomie interpretera** - sygnalizowane podczas wykrycia instrukcji nieprawidłowej semantycznie (np. próba przypisania wartości wyrażenia boolowskiego do zmiennej typu `string`).
-4. **Błędy czasu wykonania** - sygnalizowane w momencie wykrycia nieprawidłowej operacji w trakcie wykonania programu (np. próba dzielenia przez zero, odwołanie do wartości `null`, nieprawidłowe rzutowanie).
+1. **Błędy dostępu do źródła** - zgłaszane w momencie nieprawidłowości odwołania do źródła kodu (np. próba odwołania do nieistniejącego pliku)
+2. **Błędy kompilacji** - błędy związane ze statyczną analizą kodu (wszelkie błędy składniowe, semantyczne lub leksykalne)
+3. **Błędy czasu wykonania** - sygnalizowane w czasie interpretacji programu (np. nieprawidłowe rzutowanie)
 
 Komunikaty o błędach sformatowane będą w następujący sposób:
 - dla błędów wykrytych przed wykonaniem:
@@ -162,8 +135,8 @@ C? error: [komunikat o błędzie]
 - dla błędów czasu wykonania (nieobsłużonych wyjątków) - wypisanie stosu wywołań:
 
 ```
-C? unhandled exception ([nazwa typu wyjątku] - [komunikat z wyjątku]):
-	at [nazwa pliku + pełna nazwa klasy/metody jeśli dotyczy] (line [nr linii])
+C? unhandled exception ([komunikat z wyjątku]):
+	at [nazwa funkcji, w której wystąpił wyjątek] (line [nr linii])
 ```
 
 ### Przykłady użycia języka
@@ -209,7 +182,7 @@ Wynik:
 -222
 ```
 
-**3. Złożona operacja matematyczna z rzutowaniem typu**
+**3. Złożona operacja matematyczna z automatycznym rzutowaniem typu**
 
 ```csharp
 import CNull.Console;
@@ -343,7 +316,7 @@ C? unhandled exception (NullValueException - Tried to access null value in a non
 ```csharp
 import CNull.Console.WriteLine;
 
-ulong Factorial(uint n)
+int Factorial(int n)
 {
 	if (!n?) // Check if the given value isn't null. Return null if yes.
 	{
@@ -373,7 +346,7 @@ Wynik:
 1
 120
 null
-C? unhandled exception (StackOverflowException - Stack overflow):
+C? unhandled exception (Stack overflow):
 	at Program.cnull (line 24)
 	at Program.cnull (line 16)
 ```
@@ -595,7 +568,7 @@ Opis gramatyki na poziomie składni znajduje się w pliku [syntactic_grammar.ebn
 Projekt C? będzie zrealizowany w języku C# w formie modularnej. Każdy moduł realizowany jest przez osobny projekt biblioteki klas C# albo aplikację konsolową jako warstwa front-end.
 
 Główne moduły składające się na projekt:
-- **`CNull.DataAccess`** - biblioteka klas realizująca dostęp do danych oraz udostępnianie ich lekserowi w zunifikowanej formie nadającej się do przeprowadzenia analizy leksykalnej. Główne elementy składające się na tę bibliotekę:
+- **`CNull.Source`** - biblioteka klas realizująca dostęp do źródła kodu oraz udostępnianie ich lekserowi w zunifikowanej formie nadającej się do przeprowadzenia analizy leksykalnej. Główne elementy składające się na tę bibliotekę:
 	- Interfejs pobierania znaków ze źródła udostępniany lekserowi
 	- Klasa realizująca dostęp do danych z plików i ich przetwarzanie z pomocą strumieni
 	- Elementy pomocnicze dla warstwy dostępu do danych
@@ -628,10 +601,10 @@ Dodatkowe moduły:
 - **`CNull.Common`** - moduł zawierający elementy pomocnicze i wspólne dla wszystkich składników programu.
 
 Projekty testów:
-- **`CNull.UnitTests`** - testy jednostkowe
+- **`CNull.*.Tests`** - testy jednostkowe, gdzie `*` jest nazwą modułu głównego, np. `CNull.Lexer.Tests`
 - **`CNull.IntegrationTests`** - testy integracyjne
 
-Komunikacja między głównymi modułami następuje w taki sposób, że dany moduł ma powiązania jedynie z modułem znajdującym się bezpośrednio "pod nim" (tj. lekser może mieć zależność jedynie od DA, parser od leksera itd.). Każdy z modułów głównych ma dostęp do modułu obsługi błędów. Wszystkie moduły mają dostęp do modułu elementów wspólnych.
+Komunikacja między głównymi modułami następuje w taki sposób, że dany moduł ma powiązania jedynie z modułem znajdującym się bezpośrednio "pod nim" (tj. lekser może mieć zależność jedynie od źródła, parser od leksera itd.). Każdy z modułów głównych ma dostęp do modułu obsługi błędów. Wszystkie moduły mają dostęp do modułu elementów wspólnych.
 
 Aby ułatwić testowanie oraz zarządzanie zależnościami, główne obiekty będą operować na interfejsach swoich zależności, a zarządzanie nimi będzie realizowane przez dependency injection.
 
