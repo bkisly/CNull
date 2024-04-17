@@ -15,8 +15,7 @@ return_type                     = 'void'
                                 | type_name;
 
 type_name                       = primitive_type
-                                | dict_type
-                                | identifier;
+                                | dict_type;
 
 primitive_type                  = 'bool' | 'int' | 'char' | 'string' | 'float';
 dict_type                       = 'dict', '<', type_name, ',', type_name, '>';
@@ -34,8 +33,7 @@ expression_statement            = expression, ';';
 
 (*- Variables*)
 
-variable_declaration            = type_name, identifier, ';'
-                                | type_name, identifier, '=', non_assignment_expression, ';';
+variable_declaration            = type_name, identifier, [ '=', conditional_or_expression ], ';';
 
 (*- If statement*)
 
@@ -71,24 +69,19 @@ conditional_or_expression       = conditional_and_expression
                                 | conditional_or_expression, '||', conditional_and_expression;
 conditional_and_expression      = relational_expression
                                 | conditional_and_expression, '&&', relational_expression;
-relational_expression           = additive_expression
-                                | additive_expression, '<', additive_expression
-                                | additive_expression, '>', additive_expression
-                                | additive_expression, '<=', additive_expression
-                                | additive_expression, '>=', additive_expression
-                                | additive_expression, '==', additive_expression
-                                | additive_expression, '!=', additive_expression;
+
+relational_expression           = additive_expression, [ relational_operator, additive_expression ];
+relational_operator             = '<' | '>' | '<=' | '>=' | '==' | '!=';
 
 additive_expression             = multiplicative_expression
-                                | additive_expression, '+', multiplicative_expression
-                                | additive_expression, '-', multiplicative_expression;
+                                | additive_expression, additive_operator, multiplicative_expression;
+additive_operator               = '+' | '-';
+
 multiplicative_expression       = unary_expression
-                                | multiplicative_expression, '*', unary_expression
-                                | multiplicative_expression, '/', unary_expression
-                                | multiplicative_expression, '%', unary_expression;
+                                | multiplicative_expression, multiplicative_operator, unary_expression;
+multiplicative_operator         = '*' | '/' | '%';
 
 unary_expression                = secondary_expression
-                                | '+', unary_expression
                                 | '-', unary_expression
                                 | '!', unary_expression;
 
