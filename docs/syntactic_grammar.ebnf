@@ -65,7 +65,7 @@ expression                      = conditional_or_expression
 assignment                      = unary_expression, assignment_operator, expression;
 assignment_operator             = '=';
 
-throw_expression                = 'throw', new_expression;
+throw_expression                = 'throw', string_literal;
 
 conditional_or_expression       = conditional_and_expression
                                 | conditional_or_expression, '||', conditional_and_expression;
@@ -99,13 +99,10 @@ primary_expression              = literal
                                 | identifier
                                 | parenthesised_expression
                                 | member_access
-                                | invocation_expression
-                                | new_expression;
+                                | invocation_expression;
 
 parenthesised_expression        = '(', expression, ')';
 
 member_access                   = primary_expression, '.', identifier;
 invocation_expression           = primary_expression, '(', [ argument_list ], ')';
 argument_list                   = unary_expression, { unary_expression };
-
-new_expression                  = type_name, [ '(', argument_list, ')' ];
