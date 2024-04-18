@@ -10,6 +10,9 @@
         public void SetupFileStream(string path) => _reader = new StreamReader(path);
 
         public int Read() => _reader?.Read() ?? throw new InvalidOperationException("Tried to read from non-initialized stream.");
+
+        public int Peek() => _reader?.Peek() ?? throw new InvalidOperationException("Tried to read from non-initialized stream.");
+
         public void Dispose() => _reader?.Dispose();
     }
 }

@@ -19,6 +19,15 @@ namespace CNull.Source
         private char? _previousCharacter;
 
         public char? CurrentCharacter { get; private set; }
+        public char? NextCharacter
+        {
+            get
+            {
+                var character = _inputRepository.Peek();
+                return character == -1 ? null : (char)character;
+            }
+        }
+
         public bool IsCurrentCharacterNewLine => IsNewLine(CurrentCharacter);
 
         private Position _position;
@@ -77,7 +86,7 @@ namespace CNull.Source
                 _position.ColumnNumber = CurrentCharacter != '\r' ? 1 : 0;
                 _position.LineNumber++;
             }
-            else if (CurrentCharacter != '\r')
+            else if (CurrentCharacter != '\r' || NextCharacter != '\n')
             {
                 if (_position == default)
                     _position = Position.FirstCharacter;

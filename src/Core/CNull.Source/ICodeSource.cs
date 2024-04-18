@@ -33,5 +33,8 @@ namespace CNull.Source
     /// <summary>
     /// Represents a non filtered input code source.
     /// </summary>
-    public interface IRawCodeSource : ICodeSource;
+    public interface IRawCodeSource : ICodeSource
+    {
+        public char? NextCharacter { get; }
+    }
 }
