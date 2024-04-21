@@ -28,5 +28,11 @@
         /// <returns></returns>
         /// <exception cref="NullReferenceException">Thrown when StreamReader is not initialized.</exception>
         public int Read();
+
+        /// <summary>
+        /// Returns the next character from the stream without advancing it.
+        /// </summary>
+        /// <returns>The peeked character.</returns>
+        public int Peek();
     }
 }

@@ -15,7 +15,7 @@ namespace CNull.Lexer.States
 
         public override Token BuildToken()
         {
-            if (!CurrentCharacter.HasValue || CurrentCharacter.IsTokenTerminator())
+            if (CurrentCharacter.IsTokenTerminator())
                 return TokenFailed(new InvalidTokenStartCharacter(TokenPosition), false);
 
             var lengthCounter = 0;
@@ -24,7 +24,7 @@ namespace CNull.Lexer.States
                 if (++lengthCounter > Configuration.MaxIdentifierLength)
                     return TokenFailed(new InvalidTokenLengthError(TokenPosition, Configuration.MaxIdentifierLength), false);
 
-                if (IsValidCharacter(CurrentCharacter.Value))
+                if (IsValidCharacter(CurrentCharacter!.Value))
                     _tokenBuilder.Append(CurrentCharacter.Value);
                 else return TokenFailed(new InvalidIdentifierError(TokenPosition));
 

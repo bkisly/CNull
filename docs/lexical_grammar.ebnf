@@ -40,8 +40,8 @@ token                       = identifier
 
 (*Keywords*)
 
-keyword                     = 'bool' | 'int' | 'ulong' | 'float' | 'string' | 'char' | 'dict' | 'if' | 'else' | 'while' 
-                            | 'continue' | 'break' | 'void' | 'return' | 'throw' 
+keyword                     = 'bool' | 'int' | 'float' | 'string' | 'char' | 'dict' | 'if' | 'else' 
+                            | 'while' | 'continue' | 'break' | 'void' | 'return' | 'throw' 
                             | 'try' | 'catch' | TRUE | FALSE | NULL | 'import';
 
 (*Identifiers*)

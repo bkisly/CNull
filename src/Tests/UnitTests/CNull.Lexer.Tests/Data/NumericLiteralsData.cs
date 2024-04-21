@@ -28,6 +28,7 @@ namespace CNull.Lexer.Tests.Data
         {
             Add("123.4567-123== 0;", true, new Token<float>(123.4567f, TokenType.FloatLiteral, Position.FirstCharacter));
             Add("45.00000 ==123", true, new Token<float>(45f, TokenType.FloatLiteral, Position.FirstCharacter));
+            Add("45.00001 ==123", true, new Token<float>(45.00001f, TokenType.FloatLiteral, Position.FirstCharacter));
             Add("0.2345", true, new Token<float>(.2345f, TokenType.FloatLiteral, Position.FirstCharacter));
             Add("0.9223372036854775807", true, new Token<float>(.9223372036854775807f, TokenType.FloatLiteral, Position.FirstCharacter));
             Add("0.999999999999999", true, new Token<float>(.999999999999999f, TokenType.FloatLiteral, Position.FirstCharacter));
