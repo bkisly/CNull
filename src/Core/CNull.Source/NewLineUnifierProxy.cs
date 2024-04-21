@@ -25,7 +25,7 @@ namespace CNull.Source
         {
             _source.MoveToNext();
 
-            if (CurrentCharacter == '\r' && _source.NextCharacter != '\n')
+            if (CurrentCharacter == '\r' && _source.NextCharacter == '\n')
                 _source.MoveToNext();
         }
 

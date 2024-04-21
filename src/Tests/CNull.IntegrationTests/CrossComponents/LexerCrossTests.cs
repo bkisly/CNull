@@ -23,9 +23,8 @@ namespace CNull.IntegrationTests.CrossComponents
                                       int Main(dict<int, string> args)
                                       {
                                         float a = 23.456;
-                                        a\rb
-                                      }
-                                      """;
+                                        a
+                                      """ + "\r" + "b\r\n}";
 
             var expectedTokens = new List<Token>
             {
@@ -54,9 +53,9 @@ namespace CNull.IntegrationTests.CrossComponents
                 new Token<string>("a", TokenType.Identifier, new Position(6, 3)),
                 new Token<string>("b", TokenType.Identifier, new Position(6, 5)),
                 new Token(TokenType.CloseBlockOperator, new Position(7, 1)),
-                new Token(TokenType.End, new Position(8, 1)),
-                new Token(TokenType.End, new Position(8, 1)),
-                new Token(TokenType.End, new Position(8, 1)),
+                new Token(TokenType.End, new Position(7, 1)),
+                new Token(TokenType.End, new Position(7, 1)),
+                new Token(TokenType.End, new Position(7, 1)),
             };
 
             var reader = new StringReader(testBuffer);
