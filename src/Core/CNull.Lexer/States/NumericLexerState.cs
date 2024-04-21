@@ -26,7 +26,7 @@ namespace CNull.Lexer.States
                 if (CurrentCharacter.IsAsciiDigit())
                     return TokenFailed(new PrefixedZeroError(TokenPosition));
             }
-            else if (!TryBuildNumberPart(ref _integerPart, int.MaxValue, Configuration.MaxTokenLength))
+            else if (!TryBuildNumberPart(ref _integerPart, out _, int.MaxValue, Configuration.MaxTokenLength))
                 return TokenFailed(new NumericValueOverflowError(TokenPosition));
 
             if (CurrentCharacter is not '.')
@@ -34,25 +34,25 @@ namespace CNull.Lexer.States
 
             Source.MoveToNext();
 
-            if(!TryBuildNumberPart(ref _fractionPart, maxDigits: _maxFractionDigits))
+            if(!TryBuildNumberPart(ref _fractionPart, out var fractionLength, maxDigits: _maxFractionDigits))
                 return TokenFailed(new NumericValueOverflowError(TokenPosition));
 
-            var fractionValue = _fractionPart / (decimal)Math.Pow(10, _fractionPart.Length());
+            var fractionValue = _fractionPart / (decimal)Math.Pow(10, fractionLength);
             return new Token<float>(_integerPart + (float)fractionValue, TokenType.FloatLiteral, TokenPosition);
         }
 
-        private bool TryBuildNumberPart(ref long partValue, long maxValue = long.MaxValue, int maxDigits = int.MaxValue)
+        private bool TryBuildNumberPart(ref long partValue, out int partLength, long maxValue = long.MaxValue, int maxDigits = int.MaxValue)
         {
-            var digits = 0;
+            partLength = 0;
 
             while (CurrentCharacter.IsAsciiDigit())
             {
                 var digitValue = CurrentCharacter!.Value - '0';
-                if (digits > maxDigits || partValue > (maxValue - digitValue) / 10)
+                if (partLength > maxDigits || partValue > (maxValue - digitValue) / 10)
                     return false;
 
                 partValue = partValue * 10 + digitValue;
-                digits++;
+                partLength++;
 
                 Source.MoveToNext();
             }
