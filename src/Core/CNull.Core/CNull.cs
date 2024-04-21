@@ -18,7 +18,7 @@ namespace CNull.Core
         private readonly IHost _host;
         private readonly IServiceScope _serviceScope;
 
-        private readonly Func<string, string> _inputCallback;
+        private readonly Func<string, string?> _inputCallback;
         private readonly Action<string> _outputCallback;
         private readonly Action<string> _errorCallback;
 
@@ -26,7 +26,7 @@ namespace CNull.Core
         private IErrorHandler ErrorHandler => _serviceScope.ServiceProvider.GetRequiredService<IErrorHandler>();
         private IInterpreter Interpreter => _serviceScope.ServiceProvider.GetRequiredService<IInterpreter>();
 
-        public CNull(Func<string, string> inputCallback, Action<string> outputCallback, Action<string> errorCallback)
+        public CNull(Func<string, string?> inputCallback, Action<string> outputCallback, Action<string> errorCallback)
         {
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;

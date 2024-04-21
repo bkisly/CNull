@@ -8,6 +8,6 @@
         /// <summary>
         /// Executes the program.
         /// </summary>
-        void Execute(Func<string, string> inputCallback, Action<string> outputCallback);
+        void Execute(Func<string, string?> inputCallback, Action<string> outputCallback);
     }
 }
