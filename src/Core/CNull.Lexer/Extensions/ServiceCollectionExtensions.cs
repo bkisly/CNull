@@ -14,6 +14,8 @@ namespace CNull.Lexer.Extensions
             services.AddSingleton<ILexerStateServicesContainer, LexerStateServicesContainer>();
             services.AddSingleton<IRawLexer, Lexer>();
             services.AddSingleton<ILexer, CommentsFilterLexerProxy>();
+
+            return services;
         }
     }
 }
