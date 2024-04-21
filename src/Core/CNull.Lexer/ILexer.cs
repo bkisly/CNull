@@ -16,4 +16,9 @@
         /// <returns></returns>
         Token GetNextToken();
     }
+
+    /// <summary>
+    /// Marker interface, which indicates a lexer that returns raw, unfiltered or unprocessed tokens.
+    /// </summary>
+    public interface IRawLexer : ILexer;
 }

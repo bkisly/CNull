@@ -9,7 +9,7 @@ using CNull.Source;
 
 namespace CNull.Lexer
 {
-    public class Lexer : ILexer
+    public class Lexer : IRawLexer
     {
         private readonly ICodeSource _source;
         private readonly ILexerStateFactory _stateFactory;
