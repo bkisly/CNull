@@ -30,7 +30,6 @@
     <ProjectReference Include="..\..\Core\CNull.Interpreter\CNull.Interpreter.csproj" />
     <ProjectReference Include="..\..\Core\CNull.Lexer\CNull.Lexer.csproj" />
     <ProjectReference Include="..\..\Core\CNull.Parser\CNull.Parser.csproj" />
-    <ProjectReference Include="..\..\Core\CNull.Semantics\CNull.Semantics.csproj" />
     <ProjectReference Include="..\UnitTests\CNull.Lexer.Tests\CNull.Lexer.Tests.csproj" />
   </ItemGroup>
 

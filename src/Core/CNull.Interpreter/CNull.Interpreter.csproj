@@ -7,9 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Common\CNull.Common\CNull.Common.csproj" />
     <ProjectReference Include="..\..\Common\CNull.ErrorHandler\CNull.ErrorHandler.csproj" />
-    <ProjectReference Include="..\CNull.Semantics\CNull.Semantics.csproj" />
+    <ProjectReference Include="..\CNull.Parser\CNull.Parser.csproj" />
   </ItemGroup>
 
 </Project>
