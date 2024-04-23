@@ -14,7 +14,7 @@ namespace CNull.Core
     /// <summary>
     /// Facade for the C? core library.
     /// </summary>
-    public class CNull : IDisposable
+    public class CNullCore : IDisposable
     {
         private readonly IHost _host;
         private readonly IServiceScope _serviceScope;
@@ -27,7 +27,13 @@ namespace CNull.Core
         private readonly IErrorHandler _errorHandler;
         private readonly IInterpreter _interpreter;
 
-        public CNull(Func<string, string?> inputCallback, Action<string> outputCallback, Action<string> errorCallback)
+        /// <summary>
+        /// <inheritdoc cref="CNullCore"/>
+        /// </summary>
+        /// <param name="inputCallback">Standard input provider. Parameter passes the string to display before requesting for input.</param>
+        /// <param name="outputCallback">Standard output provider.</param>
+        /// <param name="errorCallback">Error output provider.</param>
+        public CNullCore(Func<string, string?> inputCallback, Action<string> outputCallback, Action<string> errorCallback)
         {
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;
@@ -49,6 +55,10 @@ namespace CNull.Core
             _errorHandler.ErrorOccurred += ErrorHandler_ErrorOccurred;
         }
 
+        /// <summary>
+        /// Executes the program from the given file.
+        /// </summary>
+        /// <param name="path">Path to read the program from.</param>
         public async Task ExecuteFromFileAsync(string path) => await BeginExecutionAsync(() =>
         {
             _mediator.NotifyFileInputRequested(path);

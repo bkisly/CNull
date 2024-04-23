@@ -1,9 +1,4 @@
-﻿using var cnull = new CNull.Core.CNull(s =>
-{
-    Console.Write(s);
-    return Console.ReadLine();
-}, Console.WriteLine, Console.WriteLine);
+﻿using CNull.Core;
 
-Console.WriteLine("Hello, World!");
-
+using var cnull = new CNullCore(_ => Console.ReadLine(), Console.WriteLine, Console.WriteLine);
 await cnull.ExecuteFromFileAsync(args.FirstOrDefault() ?? string.Empty);

@@ -6,16 +6,7 @@ namespace CNull.ErrorHandler
 {
     public class ErrorHandler : IErrorHandler
     {
-        public CancellationToken CancellationToken { get; private set; }
         public event EventHandler<ErrorOccurredEventArgs>? ErrorOccurred;
-
-        private readonly CancellationTokenSource _cancellationTokenSource;
-
-        public ErrorHandler()
-        {
-            _cancellationTokenSource = new CancellationTokenSource();
-            CancellationToken = _cancellationTokenSource.Token;
-        }
 
         public void RaiseSourceError(ISourceError error)
         {
@@ -41,11 +32,6 @@ namespace CNull.ErrorHandler
         private static void FatalError()
         {
             throw new FatalErrorException("Fatal error occurred, unable to continue program execution.");
-        }
-
-        public void Dispose()
-        {
-            _cancellationTokenSource.Dispose();
         }
     }
 }

@@ -6,17 +6,12 @@ namespace CNull.ErrorHandler
     /// <summary>
     /// Provides an interface to raise errors and effectively redirect them to the user.
     /// </summary>
-    public interface IErrorHandler : IDisposable
+    public interface IErrorHandler
     {
         /// <summary>
         /// Event raised when an error occurred.
         /// </summary>
         event EventHandler<ErrorOccurredEventArgs> ErrorOccurred;
-
-        /// <summary>
-        /// Token used to cancel program execution when errors are fatal.
-        /// </summary>
-        public CancellationToken CancellationToken { get; }
 
         /// <summary>
         /// Raises an error which occurred during interacting with the source.
