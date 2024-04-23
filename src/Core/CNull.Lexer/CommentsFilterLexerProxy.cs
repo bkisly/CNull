@@ -6,7 +6,7 @@ namespace CNull.Lexer
     /// Proxy responsible for filtering out comment tokens.
     /// </summary>
     /// <param name="lexer"></param>
-    public class CommentsFilterLexerProxy(ILexer lexer) : ILexer
+    public class CommentsFilterLexerProxy(IRawLexer lexer) : ILexer
     {
         public Token? LastToken => lexer.LastToken;
 

@@ -7,7 +7,7 @@ namespace CNull.Interpreter
         public void Execute(Func<string, string?> inputCallback, Action<string> outputCallback)
         {
             parser.Parse();
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
     }
 }

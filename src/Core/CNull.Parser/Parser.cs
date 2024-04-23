@@ -1,4 +1,5 @@
 ﻿using CNull.Lexer;
+using CNull.Lexer.Constants;
 
 namespace CNull.Parser
 {
@@ -6,7 +7,10 @@ namespace CNull.Parser
     {
         public object Parse()
         {
-            throw new NotImplementedException();
+            while (lexer.LastToken is not { TokenType: TokenType.End })
+                lexer.GetNextToken();
+
+            return null;
         }
     }
 }

@@ -2,6 +2,7 @@
 using CNull.Common.Mediators;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Events.Args;
+using CNull.ErrorHandler.Exceptions;
 using CNull.ErrorHandler.Extensions;
 using CNull.Interpreter;
 using CNull.Interpreter.Extensions;
@@ -22,9 +23,9 @@ namespace CNull.Core
         private readonly Action<string> _outputCallback;
         private readonly Action<string> _errorCallback;
 
-        private ICoreComponentsMediator Mediator => _serviceScope.ServiceProvider.GetRequiredService<ICoreComponentsMediator>();
-        private IErrorHandler ErrorHandler => _serviceScope.ServiceProvider.GetRequiredService<IErrorHandler>();
-        private IInterpreter Interpreter => _serviceScope.ServiceProvider.GetRequiredService<IInterpreter>();
+        private readonly ICoreComponentsMediator _mediator;
+        private readonly IErrorHandler _errorHandler;
+        private readonly IInterpreter _interpreter;
 
         public CNull(Func<string, string?> inputCallback, Action<string> outputCallback, Action<string> errorCallback)
         {
@@ -34,27 +35,45 @@ namespace CNull.Core
 
             var builder = Host.CreateApplicationBuilder();
 
-            builder.Services.AddInterpreterServices();
-            builder.Services.AddErrorHandler();
-            builder.Services.AddCommonServices();
+            builder.Services.AddInterpreterServices()
+                .AddErrorHandler()
+                .AddCommonServices();
 
             _host = builder.Build();
             _serviceScope = _host.Services.CreateScope();
 
-            ErrorHandler.ErrorOccurred += ErrorHandler_ErrorOccurred;
+            _mediator = _serviceScope.ServiceProvider.GetRequiredService<ICoreComponentsMediator>();
+            _errorHandler = _serviceScope.ServiceProvider.GetRequiredService<IErrorHandler>();
+            _interpreter = _serviceScope.ServiceProvider.GetRequiredService<IInterpreter>();
+
+            _errorHandler.ErrorOccurred += ErrorHandler_ErrorOccurred;
         }
 
-        public void ExecuteFromFile(string path)
+        public async Task ExecuteFromFileAsync(string path) => await BeginExecutionAsync(() =>
         {
-            Mediator.NotifyFileInputRequested(path);
-            Interpreter.Execute(_inputCallback, _outputCallback);
-        }
+            _mediator.NotifyFileInputRequested(path);
+            _interpreter.Execute(_inputCallback, _outputCallback);
+        });
 
         public void Dispose()
         {
-            ErrorHandler.ErrorOccurred -= ErrorHandler_ErrorOccurred;
+            _errorHandler.ErrorOccurred -= ErrorHandler_ErrorOccurred;
             _serviceScope.Dispose();
             _host.Dispose();
+        }
+
+        private Task BeginExecutionAsync(Action executionAction)
+        {
+            try
+            {
+                executionAction.Invoke();
+            }
+            catch (FatalErrorException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return Task.CompletedTask;
         }
 
         private void ErrorHandler_ErrorOccurred(object? sender, ErrorOccurredEventArgs e)
