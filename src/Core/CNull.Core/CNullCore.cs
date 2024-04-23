@@ -55,6 +55,11 @@ namespace CNull.Core
             _errorHandler.ErrorOccurred += ErrorHandler_ErrorOccurred;
         }
 
+        private void ErrorHandler_ErrorOccurred(object? sender, ErrorOccurredEventArgs e)
+        {
+            _errorCallback.Invoke(e.Message);
+        }
+
         /// <summary>
         /// Executes the program from the given file.
         /// </summary>
@@ -65,13 +70,6 @@ namespace CNull.Core
             _interpreter.Execute(_inputCallback, _outputCallback);
         });
 
-        public void Dispose()
-        {
-            _errorHandler.ErrorOccurred -= ErrorHandler_ErrorOccurred;
-            _serviceScope.Dispose();
-            _host.Dispose();
-        }
-
         private Task BeginExecutionAsync(Action executionAction)
         {
             try
@@ -80,15 +78,21 @@ namespace CNull.Core
             }
             catch (FatalErrorException ex)
             {
-                Console.WriteLine(ex.Message);
+                _errorCallback.Invoke(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _errorCallback.Invoke($"Unexpected error occurred. Error message: {ex.Message}");
             }
 
             return Task.CompletedTask;
         }
 
-        private void ErrorHandler_ErrorOccurred(object? sender, ErrorOccurredEventArgs e)
+        public void Dispose()
         {
-            _errorCallback.Invoke(e.Message);
+            _errorHandler.ErrorOccurred -= ErrorHandler_ErrorOccurred;
+            _serviceScope.Dispose();
+            _host.Dispose();
         }
     }
 }
