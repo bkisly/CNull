@@ -6,4 +6,4 @@
 
 Console.WriteLine("Hello, World!");
 
-await cnull.ExecuteFromFileAsync(@"C:\Users\bkisl\Desktop\test.cnull");
+await cnull.ExecuteFromFileAsync(args.FirstOrDefault() ?? string.Empty);

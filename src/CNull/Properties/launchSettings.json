@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CNull": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\bkisl\\Desktop\\test.cnull"
+    }
+  }
+}
