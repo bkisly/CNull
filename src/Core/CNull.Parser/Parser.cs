@@ -1,16 +1,28 @@
 ﻿using CNull.Lexer;
 using CNull.Lexer.Constants;
+using CNull.Parser.Productions;
 
 namespace CNull.Parser
 {
-    public class Parser(ILexer lexer) : IParser
+    public class Parser : IParser
     {
-        public object Parse()
+        private readonly ILexer _lexer;
+        private Token _currentToken = null!;
+
+        public Parser(ILexer lexer)
         {
-            while (lexer.LastToken is not { TokenType: TokenType.End })
-                lexer.GetNextToken();
+            _lexer = lexer;
+            ConsumeToken();
+        }
+
+        public Program Parse()
+        {
+            while (_lexer.LastToken is not { TokenType: TokenType.End })
+                _lexer.GetNextToken();
 
             return null;
         }
+
+        private void ConsumeToken() => _currentToken = _lexer.GetNextToken();
     }
 }

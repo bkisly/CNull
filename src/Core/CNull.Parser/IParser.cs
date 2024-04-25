@@ -1,4 +1,6 @@
-﻿namespace CNull.Parser
+﻿using CNull.Parser.Productions;
+
+namespace CNull.Parser
 {
     /// <summary>
     /// Represents a syntactic analyser of C? programs.
@@ -9,6 +11,6 @@
         /// Parses the program.
         /// </summary>
         /// <returns></returns>
-        object Parse();
+        Program Parse();
     }
 }

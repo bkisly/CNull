@@ -16,4 +16,8 @@
     <ProjectReference Include="..\CNull.Lexer\CNull.Lexer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Errors\" />
+  </ItemGroup>
+
 </Project>
