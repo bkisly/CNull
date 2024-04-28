@@ -17,7 +17,16 @@
     /// Syntactic production which represents a definition of the function.
     /// </summary>
     /// <param name="ReturnType">The return type of the function.</param>
-    /// <param name="Name"></param>
-    /// <param name="Parameters"></param>
-    public record FunctionDefinition(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters);
+    /// <param name="Name">The name of the function.</param>
+    /// <param name="Parameters">Parameters list.</param>
+    /// <param name="FunctionBody">Block statement, which is the body of the function.</param>
+    public record FunctionDefinition(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters,
+        BlockStatement FunctionBody);
+
+    /// <summary>
+    /// Syntactic production that represents a parameter.
+    /// </summary>
+    /// <param name="Type">Type of the parameter.</param>
+    /// <param name="Name">Name of the parameter.</param>
+    public record Parameter(IDeclarableType Type, string Name);
 }
