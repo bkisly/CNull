@@ -17,14 +17,14 @@
     /// <param name="Type">Type of the variable.</param>
     /// <param name="Name">Name of the variable.</param>
     /// <param name="InitializationExpression">Expression which returns a value to initialize the variable.</param>
-    public record VariableDeclaration(IDeclarableType Type, string Name, IExpression? InitializationExpression) : IBasicStatement;
+    public record VariableDeclaration(IDeclarableType Type, string Name, IExpression? InitializationExpression = null) : IBasicStatement;
 
     /// <summary>
     /// Syntactic production which represents an expression encapsulated into a statement with optional assignment.
     /// </summary>
     /// <param name="Expression">Basic expression of the statement.</param>
     /// <param name="AssignmentValue">Value to assign.</param>
-    public record ExpressionStatement(IExpression Expression, IExpression? AssignmentValue) : IBasicStatement;
+    public record ExpressionStatement(IExpression Expression, IExpression? AssignmentValue = null) : IBasicStatement;
 
     /// <summary>
     /// Syntactic production which recursively represents the if-else statement.

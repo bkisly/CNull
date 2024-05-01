@@ -86,18 +86,19 @@ namespace CNull.Parser
         }
 
         /// <summary>
-        /// Helper method that validates and builds an identifier.
+        /// Helper method that extracts the value from the current token, after successful token type validation.
         /// </summary>
-        private string ParseIdentifier(Token token)
+        private T ExtractValueFromCurrentToken<T>(TokenType expectedTokenType)
         {
-            ValidateCurrentToken(TokenType.Identifier, null!);
+            ValidateCurrentToken(expectedTokenType, null!);
 
-            var identifier = (token as Token<string>)?.Value;
+            var value = _currentToken as Token<T>;
 
-            if (string.IsNullOrEmpty(identifier))
+            if (value == null)
                 RaiseFactoryError(null!);
-
-            return identifier!;
+            
+            ConsumeToken();
+            return value!.Value;
         }
 
         #endregion
@@ -112,11 +113,8 @@ namespace CNull.Parser
             ValidateCurrentToken(TokenType.ImportKeyword, null!);
             ConsumeToken();
 
-            var moduleName = ParseIdentifier(_currentToken);
-            ConsumeToken();
-
-            var functionName = ParseIdentifier(_currentToken);
-            ConsumeToken();
+            var moduleName = ExtractValueFromCurrentToken<string>(TokenType.Identifier);
+            var functionName = ExtractValueFromCurrentToken<string>(TokenType.Identifier);
 
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
             ConsumeToken();
@@ -130,7 +128,7 @@ namespace CNull.Parser
         private FunctionDefinition? ParseFunctionDefinition() => BuilderWrapper<FunctionDefinition?>(() =>
         {
             var returnType = ParseReturnType();
-            var identifier = ParseIdentifier(_currentToken);
+            var identifier = ExtractValueFromCurrentToken<string>(TokenType.Identifier);
 
             ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
             ConsumeToken();
@@ -223,7 +221,7 @@ namespace CNull.Parser
                     RaiseFactoryError(null!);
 
                 var type = ParseDeclarableType();
-                var identifier = ParseIdentifier(_currentToken);
+                var identifier = ExtractValueFromCurrentToken<string>(TokenType.Identifier);
 
                 expectNewParameter = _currentToken.TokenType == TokenType.CommaOperator;
                 parameters.Add(new Parameter(type, identifier));
@@ -256,7 +254,7 @@ namespace CNull.Parser
         });
 
         /// <summary>
-        /// EBNF: <c>basicStatement = ifStatement | whileStatement | 'continue', ';' | 'break', ';' | tryStatement | 'throw', stringLiteral, ';' | expression, ';';</c>
+        /// EBNF: <c>basicStatement = ifStatement | whileStatement | 'continue', ';' | 'break', ';' | tryStatement | 'throw', stringLiteral, ';' | expressionStatement;</c>
         /// </summary>
         private IBasicStatement? ParseBasicStatement() => BuilderWrapper<IBasicStatement?>(() =>
         {
@@ -266,6 +264,8 @@ namespace CNull.Parser
                 TokenType.WhileKeyword => ParseWhileStatement(),
                 TokenType.ContinueKeyword => ParseSingleLineStatement(() => new ContinueStatement()),
                 TokenType.BreakKeyword => ParseSingleLineStatement(() => new BreakStatement()),
+                TokenType.ThrowKeyword => ParseThrowStatement(),
+                TokenType.TryKeyword => ParseTryStatement(),
                 _ => null
             };
 
@@ -292,22 +292,160 @@ namespace CNull.Parser
             return statement;
         }
 
+        /// <summary>
+        /// EBNF: <c>ifStatement = 'if', '(', expression, ')', blockStatement, [ 'else', ( ifStatement | blockStatement ) ];</c>
+        /// </summary>
         private IfStatement? ParseIfStatement() => BuilderWrapper<IfStatement?>(() =>
         {
-            throw new NotImplementedException();
+            ValidateCurrentToken(TokenType.IfKeyword, null!);
+            ConsumeToken();
+
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
+            ConsumeToken();
+
+            var expression = ParseExpression();
+
+            ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
+            ConsumeToken();
+
+            var body = ParseBlockStatement();
+            BlockStatement? elseBlock = null;
+            IfStatement? elseIfStatement = null;
+
+            if (_currentToken.TokenType == TokenType.ElseKeyword)
+            {
+                ConsumeToken();
+
+                if (_currentToken.TokenType == TokenType.IfKeyword)
+                    elseIfStatement = ParseIfStatement();
+
+                elseBlock = ParseBlockStatement();
+            }
+
+            return new IfStatement(expression, body, elseIfStatement, elseBlock);
         });
 
+        /// <summary>
+        /// EBNF: <c>whileStatement = 'while', '(', expression, ')', blockStatement;</c>
+        /// </summary>
         private WhileStatement? ParseWhileStatement() => BuilderWrapper<WhileStatement?>(() =>
         {
-            throw new NotImplementedException();
+            ValidateCurrentToken(TokenType.WhileKeyword, null!);
+            ConsumeToken();
+            
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
+            ConsumeToken();
+
+            var expression = ParseExpression();
+
+            ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
+            ConsumeToken();
+
+            var body = ParseBlockStatement();
+            return new WhileStatement(expression, body);
         });
 
+        /// <summary>
+        /// EBNF: <c>variableDeclaration = typeName, identifier, [ '=', expression ], ';';</c>
+        /// </summary>
         private VariableDeclaration? ParseVariableDeclaration() => BuilderWrapper<VariableDeclaration?>(() =>
         {
-            throw new NotImplementedException();
+            var type = ParseDeclarableType();
+            var identifier = ExtractValueFromCurrentToken<string>(TokenType.Identifier);
+
+            if (_currentToken.TokenType != TokenType.AssignmentOperator)
+                return new VariableDeclaration(type, identifier);
+
+            ConsumeToken();
+            var initializationExpression = ParseExpression();
+
+            return new VariableDeclaration(type, identifier, initializationExpression);
         });
 
+        /// <summary>
+        /// EBNF: <c>expressionStatement = expression, [ '=', expression ], ';'</c>
+        /// </summary>
         private ExpressionStatement? ParseExpressionStatement() => BuilderWrapper<ExpressionStatement?>(() =>
+        {
+            var expression = ParseExpression();
+
+            if (_currentToken.TokenType != TokenType.AssignmentOperator)
+                return new ExpressionStatement(expression);
+
+            ConsumeToken();
+            var initializationExpression = ParseExpression();
+
+            return new ExpressionStatement(expression, initializationExpression);
+        });
+
+        /// <summary>
+        /// EBNF: <c>throwStatement = 'throw', stringLiteral, ';'</c>
+        /// </summary>
+        private ThrowStatement? ParseThrowStatement() => BuilderWrapper<ThrowStatement?>(() =>
+        {
+            ValidateCurrentToken(TokenType.ThrowKeyword, null!);
+            ConsumeToken();
+
+            ValidateCurrentToken(TokenType.StringLiteral, null!);
+            var message = ExtractValueFromCurrentToken<string>(TokenType.StringLiteral);
+
+            return new ThrowStatement(message);
+        });
+
+        /// <summary>
+        /// EBNF: <c>tryStatement = 'try', blockStatement, catchClause, { catchClause };</c>
+        /// </summary>
+        private TryStatement? ParseTryStatement() => BuilderWrapper<TryStatement?>(() =>
+        {
+            ValidateCurrentToken(TokenType.TryKeyword, null!);
+            ConsumeToken();
+
+            var body = ParseBlockStatement();
+            var catchClauses = new List<CatchClause>();
+
+            while (ParseCatchClause() is { } catchClause)
+                catchClauses.Add(catchClause);
+
+            if (catchClauses.Count == 0)
+                RaiseFactoryError(null!);
+
+            return new TryStatement(body, catchClauses);
+        });
+
+        /// <summary>
+        /// EBNF: <c>catchClause = 'catch', '(', identifier, [ expression ] ')', blockStatement;</c>
+        /// </summary>
+        private CatchClause? ParseCatchClause() => BuilderWrapper<CatchClause?>(() =>
+        {
+            ValidateCurrentToken(TokenType.CatchKeyword, null!);
+            ConsumeToken();
+
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
+            ConsumeToken();
+
+            var identifier = ExtractValueFromCurrentToken<string>(TokenType.Identifier);
+            ConsumeToken();
+
+            IExpression? filterExpression = null;
+
+            if (_currentToken.TokenType == TokenType.RightParenthesisOperator)
+                ConsumeToken();
+            else
+            {
+                filterExpression = ParseExpression();
+                ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
+                ConsumeToken();
+            }
+
+            var body = ParseBlockStatement();
+            return new CatchClause(identifier, filterExpression, body);
+        });
+
+        #endregion
+
+        #region Expressions builders
+
+        private IExpression? ParseExpression() => BuilderWrapper<IExpression?>(() =>
         {
             throw new NotImplementedException();
         });
