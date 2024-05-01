@@ -2,7 +2,9 @@
 using CNull.ErrorHandler.Errors;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
+using CNull.Parser.Enums;
 using CNull.Parser.Exceptions;
+using CNull.Parser.Extensions;
 using CNull.Parser.Productions;
 
 namespace CNull.Parser
@@ -45,11 +47,11 @@ namespace CNull.Parser
         /// <typeparam name="T">Type of the production to build.</typeparam>
         /// <param name="productionFactory">Factory method of the production.</param>
         /// <returns>The build production.</returns>
-        private static T? BuilderWrapper<T>(Func<T?> productionFactory) where T : class?
+        private T? BuilderWrapper<T>(Func<T?> productionFactory) where T : class?
         {
             try
             {
-                return productionFactory.Invoke();
+                return _currentToken.TokenType == TokenType.End ? null : productionFactory.Invoke();
             }
             catch (UnexpectedTokenException)
             {
@@ -58,15 +60,14 @@ namespace CNull.Parser
         }
 
         /// <summary>
-        /// Checks if the given token matches the expected type.
+        /// Checks if the current token matches the expected type.
         /// </summary>
-        /// <param name="token">Token to validate.</param>
         /// <param name="expectedType">Expected token type.</param>
         /// <param name="errorToThrow">Error to be passed to the error handler.</param>
         /// <exception cref="UnexpectedTokenException">Thrown when the type of the token doesn't match the expected type.</exception>
-        private void ValidateToken(Token token, TokenType expectedType, ICompilationError errorToThrow)
+        private void ValidateCurrentToken(TokenType expectedType, ICompilationError errorToThrow)
         {
-            if (token.TokenType == expectedType)
+            if (_currentToken.TokenType == expectedType)
                 return;
 
             RaiseFactoryError(errorToThrow);
@@ -81,6 +82,25 @@ namespace CNull.Parser
             throw new UnexpectedTokenException();
         }
 
+        /// <summary>
+        /// Helper method that validates and builds an identifier.
+        /// </summary>
+        private string ParseIdentifier(Token token)
+        {
+            ValidateCurrentToken(TokenType.Identifier, null!);
+
+            var identifier = (token as Token<string>)?.Value;
+
+            if (!string.IsNullOrEmpty(identifier))
+            {
+                ConsumeToken();
+                return identifier;
+            }
+
+            RaiseFactoryError(null!);
+            return null!;
+        }
+
         #endregion
 
         #region Top level productions builders
@@ -91,28 +111,19 @@ namespace CNull.Parser
         /// <returns></returns>
         private ImportDirective? ParseImportDirective() => BuilderWrapper<ImportDirective?>(() =>
         {
-            ValidateToken(_currentToken, TokenType.ImportKeyword, null!);
-            ConsumeToken();
-            ValidateToken(_currentToken, TokenType.Identifier, null!);
-
-            var moduleName = (_currentToken as Token<string>)?.Value;
+            ValidateCurrentToken(TokenType.ImportKeyword, null!);
             ConsumeToken();
 
-            ValidateToken(_currentToken, TokenType.Identifier, null!);
-
-            var functionName = (_currentToken as Token<string>)?.Value;
+            var moduleName = ParseIdentifier(_currentToken);
             ConsumeToken();
 
-            ValidateToken(_currentToken, TokenType.SemicolonOperator, null!);
+            var functionName = ParseIdentifier(_currentToken);
             ConsumeToken();
 
-            if (moduleName is not null && functionName is not null)
-                return new ImportDirective(moduleName, functionName);
+            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+            ConsumeToken();
 
-            // @TODO: invalid method path
-            _errorHandler.RaiseCompilationError(null!);
-            return null;
-
+            return new ImportDirective(moduleName, functionName);
         });
 
         /// <summary>
@@ -122,24 +133,14 @@ namespace CNull.Parser
         private FunctionDefinition? ParseFunctionDefinition() => BuilderWrapper<FunctionDefinition?>(() =>
         {
             var returnType = ParseReturnType();
+            var identifier = ParseIdentifier(_currentToken);
 
-            ValidateToken(_currentToken, TokenType.Identifier, null!);
-            var identifier = (_currentToken as Token<string>)?.Value;
-
-            if (string.IsNullOrEmpty(identifier))
-            {
-                _errorHandler.RaiseCompilationError(null!);
-                throw new UnexpectedTokenException();
-            }
-
-            ConsumeToken();
-
-            ValidateToken(_currentToken, TokenType.LeftParenthesisOperator, null!);
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
             ConsumeToken();
 
             var parameters = ParseParametersList();
             
-            ValidateToken(_currentToken, TokenType.RightParenthesisOperator, null!);
+            ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
             ConsumeToken();
 
             var functionBody = ParseBlockStatement();
@@ -153,19 +154,127 @@ namespace CNull.Parser
 
         private ReturnType? ParseReturnType() => BuilderWrapper<ReturnType?>(() =>
         {
+            if (!_currentToken.TokenType.IsReturnType())
+                RaiseFactoryError(null!);
+
+            return _currentToken.TokenType switch
+            {
+                TokenType.VoidKeyword => new ReturnType(),
+                TokenType.DictKeyword => ParseDictionaryType(),
+                _ => new PrimitiveType((PrimitiveTypes)_currentToken.TokenType)
+            };
+        });
+
+        private DictionaryType? ParseDictionaryType() => BuilderWrapper<DictionaryType?>(() =>
+        {
+            ValidateCurrentToken(TokenType.DictKeyword, null!);
+            ConsumeToken();
+
+            ValidateCurrentToken(TokenType.LessThanOperator, null!);
+            ConsumeToken();
+
+            if(!_currentToken.TokenType.IsPrimitiveType())
+                RaiseFactoryError(null!);
+
+            var keyType = new PrimitiveType((PrimitiveTypes)_currentToken.TokenType);
+            ConsumeToken();
+
+            ValidateCurrentToken(TokenType.CommaOperator, null!);
+            ConsumeToken();
+
+            if (!_currentToken.TokenType.IsPrimitiveType())
+                RaiseFactoryError(null!);
+
+            var valueType = new PrimitiveType((PrimitiveTypes)_currentToken.TokenType);
+            ConsumeToken();
+
+            return new DictionaryType(keyType, valueType);
+        });
+
+        private IDeclarableType? ParseDeclarableType() => BuilderWrapper<IDeclarableType?>(() =>
+        {
             throw new NotImplementedException();
         });
 
         private IEnumerable<Parameter>? ParseParametersList() => BuilderWrapper<IEnumerable<Parameter>?>(() =>
         {
-            throw new NotImplementedException();
+            var parameters = new List<Parameter>();
+            var expectNewParameter = true;
+
+            while (expectNewParameter)
+            {
+                if(!_currentToken.TokenType.IsDeclarableType())
+                    RaiseFactoryError(null!);
+
+                var type = ParseDeclarableType();
+                var identifier = ParseIdentifier(_currentToken);
+
+                expectNewParameter = _currentToken.TokenType == TokenType.CommaOperator;
+                parameters.Add(new Parameter(type, identifier));
+            }
+
+            return parameters;
         });
 
         #endregion
 
         #region Statements builders
 
+        /// <summary>
+        /// EBNF: <c>blockStatement = '{', { basicStatement }, '}';</c>
+        /// </summary>
         private BlockStatement? ParseBlockStatement() => BuilderWrapper<BlockStatement?>(() =>
+        {
+            ValidateCurrentToken(TokenType.OpenBlockOperator, null!);
+            ConsumeToken();
+
+            var statementsList = new List<IBasicStatement>();
+
+            while (ParseBasicStatement() is { } statement)
+                statementsList.Add(statement);
+
+            ValidateCurrentToken(TokenType.CloseBlockOperator, null!);
+            ConsumeToken();
+
+            return new BlockStatement(statementsList);
+        });
+
+        private IBasicStatement? ParseBasicStatement() => BuilderWrapper<IBasicStatement?>(() =>
+        {
+            IBasicStatement? statement = _currentToken.TokenType switch
+            {
+                TokenType.IfKeyword => ParseIfStatement(),
+                TokenType.WhileKeyword => ParseWhileStatement(),
+                TokenType.ContinueKeyword => new ContinueStatement(),
+                TokenType.BreakKeyword => new BreakStatement(),
+                _ => null
+            };
+
+            if (statement != null)
+                return statement;
+
+            if (_currentToken.TokenType.IsDeclarableType())
+                return ParseVariableDeclaration();
+
+            return ParseExpressionStatement();
+        });
+
+        private IfStatement? ParseIfStatement() => BuilderWrapper<IfStatement?>(() =>
+        {
+            throw new NotImplementedException();
+        });
+
+        private WhileStatement? ParseWhileStatement() => BuilderWrapper<WhileStatement?>(() =>
+        {
+            throw new NotImplementedException();
+        });
+
+        private VariableDeclaration? ParseVariableDeclaration() => BuilderWrapper<VariableDeclaration?>(() =>
+        {
+            throw new NotImplementedException();
+        });
+
+        private ExpressionStatement? ParseExpressionStatement() => BuilderWrapper<ExpressionStatement?>(() =>
         {
             throw new NotImplementedException();
         });
