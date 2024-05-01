@@ -254,7 +254,8 @@ namespace CNull.Parser
         });
 
         /// <summary>
-        /// EBNF: <c>basicStatement = ifStatement | whileStatement | 'continue', ';' | 'break', ';' | tryStatement | 'throw', stringLiteral, ';' | expressionStatement;</c>
+        /// EBNF: <c>basicStatement = ifStatement | whileStatement | 'continue', ';' | 'break', ';' | tryStatement |
+        /// throwStatement | expressionStatement | returnStatement;</c>
         /// </summary>
         private IBasicStatement? ParseBasicStatement() => BuilderWrapper<IBasicStatement?>(() =>
         {
@@ -264,8 +265,9 @@ namespace CNull.Parser
                 TokenType.WhileKeyword => ParseWhileStatement(),
                 TokenType.ContinueKeyword => ParseSingleLineStatement(() => new ContinueStatement()),
                 TokenType.BreakKeyword => ParseSingleLineStatement(() => new BreakStatement()),
-                TokenType.ThrowKeyword => ParseThrowStatement(),
+                TokenType.ThrowKeyword => ParseSingleLineStatement(ParseThrowStatement),
                 TokenType.TryKeyword => ParseTryStatement(),
+                TokenType.ReturnKeyword => ParseSingleLineStatement(ParseReturnStatement),
                 _ => null
             };
 
@@ -439,6 +441,18 @@ namespace CNull.Parser
 
             var body = ParseBlockStatement();
             return new CatchClause(identifier, filterExpression, body);
+        });
+
+        /// <summary>
+        /// EBNF: <c>returnStatement = 'return', expression, ';';</c>
+        /// </summary>
+        private ReturnStatement? ParseReturnStatement() => BuilderWrapper<ReturnStatement?>(() =>
+        {
+            ValidateCurrentToken(TokenType.ReturnKeyword, null!);
+            ConsumeToken();
+
+            var expression = ParseExpression();
+            return new ReturnStatement(expression);
         });
 
         #endregion
