@@ -39,6 +39,9 @@ namespace CNull.Parser
 
         #region Common methods
 
+        /// <summary>
+        /// Loads the next available token.
+        /// </summary>
         private void ConsumeToken() => _currentToken = _lexer.GetNextToken();
 
         /// <summary>
@@ -91,14 +94,10 @@ namespace CNull.Parser
 
             var identifier = (token as Token<string>)?.Value;
 
-            if (!string.IsNullOrEmpty(identifier))
-            {
-                ConsumeToken();
-                return identifier;
-            }
+            if (string.IsNullOrEmpty(identifier))
+                RaiseFactoryError(null!);
 
-            RaiseFactoryError(null!);
-            return null!;
+            return identifier!;
         }
 
         #endregion
@@ -108,7 +107,6 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>importDirective = 'import', identifier, '.', identifier;</c>  
         /// </summary>
-        /// <returns></returns>
         private ImportDirective? ParseImportDirective() => BuilderWrapper<ImportDirective?>(() =>
         {
             ValidateCurrentToken(TokenType.ImportKeyword, null!);
@@ -129,7 +127,6 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>functionDefinition = typeName, identifier, '(', [ parameter ], ')', blockStatement;</c>
         /// </summary>
-        /// <returns></returns>
         private FunctionDefinition? ParseFunctionDefinition() => BuilderWrapper<FunctionDefinition?>(() =>
         {
             var returnType = ParseReturnType();
@@ -149,9 +146,12 @@ namespace CNull.Parser
         });
 
         #endregion
-
+        
         #region Types and parameters builders
 
+        /// <summary>
+        /// EBNF: <c>returnType = 'void' | typeName;</c>
+        /// </summary>
         private ReturnType? ParseReturnType() => BuilderWrapper<ReturnType?>(() =>
         {
             if (!_currentToken.TokenType.IsReturnType())
@@ -165,6 +165,9 @@ namespace CNull.Parser
             };
         });
 
+        /// <summary>
+        /// EBNF: <c>dictType = 'dict', '&lt;', primitiveType, ',', primitiveType, '&gt;';</c>
+        /// </summary>
         private DictionaryType? ParseDictionaryType() => BuilderWrapper<DictionaryType?>(() =>
         {
             ValidateCurrentToken(TokenType.DictKeyword, null!);
@@ -191,11 +194,24 @@ namespace CNull.Parser
             return new DictionaryType(keyType, valueType);
         });
 
+        /// <summary>
+        /// EBNF: <c>typeName = primitiveType | dictType;</c>
+        /// </summary>
         private IDeclarableType? ParseDeclarableType() => BuilderWrapper<IDeclarableType?>(() =>
         {
-            throw new NotImplementedException();
-        });
+            if (_currentToken.TokenType == TokenType.DictKeyword)
+                return ParseDictionaryType();
 
+            if (!_currentToken.TokenType.IsPrimitiveType())
+                RaiseFactoryError(null!);
+
+            ConsumeToken();
+            return new PrimitiveType((PrimitiveTypes)_currentToken.TokenType);
+        });
+        
+        /// <summary>
+        /// EBNF: <c>parametersList = [ typeName, identifier, { ',', typeName, identifier } ];</c>
+        /// </summary>
         private IEnumerable<Parameter>? ParseParametersList() => BuilderWrapper<IEnumerable<Parameter>?>(() =>
         {
             var parameters = new List<Parameter>();
@@ -203,7 +219,7 @@ namespace CNull.Parser
 
             while (expectNewParameter)
             {
-                if(!_currentToken.TokenType.IsDeclarableType())
+                if (!_currentToken.TokenType.IsDeclarableType())
                     RaiseFactoryError(null!);
 
                 var type = ParseDeclarableType();
@@ -239,25 +255,42 @@ namespace CNull.Parser
             return new BlockStatement(statementsList);
         });
 
+        /// <summary>
+        /// EBNF: <c>basicStatement = ifStatement | whileStatement | 'continue', ';' | 'break', ';' | tryStatement | 'throw', stringLiteral, ';' | expression, ';';</c>
+        /// </summary>
         private IBasicStatement? ParseBasicStatement() => BuilderWrapper<IBasicStatement?>(() =>
         {
-            IBasicStatement? statement = _currentToken.TokenType switch
+            var statement = _currentToken.TokenType switch
             {
                 TokenType.IfKeyword => ParseIfStatement(),
                 TokenType.WhileKeyword => ParseWhileStatement(),
-                TokenType.ContinueKeyword => new ContinueStatement(),
-                TokenType.BreakKeyword => new BreakStatement(),
+                TokenType.ContinueKeyword => ParseSingleLineStatement(() => new ContinueStatement()),
+                TokenType.BreakKeyword => ParseSingleLineStatement(() => new BreakStatement()),
                 _ => null
             };
 
             if (statement != null)
                 return statement;
 
-            if (_currentToken.TokenType.IsDeclarableType())
-                return ParseVariableDeclaration();
-
-            return ParseExpressionStatement();
+            return _currentToken.TokenType.IsDeclarableType() 
+                ? ParseSingleLineStatement(ParseVariableDeclaration)
+                : ParseSingleLineStatement(ParseExpressionStatement);
         });
+
+        /// <summary>
+        /// Wrapper method which ensures that single line statements end with a semicolon.
+        /// </summary>
+        /// <param name="statementFactory">Factory method for a statement.</param>
+        /// <returns>The parsed statement.</returns>
+        private IBasicStatement? ParseSingleLineStatement(Func<IBasicStatement?> statementFactory)
+        {
+            var statement = statementFactory.Invoke();
+
+            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+            ConsumeToken();
+
+            return statement;
+        }
 
         private IfStatement? ParseIfStatement() => BuilderWrapper<IfStatement?>(() =>
         {
