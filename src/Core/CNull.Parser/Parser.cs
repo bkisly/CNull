@@ -95,7 +95,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>importDirective = 'import', identifier, '.', identifier;</c>  
         /// </summary>
-        private ImportDirective? ParseImportDirective()
+        private ImportDirective ParseImportDirective()
         {
             ValidateCurrentToken(TokenType.ImportKeyword, null!);
 
@@ -109,7 +109,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>functionDefinition = typeName, identifier, '(', [ parameter ], ')', blockStatement;</c>
         /// </summary>
-        private FunctionDefinition? ParseFunctionDefinition()
+        private FunctionDefinition ParseFunctionDefinition()
         {
             var returnType = ParseReturnType();
             var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
@@ -129,7 +129,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>returnType = 'void' | typeName;</c>
         /// </summary>
-        private ReturnType? ParseReturnType()
+        private ReturnType ParseReturnType()
         {
             if (!_currentToken.TokenType.IsReturnType())
                 RaiseFactoryError(null!);
@@ -145,7 +145,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>dictType = 'dict', '&lt;', primitiveType, ',', primitiveType, '&gt;';</c>
         /// </summary>
-        private DictionaryType? ParseDictionaryType()
+        private DictionaryType ParseDictionaryType()
         {
             ValidateCurrentToken(TokenType.DictKeyword, null!);
             ValidateCurrentToken(TokenType.LessThanOperator, null!);
@@ -170,7 +170,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>typeName = primitiveType | dictType;</c>
         /// </summary>
-        private IDeclarableType? ParseDeclarableType()
+        private IDeclarableType ParseDeclarableType()
         {
             if (_currentToken.TokenType == TokenType.DictKeyword)
                 return ParseDictionaryType();
@@ -186,7 +186,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>parametersList = [ parameter, { ',', parameter } ];</c>
         /// </summary>
-        private IEnumerable<Parameter>? ParseParametersList()
+        private IEnumerable<Parameter> ParseParametersList()
         {
             var parameters = new List<Parameter>();
 
@@ -230,7 +230,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>blockStatement = '{', { basicStatement }, '}';</c>
         /// </summary>
-        private BlockStatement? ParseBlockStatement()
+        private BlockStatement ParseBlockStatement()
         {
             ValidateCurrentToken(TokenType.OpenBlockOperator, null!);
             var statementsList = new List<IBasicStatement>();
@@ -271,7 +271,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>ifStatement = 'if', '(', expression, ')', blockStatement, [ 'else', ( ifStatement | blockStatement ) ];</c>
         /// </summary>
-        private IfStatement? ParseIfStatement()
+        private IfStatement ParseIfStatement()
         {
             ValidateCurrentToken(TokenType.IfKeyword, null!);
 
@@ -299,7 +299,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>whileStatement = 'while', '(', expression, ')', blockStatement;</c>
         /// </summary>
-        private WhileStatement? ParseWhileStatement()
+        private WhileStatement ParseWhileStatement()
         {
             ValidateCurrentToken(TokenType.WhileKeyword, null!);
 
@@ -314,7 +314,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>variableDeclaration = typeName, identifier, [ '=', expression ], ';';</c>
         /// </summary>
-        private VariableDeclaration? ParseVariableDeclaration()
+        private VariableDeclaration ParseVariableDeclaration()
         {
             var type = ParseDeclarableType();
             var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
@@ -335,7 +335,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>expressionStatement = expression, [ '=', expression ], ';'</c>
         /// </summary>
-        private ExpressionStatement? ParseExpressionStatement()
+        private ExpressionStatement ParseExpressionStatement()
         {
             var expression = ParseExpression();
 
@@ -355,7 +355,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>continueStatement = 'continue', ';';</c>
         /// </summary>
-        private ContinueStatement? ParseContinueStatement()
+        private ContinueStatement ParseContinueStatement()
         {
             ValidateCurrentToken(TokenType.ContinueKeyword, null!);
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
@@ -365,7 +365,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>breakStatement = 'break', ';';</c>
         /// </summary>
-        private BreakStatement? ParseBreakStatement()
+        private BreakStatement ParseBreakStatement()
         {
             ValidateCurrentToken(TokenType.BreakKeyword, null!);
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
@@ -375,7 +375,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>throwStatement = 'throw', stringLiteral, ';'</c>
         /// </summary>
-        private ThrowStatement? ParseThrowStatement()
+        private ThrowStatement ParseThrowStatement()
         {
             ValidateCurrentToken(TokenType.ThrowKeyword, null!);
             var message = ValidateCurrentToken<string>(TokenType.StringLiteral, null!);
@@ -387,7 +387,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>tryStatement = 'try', blockStatement, catchClause, { catchClause };</c>
         /// </summary>
-        private TryStatement? ParseTryStatement()
+        private TryStatement ParseTryStatement()
         {
             ValidateCurrentToken(TokenType.TryKeyword, null!);
 
@@ -433,7 +433,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>returnStatement = 'return', expression, ';';</c>
         /// </summary>
-        private ReturnStatement? ParseReturnStatement()
+        private ReturnStatement ParseReturnStatement()
         {
             ValidateCurrentToken(TokenType.ReturnKeyword, null!);
             ConsumeToken();
@@ -447,7 +447,7 @@ namespace CNull.Parser
 
         #region Expressions builders
 
-        private IExpression? ParseExpression()
+        private IExpression ParseExpression()
         {
             throw new NotImplementedException();
         }
