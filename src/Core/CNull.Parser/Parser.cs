@@ -442,7 +442,6 @@ namespace CNull.Parser
             {
                 filterExpression = ParseExpression();
                 ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
-                ConsumeToken();
             }
 
             var body = ParseBlockStatement();
@@ -456,10 +455,9 @@ namespace CNull.Parser
         private ReturnStatement ParseReturnStatement()
         {
             ValidateCurrentToken(TokenType.ReturnKeyword, null!);
-            ConsumeToken();
-
             var expression = ParseExpression();
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+
             return new ReturnStatement(expression);
         }
 
