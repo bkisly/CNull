@@ -56,7 +56,7 @@ namespace CNull.Parser
         /// </summary>
         /// <param name="expectedType">Expected token type.</param>
         /// <param name="errorToThrow">Error to be passed to the error handler.</param>
-        /// <exception cref="UnexpectedTokenException">Thrown when the type of the token doesn't match the expected type.</exception>
+        /// <exception cref="UnexpectedTokenException"/>
         private void ValidateCurrentToken(TokenType expectedType, ICompilationError errorToThrow)
         {
             if (_currentToken.TokenType != expectedType)
@@ -69,6 +69,7 @@ namespace CNull.Parser
         /// Checks if the current token matches the expected type and extracts the value from the token, accordingly to the given type.
         /// </summary>
         /// <returns>The value extracted from the token.</returns>
+        /// <exception cref="UnexpectedTokenException"/>
         private T ValidateCurrentToken<T>(TokenType expectedType, ICompilationError errorToThrow)
         {
             if (_currentToken.TokenType != expectedType)
@@ -82,6 +83,7 @@ namespace CNull.Parser
         /// <summary>
         /// Raises an error during creation of a syntactic production.
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private void RaiseFactoryError(ICompilationError errorToThrow)
         {
             _errorHandler.RaiseCompilationError(errorToThrow);
@@ -95,6 +97,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>importDirective = 'import', identifier, '.', identifier;</c>  
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private ImportDirective ParseImportDirective()
         {
             ValidateCurrentToken(TokenType.ImportKeyword, null!);
@@ -109,6 +112,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>functionDefinition = typeName, identifier, '(', [ parameter ], ')', blockStatement;</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private FunctionDefinition ParseFunctionDefinition()
         {
             var returnType = ParseReturnType();
@@ -123,12 +127,13 @@ namespace CNull.Parser
         }
 
         #endregion
-        
+
         #region Types and parameters builders
 
         /// <summary>
         /// EBNF: <c>returnType = 'void' | typeName;</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private ReturnType ParseReturnType()
         {
             if (!_currentToken.TokenType.IsReturnType())
@@ -145,6 +150,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>dictType = 'dict', '&lt;', primitiveType, ',', primitiveType, '&gt;';</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private DictionaryType ParseDictionaryType()
         {
             ValidateCurrentToken(TokenType.DictKeyword, null!);
@@ -170,6 +176,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>typeName = primitiveType | dictType;</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private IDeclarableType ParseDeclarableType()
         {
             if (_currentToken.TokenType == TokenType.DictKeyword)
@@ -182,10 +189,11 @@ namespace CNull.Parser
             ConsumeToken();
             return new PrimitiveType(type);
         }
-        
+
         /// <summary>
         /// EBNF: <c>parametersList = [ parameter, { ',', parameter } ];</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private IEnumerable<Parameter> ParseParametersList()
         {
             var parameters = new List<Parameter>();
@@ -212,7 +220,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>parameter = typeName, identifier;</c>
         /// </summary>
-        /// <returns></returns>
+        /// <exception cref="UnexpectedTokenException"/>
         private Parameter? ParseParameter()
         {
             if (!_currentToken.TokenType.IsDeclarableType())
@@ -230,6 +238,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>blockStatement = '{', { basicStatement }, '}';</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private BlockStatement ParseBlockStatement()
         {
             ValidateCurrentToken(TokenType.OpenBlockOperator, null!);
@@ -246,6 +255,7 @@ namespace CNull.Parser
         /// EBNF: <c>basicStatement = ifStatement | whileStatement | continueStatement | breakStatement | tryStatement |
         /// throwStatement | expressionStatement | returnStatement;</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private IBasicStatement? ParseBasicStatement()
         {
             IBasicStatement? statement = _currentToken.TokenType switch
@@ -271,6 +281,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>ifStatement = 'if', '(', expression, ')', blockStatement, [ 'else', ( ifStatement | blockStatement ) ];</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private IfStatement ParseIfStatement()
         {
             ValidateCurrentToken(TokenType.IfKeyword, null!);
@@ -299,6 +310,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>whileStatement = 'while', '(', expression, ')', blockStatement;</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private WhileStatement ParseWhileStatement()
         {
             ValidateCurrentToken(TokenType.WhileKeyword, null!);
@@ -314,6 +326,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>variableDeclaration = typeName, identifier, [ '=', expression ], ';';</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private VariableDeclaration ParseVariableDeclaration()
         {
             var type = ParseDeclarableType();
@@ -335,6 +348,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>expressionStatement = expression, [ '=', expression ], ';'</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private ExpressionStatement ParseExpressionStatement()
         {
             var expression = ParseExpression();
@@ -355,6 +369,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>continueStatement = 'continue', ';';</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private ContinueStatement ParseContinueStatement()
         {
             ValidateCurrentToken(TokenType.ContinueKeyword, null!);
@@ -365,6 +380,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>breakStatement = 'break', ';';</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private BreakStatement ParseBreakStatement()
         {
             ValidateCurrentToken(TokenType.BreakKeyword, null!);
@@ -375,6 +391,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>throwStatement = 'throw', stringLiteral, ';'</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private ThrowStatement ParseThrowStatement()
         {
             ValidateCurrentToken(TokenType.ThrowKeyword, null!);
@@ -387,6 +404,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>tryStatement = 'try', blockStatement, catchClause, { catchClause };</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private TryStatement ParseTryStatement()
         {
             ValidateCurrentToken(TokenType.TryKeyword, null!);
@@ -406,6 +424,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>catchClause = 'catch', '(', identifier, [ expression ] ')', blockStatement;</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private CatchClause? ParseCatchClause()
         {
             if (_currentToken.TokenType != TokenType.CatchKeyword)
@@ -433,6 +452,7 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>returnStatement = 'return', expression, ';';</c>
         /// </summary>
+        /// <exception cref="UnexpectedTokenException"/>
         private ReturnStatement ParseReturnStatement()
         {
             ValidateCurrentToken(TokenType.ReturnKeyword, null!);
