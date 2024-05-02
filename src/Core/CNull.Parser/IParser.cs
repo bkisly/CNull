@@ -11,6 +11,6 @@ namespace CNull.Parser
         /// Parses the program.
         /// </summary>
         /// <returns></returns>
-        Program Parse();
+        Program? Parse();
     }
 }
