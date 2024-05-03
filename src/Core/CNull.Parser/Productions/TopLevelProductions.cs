@@ -1,5 +1,18 @@
-﻿namespace CNull.Parser.Productions
+﻿using CNull.Common;
+
+namespace CNull.Parser.Productions
 {
+    /// <summary>
+    /// Represents a general type of a syntactic production.
+    /// </summary>
+    public interface ISyntacticProduction
+    {
+        /// <summary>
+        /// Position in text of a production.
+        /// </summary>
+        Position Position { get; }
+    }
+
     /// <summary>
     /// Syntactic production which represents the whole program.
     /// </summary>
@@ -11,7 +24,7 @@
     /// </summary>
     /// <param name="ModuleName">Name of the module to import from.</param>
     /// <param name="FunctionName">Function to import from the module.</param>
-    public record ImportDirective(string ModuleName, string FunctionName);
+    public record ImportDirective(string ModuleName, string FunctionName, Position Position) : ISyntacticProduction;
 
     /// <summary>
     /// Syntactic production which represents a definition of the function.
@@ -21,12 +34,12 @@
     /// <param name="Parameters">Parameters list.</param>
     /// <param name="FunctionBody">Block statement, which is the body of the function.</param>
     public record FunctionDefinition(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters,
-        BlockStatement FunctionBody);
+        BlockStatement FunctionBody, Position Position) : ISyntacticProduction;
 
     /// <summary>
     /// Syntactic production that represents a parameter.
     /// </summary>
     /// <param name="Type">Type of the parameter.</param>
     /// <param name="Name">Name of the parameter.</param>
-    public record Parameter(IDeclarableType Type, string Name);
+    public record Parameter(IDeclarableType Type, string Name, Position Position) : ISyntacticProduction;
 }

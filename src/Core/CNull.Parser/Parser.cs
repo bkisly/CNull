@@ -100,13 +100,14 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private ImportDirective ParseImportDirective()
         {
+            var position = _currentToken.Position;
             ValidateCurrentToken(TokenType.ImportKeyword, null!);
 
             var moduleName = ValidateCurrentToken<string>(TokenType.Identifier, null!);
             var functionName = ValidateCurrentToken<string>(TokenType.Identifier, null!);
 
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
-            return new ImportDirective(moduleName, functionName);
+            return new ImportDirective(moduleName, functionName, position);
         }
 
         /// <summary>
@@ -115,6 +116,7 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private FunctionDefinition ParseFunctionDefinition()
         {
+            var position = _currentToken.Position;
             var returnType = ParseReturnType();
             var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
 
@@ -123,7 +125,7 @@ namespace CNull.Parser
             ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
 
             var functionBody = ParseBlockStatement();
-            return new FunctionDefinition(returnType, identifier, parameters, functionBody);
+            return new FunctionDefinition(returnType, identifier, parameters, functionBody, position);
         }
 
         #endregion
@@ -139,11 +141,13 @@ namespace CNull.Parser
             if (!_currentToken.TokenType.IsReturnType())
                 RaiseFactoryError(null!);
 
+            var position = _currentToken.Position;
+
             return _currentToken.TokenType switch
             {
-                TokenType.VoidKeyword => new ReturnType(),
+                TokenType.VoidKeyword => new ReturnType(position),
                 TokenType.DictKeyword => ParseDictionaryType(),
-                _ => new PrimitiveType((PrimitiveTypes)_currentToken.TokenType)
+                _ => new PrimitiveType((PrimitiveTypes)_currentToken.TokenType, position)
             };
         }
 
@@ -153,13 +157,14 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private DictionaryType ParseDictionaryType()
         {
+            var dictPosition = _currentToken.Position;
             ValidateCurrentToken(TokenType.DictKeyword, null!);
             ValidateCurrentToken(TokenType.LessThanOperator, null!);
 
             if(!_currentToken.TokenType.IsPrimitiveType())
                 RaiseFactoryError(null!);
 
-            var keyType = new PrimitiveType((PrimitiveTypes)_currentToken.TokenType);
+            var keyType = new PrimitiveType((PrimitiveTypes)_currentToken.TokenType, _currentToken.Position);
             ConsumeToken();
 
             ValidateCurrentToken(TokenType.CommaOperator, null!);
@@ -167,10 +172,10 @@ namespace CNull.Parser
             if (!_currentToken.TokenType.IsPrimitiveType())
                 RaiseFactoryError(null!);
 
-            var valueType = new PrimitiveType((PrimitiveTypes)_currentToken.TokenType);
+            var valueType = new PrimitiveType((PrimitiveTypes)_currentToken.TokenType, _currentToken.Position);
             ConsumeToken();
 
-            return new DictionaryType(keyType, valueType);
+            return new DictionaryType(keyType, valueType, dictPosition);
         }
 
         /// <summary>
@@ -185,9 +190,10 @@ namespace CNull.Parser
             if (!_currentToken.TokenType.IsPrimitiveType())
                 RaiseFactoryError(null!);
 
+            var position = _currentToken.Position;
             var type = (PrimitiveTypes)_currentToken.TokenType;
             ConsumeToken();
-            return new PrimitiveType(type);
+            return new PrimitiveType(type, position);
         }
 
         /// <summary>
@@ -226,9 +232,10 @@ namespace CNull.Parser
             if (!_currentToken.TokenType.IsDeclarableType())
                 return null;
 
+            var position = _currentToken.Position;
             var type = ParseDeclarableType();
             var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
-            return new Parameter(type, identifier);
+            return new Parameter(type, identifier, position);
         }
 
         #endregion
@@ -284,6 +291,7 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private IfStatement ParseIfStatement()
         {
+            var position = _currentToken.Position;
             ValidateCurrentToken(TokenType.IfKeyword, null!);
 
             ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
@@ -304,7 +312,7 @@ namespace CNull.Parser
                 elseBlock = ParseBlockStatement();
             }
 
-            return new IfStatement(expression, body, elseIfStatement, elseBlock);
+            return new IfStatement(expression, body, elseIfStatement, elseBlock, position);
         }
 
         /// <summary>
@@ -313,6 +321,7 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private WhileStatement ParseWhileStatement()
         {
+            var position = _currentToken.Position;
             ValidateCurrentToken(TokenType.WhileKeyword, null!);
 
             ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
@@ -320,7 +329,7 @@ namespace CNull.Parser
             ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
 
             var body = ParseBlockStatement();
-            return new WhileStatement(expression, body);
+            return new WhileStatement(expression, body, position);
         }
 
         /// <summary>
@@ -329,20 +338,21 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private VariableDeclaration ParseVariableDeclaration()
         {
+            var position = _currentToken.Position;
             var type = ParseDeclarableType();
             var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
 
             if (_currentToken.TokenType != TokenType.AssignmentOperator)
             {
                 ValidateCurrentToken(TokenType.SemicolonOperator, null!);
-                return new VariableDeclaration(type, identifier);
+                return new VariableDeclaration(type, identifier, position);
             }
 
             ConsumeToken();
             var initializationExpression = ParseExpression();
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
 
-            return new VariableDeclaration(type, identifier, initializationExpression);
+            return new VariableDeclaration(type, identifier, position, initializationExpression);
         }
 
         /// <summary>
@@ -351,19 +361,20 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private ExpressionStatement ParseExpressionStatement()
         {
+            var position = _currentToken.Position;
             var expression = ParseExpression();
 
             if (_currentToken.TokenType != TokenType.AssignmentOperator)
             {
                 ValidateCurrentToken(TokenType.SemicolonOperator, null!);
-                return new ExpressionStatement(expression);
+                return new ExpressionStatement(expression, position);
             }
 
             ConsumeToken();
             var initializationExpression = ParseExpression();
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
 
-            return new ExpressionStatement(expression, initializationExpression);
+            return new ExpressionStatement(expression, position, initializationExpression);
         }
 
         /// <summary>
@@ -372,9 +383,10 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private ContinueStatement ParseContinueStatement()
         {
+            var position = _currentToken.Position;
             ValidateCurrentToken(TokenType.ContinueKeyword, null!);
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
-            return new ContinueStatement();
+            return new ContinueStatement(position);
         }
 
         /// <summary>
@@ -383,9 +395,10 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private BreakStatement ParseBreakStatement()
         {
+            var position = _currentToken.Position;
             ValidateCurrentToken(TokenType.BreakKeyword, null!);
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
-            return new BreakStatement();
+            return new BreakStatement(position);
         }
 
         /// <summary>
@@ -394,11 +407,12 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private ThrowStatement ParseThrowStatement()
         {
+            var position = _currentToken.Position;
             ValidateCurrentToken(TokenType.ThrowKeyword, null!);
             var message = ValidateCurrentToken<string>(TokenType.StringLiteral, null!);
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
 
-            return new ThrowStatement(message);
+            return new ThrowStatement(message, position);
         }
 
         /// <summary>
@@ -407,6 +421,7 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private TryStatement ParseTryStatement()
         {
+            var position = _currentToken.Position;
             ValidateCurrentToken(TokenType.TryKeyword, null!);
 
             var body = ParseBlockStatement();
@@ -418,7 +433,7 @@ namespace CNull.Parser
             if (catchClauses.Count == 0)
                 RaiseFactoryError(null!);
 
-            return new TryStatement(body, catchClauses);
+            return new TryStatement(body, catchClauses, position);
         }
 
         /// <summary>
@@ -429,6 +444,8 @@ namespace CNull.Parser
         {
             if (_currentToken.TokenType != TokenType.CatchKeyword)
                 return null;
+
+            var position = _currentToken.Position;
 
             ConsumeToken();
             ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
@@ -445,7 +462,7 @@ namespace CNull.Parser
             }
 
             var body = ParseBlockStatement();
-            return new CatchClause(identifier, filterExpression, body);
+            return new CatchClause(identifier, filterExpression, body, position);
         }
 
         /// <summary>
@@ -454,11 +471,12 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private ReturnStatement ParseReturnStatement()
         {
+            var position = _currentToken.Position;
             ValidateCurrentToken(TokenType.ReturnKeyword, null!);
             var expression = ParseExpression();
             ValidateCurrentToken(TokenType.SemicolonOperator, null!);
 
-            return new ReturnStatement(expression);
+            return new ReturnStatement(expression, position);
         }
 
         #endregion
