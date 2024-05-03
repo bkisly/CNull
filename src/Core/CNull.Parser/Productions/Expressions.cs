@@ -7,13 +7,20 @@ namespace CNull.Parser.Productions
     /// </summary>
     public interface IExpression : ISyntacticProduction;
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="LeftFactor"></param>
-    /// <param name="RightFactor"></param>
-    /// <param name="Position"></param>
-    public record OrExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public interface IBinaryExpression : IExpression
+    {
+        IExpression LeftFactor { get; }
+        IExpression RightFactor { get; }
+    }
+
+    public interface IUnaryExpression : IExpression
+    {
+        IExpression Expression { get; }
+    }
+
+    public delegate IBinaryExpression BinaryExpressionFactory(IExpression left, IExpression right, Position position);
+
+    public delegate IUnaryExpression UnaryExpressionFactory(IExpression expression, Position position);
 
     /// <summary>
     /// 
@@ -21,7 +28,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record AndExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record OrExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -29,7 +36,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record GreaterThanExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record AndExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -37,7 +44,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record GreaterThanOrEqualExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record GreaterThanExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -45,7 +52,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record EqualExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record GreaterThanOrEqualExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -53,7 +60,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record NotEqualExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record EqualExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -61,7 +68,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record LessThanExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record NotEqualExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -69,7 +76,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record LessThanOrEqualExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record LessThanExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -77,7 +84,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record AdditionExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record LessThanOrEqualExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -85,7 +92,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record SubtractionExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record AdditionExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -93,7 +100,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record MultiplicationExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record SubtractionExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -101,7 +108,7 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record DivisionExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record MultiplicationExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
@@ -109,28 +116,36 @@ namespace CNull.Parser.Productions
     /// <param name="LeftFactor"></param>
     /// <param name="RightFactor"></param>
     /// <param name="Position"></param>
-    public record ModuloExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IExpression;
+    public record DivisionExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="LeftFactor"></param>
+    /// <param name="RightFactor"></param>
+    /// <param name="Position"></param>
+    public record ModuloExpression(IExpression LeftFactor, IExpression RightFactor, Position Position) : IBinaryExpression;
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="Expression"></param>
     /// <param name="Position"></param>
-    public record BooleanNegationExpression(IExpression Expression, Position Position) : IExpression;
+    public record BooleanNegationExpression(IExpression Expression, Position Position) : IUnaryExpression;
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="Expression"></param>
     /// <param name="Position"></param>
-    public record NegationExpression(IExpression Expression, Position Position) : IExpression;
+    public record NegationExpression(IExpression Expression, Position Position) : IUnaryExpression;
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="Expression"></param>
     /// <param name="Position"></param>
-    public record NullCheckExpression(IExpression Expression, Position Position) : IExpression;
+    public record NullCheckExpression(IExpression Expression, Position Position) : IUnaryExpression;
 
     /// <summary>
     /// 

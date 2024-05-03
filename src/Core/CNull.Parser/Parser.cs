@@ -1,4 +1,5 @@
-﻿using CNull.ErrorHandler;
+﻿using CNull.Common;
+using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
@@ -483,7 +484,118 @@ namespace CNull.Parser
 
         #region Expressions builders
 
-        private IExpression ParseExpression()
+        private IExpression? ParseExpression()
+        {
+            var leftFactor = ParseAndExpression();
+
+            if (leftFactor == null)
+                return null;
+
+            while (_currentToken.TokenType == TokenType.OrOperator)
+            {
+                var position = _currentToken.Position;
+                ConsumeToken();
+                var rightFactor = ParseAndExpression();
+
+                if (rightFactor == null)
+                    RaiseFactoryError(null!);
+
+                leftFactor = new OrExpression(leftFactor, rightFactor!, position);
+            }
+
+            return leftFactor;
+        }
+
+        private IExpression? ParseAndExpression()
+        {
+            var leftFactor = ParseRelationalExpression();
+
+            if (leftFactor == null)
+                return null;
+
+            while (_currentToken.TokenType == TokenType.AndOperator)
+            {
+                var position = _currentToken.Position;
+                ConsumeToken();
+                var rightFactor = ParseRelationalExpression();
+
+                if (rightFactor == null)
+                    RaiseFactoryError(null!);
+
+                leftFactor = new AndExpression(leftFactor, rightFactor!, position);
+            }
+
+            return leftFactor;
+        }
+
+        /// <summary>
+        /// Parses a binary expression, which does not support connectivity.
+        /// </summary>
+        /// <param name="tokenTypeToFactories">Map of token types to corresponding factory methods of binary expressions.</param>
+        /// <param name="innerFactory">Factory method which parses an expression in the inner tree.</param>
+        /// <param name="errorOnInvalidInner">Error thrown when inner expression factory returned null.</param>
+        /// <returns>The parsed binary expression.</returns>
+        private IExpression? ParseBinaryExpression(IReadOnlyDictionary<TokenType, BinaryExpressionFactory> tokenTypeToFactories,
+            Func<IExpression?> innerFactory, ICompilationError errorOnInvalidInner)
+        {
+            var leftFactor = innerFactory.Invoke();
+
+            if (leftFactor == null)
+                return null;
+
+            if (!tokenTypeToFactories.TryGetValue(_currentToken.TokenType, out var factory)) 
+                return leftFactor;
+
+            var position = _currentToken.Position;
+            ConsumeToken();
+            var rightFactor = innerFactory.Invoke();
+
+            if (rightFactor == null)
+                RaiseFactoryError(errorOnInvalidInner);
+
+            leftFactor = factory.Invoke(leftFactor, rightFactor!, position);
+            return leftFactor;
+        }
+
+        private IExpression? ParseRelationalExpression()
+        {
+            var relationalExpressionsFactory = new Dictionary<TokenType, BinaryExpressionFactory>
+            {
+                { TokenType.GreaterThanOperator, (left, right, position) => new GreaterThanExpression(left, right, position) },
+                { TokenType.GreaterThanOrEqualOperator, (left, right, position) => new GreaterThanOrEqualExpression(left, right, position) },
+                { TokenType.EqualOperator, (left, right, position) => new EqualExpression(left, right, position) },
+                { TokenType.NotEqualOperator, (left, right, position) => new NotEqualExpression(left, right, position) },
+                { TokenType.LessThanOperator, (left, right, position) => new LessThanExpression(left, right, position) },
+                { TokenType.LessThanOrEqualOperator, (left, right, position) => new LessThanOrEqualExpression(left, right, position) }
+            };
+
+            return ParseBinaryExpression(relationalExpressionsFactory, ParseAdditiveExpression, null!);
+        }
+
+        private IExpression? ParseAdditiveExpression()
+        {
+            var additiveExpressionsFactory = new Dictionary<TokenType, BinaryExpressionFactory>
+            {
+                { TokenType.PlusOperator, (left, right, position) => new AdditionExpression(left, right, position) },
+                { TokenType.MinusOperator, (left, right, position) => new SubtractionExpression(left, right, position) }
+            };
+
+            return ParseBinaryExpression(additiveExpressionsFactory, ParseMultiplicativeExpression, null!);
+        }
+
+        private IExpression? ParseMultiplicativeExpression()
+        {
+            var multiplicativeExpressionsFactory = new Dictionary<TokenType, BinaryExpressionFactory>
+            {
+                { TokenType.AsteriskOperator, (left, right, position) => new MultiplicationExpression(left, right, position) },
+                { TokenType.SlashOperator, (left, right, position) => new DivisionExpression(left, right, position) },
+                { TokenType.PercentOperator, (left, right, position) => new ModuloExpression(left, right, position) },
+            };
+
+            return ParseBinaryExpression(multiplicativeExpressionsFactory, ParseUnaryExpression, null!);
+        }
+
+        private IExpression? ParseUnaryExpression()
         {
             throw new NotImplementedException();
         }
