@@ -1,5 +1,4 @@
-﻿using CNull.Common;
-using CNull.ErrorHandler;
+﻿using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
@@ -201,7 +200,7 @@ namespace CNull.Parser
         /// EBNF: <c>parametersList = [ parameter, { ',', parameter } ];</c>
         /// </summary>
         /// <exception cref="UnexpectedTokenException"/>
-        private IEnumerable<Parameter> ParseParametersList()
+        private List<Parameter> ParseParametersList()
         {
             var parameters = new List<Parameter>();
 
@@ -484,6 +483,9 @@ namespace CNull.Parser
 
         #region Expressions builders
 
+        /// <summary>
+        /// EBNF: <c>expression = conditionalAndExpression, { '||', conditionalAndExpression };</c>
+        /// </summary>
         private IExpression? ParseExpression()
         {
             var leftFactor = ParseAndExpression();
@@ -506,6 +508,9 @@ namespace CNull.Parser
             return leftFactor;
         }
 
+        /// <summary>
+        /// EBNF: <c>conditionalAndExpression = relationalExpression, { '&amp;&amp;', relationalExpression };</c>
+        /// </summary>
         private IExpression? ParseAndExpression()
         {
             var leftFactor = ParseRelationalExpression();
@@ -529,13 +534,13 @@ namespace CNull.Parser
         }
 
         /// <summary>
-        /// Parses a binary expression, which does not support connectivity.
+        /// Helper method which parses a binary expression, that does not support connectivity.
         /// </summary>
         /// <param name="tokenTypeToFactories">Map of token types to corresponding factory methods of binary expressions.</param>
         /// <param name="innerFactory">Factory method which parses an expression in the inner tree.</param>
         /// <param name="errorOnInvalidInner">Error thrown when inner expression factory returned null.</param>
         /// <returns>The parsed binary expression.</returns>
-        private IExpression? ParseBinaryExpression(IReadOnlyDictionary<TokenType, BinaryExpressionFactory> tokenTypeToFactories,
+        private IExpression? ParseBinaryExpression(Dictionary<TokenType, BinaryExpressionFactory> tokenTypeToFactories,
             Func<IExpression?> innerFactory, ICompilationError errorOnInvalidInner)
         {
             var leftFactor = innerFactory.Invoke();
@@ -557,6 +562,9 @@ namespace CNull.Parser
             return leftFactor;
         }
 
+        /// <summary>
+        /// EBNF: <c>relationalExpression = additiveExpression, [ relationalOperator, additiveExpression ];</c>
+        /// </summary>
         private IExpression? ParseRelationalExpression()
         {
             var relationalExpressionsFactory = new Dictionary<TokenType, BinaryExpressionFactory>
@@ -572,6 +580,9 @@ namespace CNull.Parser
             return ParseBinaryExpression(relationalExpressionsFactory, ParseAdditiveExpression, null!);
         }
 
+        /// <summary>
+        /// EBNF: <c>additiveExpression = multiplicativeExpression, [ additiveOperator, multiplicativeExpression ];</c>
+        /// </summary>
         private IExpression? ParseAdditiveExpression()
         {
             var additiveExpressionsFactory = new Dictionary<TokenType, BinaryExpressionFactory>
@@ -583,6 +594,9 @@ namespace CNull.Parser
             return ParseBinaryExpression(additiveExpressionsFactory, ParseMultiplicativeExpression, null!);
         }
 
+        /// <summary>
+        /// EBNF: <c>multiplicativeExpression = unaryExpression, [ multiplicativeOperator, unaryExpression ];</c>
+        /// </summary>
         private IExpression? ParseMultiplicativeExpression()
         {
             var multiplicativeExpressionsFactory = new Dictionary<TokenType, BinaryExpressionFactory>
@@ -596,6 +610,43 @@ namespace CNull.Parser
         }
 
         private IExpression? ParseUnaryExpression()
+        {
+            var unaryExpressionsFactory = new Dictionary<TokenType, UnaryExpressionFactory>
+            {
+                { TokenType.MinusOperator, (expression, position) => new NegationExpression(expression, position) },
+                { TokenType.NegationOperator, (expression, position) => new BooleanNegationExpression(expression, position) }
+            };
+
+            var hasOperator = unaryExpressionsFactory.TryGetValue(_currentToken.TokenType, out var factory);
+            var position = _currentToken.Position;
+
+            if (hasOperator)
+                ConsumeToken();
+
+            var innerExpression = ParseSecondaryExpression();
+
+            if (innerExpression == null)
+                RaiseFactoryError(null!);
+
+            return factory?.Invoke(innerExpression!, position) ?? innerExpression;
+        }
+
+        private IExpression? ParseSecondaryExpression()
+        {
+            var innerExpression = ParsePrimaryExpression();
+
+            if (innerExpression == null)
+                return null;
+
+            if (_currentToken.TokenType != TokenType.IsNullOperator)
+                return innerExpression;
+
+            var position = _currentToken.Position;
+            ConsumeToken();
+            return new NullCheckExpression(innerExpression, position);
+        }
+
+        private IExpression? ParsePrimaryExpression()
         {
             throw new NotImplementedException();
         }
