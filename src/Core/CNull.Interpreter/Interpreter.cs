@@ -6,7 +6,8 @@ namespace CNull.Interpreter
     {
         public void Execute(Func<string, string?> inputCallback, Action<string> outputCallback)
         {
-            parser.Parse();
+            var program = parser.Parse();
+            Console.WriteLine("test");
             //throw new NotImplementedException();
         }
     }

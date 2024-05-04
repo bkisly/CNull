@@ -54,7 +54,7 @@ namespace CNull.Lexer
                 return true;
 
             var lengthCounter = 0;
-            while (char.IsWhiteSpace(_source.CurrentCharacter.Value))
+            while (_source.CurrentCharacter.HasValue && char.IsWhiteSpace(_source.CurrentCharacter.Value))
             {
                 if (++lengthCounter > _configuration.MaxWhitespaceLength)
                 {

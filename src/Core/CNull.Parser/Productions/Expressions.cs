@@ -153,7 +153,7 @@ namespace CNull.Parser.Productions
     /// <typeparam name="T"></typeparam>
     /// <param name="Value"></param>
     /// <param name="Position"></param>
-    public record LiteralExpression<T>(T Value, Position Position) : IExpression;
+    public record LiteralExpression<T>(T? Value, Position Position) : IExpression;
 
     /// <summary>
     /// 
@@ -175,5 +175,5 @@ namespace CNull.Parser.Productions
     /// </summary>
     /// <param name="AccessedMember"></param>
     /// <param name="Position"></param>
-    public record MemberAccessExpression(IdentifierOrCallExpression AccessedMember, Position Position) : IExpression;
+    public record MemberAccessExpression(IExpression AccessedMember, Position Position, MemberAccessExpression? ParentMember = null) : IExpression;
 }

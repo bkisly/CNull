@@ -33,11 +33,17 @@ namespace CNull.Lexer.States
             while (!CurrentCharacter.IsTokenTerminator());
 
             var literalToken = _tokenBuilder.ToString();
-            var token = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType) 
-                ? new Token(tokenType, TokenPosition) 
-                : new Token<string>(literalToken, TokenType.Identifier, TokenPosition);
+            var isKeyword = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType);
 
-            return token;
+            if (!isKeyword)
+                return new Token<string>(_tokenBuilder.ToString(), TokenType.Identifier, TokenPosition);
+
+            return tokenType switch
+            {
+                TokenType.TrueKeyword or TokenType.FalseKeyword => new Token<bool>(tokenType == TokenType.TrueKeyword, tokenType, TokenPosition),
+                TokenType.NullKeyword => new Token<object?>(null, TokenType.NullKeyword, TokenPosition),
+                _ => new Token(tokenType, TokenPosition)
+            };
         }
 
         private static bool IsValidFirstCharacter(char character)
