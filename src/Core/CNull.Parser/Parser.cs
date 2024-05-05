@@ -258,9 +258,12 @@ namespace CNull.Parser
         /// EBNF: <c>blockStatement = '{', { basicStatement }, '}';</c>
         /// </summary>
         /// <exception cref="UnexpectedTokenException"/>
-        private BlockStatement ParseBlockStatement()
+        private BlockStatement? ParseBlockStatement()
         {
-            ValidateCurrentToken(TokenType.OpenBlockOperator, null!);
+            if(_currentToken.TokenType != TokenType.OpenBlockOperator)
+                return null;
+
+            ConsumeToken();
             var statementsList = new List<IBasicStatement>();
 
             while (ParseBasicStatement() is { } statement)
@@ -499,50 +502,34 @@ namespace CNull.Parser
         #region Expressions builders
 
         /// <summary>
-        /// EBNF: <c>expression = conditionalAndExpression, { '||', conditionalAndExpression };</c>
+        /// Helper method which parses a binary expression, that does not support connectivity.
         /// </summary>
-        private IExpression? ParseExpression()
+        /// <param name="tokenTypeToFactories">Map of token types to corresponding factory methods of binary expressions.</param>
+        /// <param name="innerFactory">Factory method which parses an expression in the inner tree.</param>
+        /// <param name="errorOnInvalidInner">Error thrown when inner expression factory returned null.</param>
+        /// <param name="connective">Determines whether the expression supports connectivity.</param>
+        /// <returns>The parsed binary expression.</returns>
+        private IExpression? ParseBinaryExpression(Dictionary<TokenType, BinaryExpressionFactory> tokenTypeToFactories,
+            Func<IExpression?> innerFactory, ICompilationError errorOnInvalidInner, bool connective)
         {
-            var leftFactor = ParseAndExpression();
+            var leftFactor = innerFactory.Invoke();
 
             if (leftFactor == null)
                 return null;
 
-            while (_currentToken.TokenType == TokenType.OrOperator)
+            while (tokenTypeToFactories.TryGetValue(_currentToken.TokenType, out var factory))
             {
                 var position = _currentToken.Position;
                 ConsumeToken();
-                var rightFactor = ParseAndExpression();
+                var rightFactor = innerFactory.Invoke();
 
                 if (rightFactor == null)
-                    RaiseFactoryError(null!);
+                    RaiseFactoryError(errorOnInvalidInner);
 
-                leftFactor = new OrExpression(leftFactor, rightFactor!, position);
-            }
+                leftFactor = factory.Invoke(leftFactor, rightFactor!, position);
 
-            return leftFactor;
-        }
-
-        /// <summary>
-        /// EBNF: <c>conditionalAndExpression = relationalExpression, { '&amp;&amp;', relationalExpression };</c>
-        /// </summary>
-        private IExpression? ParseAndExpression()
-        {
-            var leftFactor = ParseRelationalExpression();
-
-            if (leftFactor == null)
-                return null;
-
-            while (_currentToken.TokenType == TokenType.AndOperator)
-            {
-                var position = _currentToken.Position;
-                ConsumeToken();
-                var rightFactor = ParseRelationalExpression();
-
-                if (rightFactor == null)
-                    RaiseFactoryError(null!);
-
-                leftFactor = new AndExpression(leftFactor, rightFactor!, position);
+                if (!connective)
+                    break;
             }
 
             return leftFactor;
@@ -551,30 +538,46 @@ namespace CNull.Parser
         /// <summary>
         /// Helper method which parses a binary expression, that does not support connectivity.
         /// </summary>
-        /// <param name="tokenTypeToFactories">Map of token types to corresponding factory methods of binary expressions.</param>
+        /// <param name="operatorType">Type of the operator of the expression.</param>
+        /// <param name="expressionFactory">Factory method of the parsed expression.</param>
         /// <param name="innerFactory">Factory method which parses an expression in the inner tree.</param>
         /// <param name="errorOnInvalidInner">Error thrown when inner expression factory returned null.</param>
+        /// <param name="connective">Determines whether the expression supports connectivity.</param>
         /// <returns>The parsed binary expression.</returns>
-        private IExpression? ParseBinaryExpression(Dictionary<TokenType, BinaryExpressionFactory> tokenTypeToFactories,
-            Func<IExpression?> innerFactory, ICompilationError errorOnInvalidInner)
+        private IExpression? ParseBinaryExpression(TokenType operatorType, BinaryExpressionFactory expressionFactory,
+            Func<IExpression?> innerFactory, ICompilationError errorOnInvalidInner, bool connective)
         {
-            var leftFactor = innerFactory.Invoke();
+            return ParseBinaryExpression(
+                new Dictionary<TokenType, BinaryExpressionFactory> { [operatorType] = expressionFactory }, 
+                innerFactory,
+                errorOnInvalidInner, 
+                connective);
+        }
 
-            if (leftFactor == null)
-                return null;
+        /// <summary>
+        /// EBNF: <c>expression = conditionalAndExpression, { '||', conditionalAndExpression };</c>
+        /// </summary>
+        private IExpression? ParseExpression()
+        {
+            return ParseBinaryExpression(
+                TokenType.OrOperator,
+                (left, right, position) => new OrExpression(left, right, position), 
+                ParseAndExpression, 
+                null!, 
+                true);
+        }
 
-            if (!tokenTypeToFactories.TryGetValue(_currentToken.TokenType, out var factory)) 
-                return leftFactor;
-
-            var position = _currentToken.Position;
-            ConsumeToken();
-            var rightFactor = innerFactory.Invoke();
-
-            if (rightFactor == null)
-                RaiseFactoryError(errorOnInvalidInner);
-
-            leftFactor = factory.Invoke(leftFactor, rightFactor!, position);
-            return leftFactor;
+        /// <summary>
+        /// EBNF: <c>conditionalAndExpression = relationalExpression, { '&amp;&amp;', relationalExpression };</c>
+        /// </summary>
+        private IExpression? ParseAndExpression()
+        {
+            return ParseBinaryExpression(
+                TokenType.AndOperator,
+                (left, right, position) => new AndExpression(left, right, position),
+                ParseRelationalExpression,
+                null!,
+                true);
         }
 
         /// <summary>
@@ -592,7 +595,7 @@ namespace CNull.Parser
                 { TokenType.LessThanOrEqualOperator, (left, right, position) => new LessThanOrEqualExpression(left, right, position) }
             };
 
-            return ParseBinaryExpression(relationalExpressionsFactory, ParseAdditiveExpression, null!);
+            return ParseBinaryExpression(relationalExpressionsFactory, ParseAdditiveExpression, null!, false);
         }
 
         /// <summary>
@@ -606,7 +609,7 @@ namespace CNull.Parser
                 { TokenType.MinusOperator, (left, right, position) => new SubtractionExpression(left, right, position) }
             };
 
-            return ParseBinaryExpression(additiveExpressionsFactory, ParseMultiplicativeExpression, null!);
+            return ParseBinaryExpression(additiveExpressionsFactory, ParseMultiplicativeExpression, null!, true);
         }
 
         /// <summary>
@@ -621,7 +624,7 @@ namespace CNull.Parser
                 { TokenType.PercentOperator, (left, right, position) => new ModuloExpression(left, right, position) },
             };
 
-            return ParseBinaryExpression(multiplicativeExpressionsFactory, ParseUnaryExpression, null!);
+            return ParseBinaryExpression(multiplicativeExpressionsFactory, ParseUnaryExpression, null!, true);
         }
 
         private IExpression? ParseUnaryExpression()
@@ -740,7 +743,7 @@ namespace CNull.Parser
                 TokenType.IntegerLiteral => BuildLiteral<int>(TokenType.IntegerLiteral, null!),
                 TokenType.FloatLiteral => BuildLiteral<float>(TokenType.FloatLiteral, null!),
                 TokenType.StringLiteral => BuildLiteral<string>(TokenType.StringLiteral, null!),
-                TokenType.CharKeyword => BuildLiteral<char>(TokenType.CharLiteral, null!),
+                TokenType.CharLiteral => BuildLiteral<char>(TokenType.CharLiteral, null!),
                 TokenType.TrueKeyword => BuildLiteral<bool>(TokenType.TrueKeyword, null!),
                 TokenType.FalseKeyword => BuildLiteral<bool>(TokenType.FalseKeyword, null!),
                 TokenType.NullKeyword => BuildLiteral<object?>(TokenType.NullKeyword, null!),
