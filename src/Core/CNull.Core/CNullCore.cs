@@ -1,4 +1,5 @@
-﻿using CNull.Common.Extensions;
+﻿using System.Reflection;
+using CNull.Common.Extensions;
 using CNull.Common.Mediators;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Events.Args;
@@ -6,8 +7,11 @@ using CNull.ErrorHandler.Exceptions;
 using CNull.ErrorHandler.Extensions;
 using CNull.Interpreter;
 using CNull.Interpreter.Extensions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NReco.Logging.File;
 
 namespace CNull.Core
 {
@@ -44,6 +48,9 @@ namespace CNull.Core
             builder.Services.AddInterpreterServices()
                 .AddErrorHandler()
                 .AddCommonServices();
+
+            builder.Configuration.AddUserSecrets(Assembly.GetAssembly(typeof(CNullCore))!);
+            builder.Services.AddLogging(options => options.ClearProviders().AddFile(builder.Configuration.GetValue<string>("LogOutput"), false));
 
             _host = builder.Build();
             _serviceScope = _host.Services.CreateScope();
