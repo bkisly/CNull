@@ -1,9 +1,12 @@
 ﻿using CNull.Common;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
+using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
+using CNull.Lexer.Extensions;
 using CNull.Parser.Enums;
+using CNull.Parser.Errors;
 using CNull.Parser.Exceptions;
 using CNull.Parser.Extensions;
 using CNull.Parser.Productions;
@@ -49,12 +52,11 @@ namespace CNull.Parser
         /// Checks if the current token matches the expected type.
         /// </summary>
         /// <param name="expectedType">Expected token type.</param>
-        /// <param name="errorToThrow">Error to be passed to the error handler.</param>
         /// <exception cref="UnexpectedTokenException"/>
-        private void ValidateCurrentToken(TokenType expectedType, ICompilationError errorToThrow)
+        private void ValidateCurrentToken(TokenType expectedType)
         {
             if (_currentToken.TokenType != expectedType)
-                RaiseFactoryError(errorToThrow);
+                throw ParserError(new MissingKeywordOrOperatorError(expectedType.ToLiteralString(), _currentToken.Position));
 
             ConsumeToken();
         }
@@ -67,7 +69,7 @@ namespace CNull.Parser
         private T ValidateCurrentToken<T>(TokenType expectedType, ICompilationError errorToThrow)
         {
             if (_currentToken.TokenType != expectedType)
-                RaiseFactoryError(errorToThrow);
+                throw ParserError(errorToThrow);
 
             var value = (_currentToken as Token<T>)!.Value;
             ConsumeToken();
@@ -75,13 +77,12 @@ namespace CNull.Parser
         }
 
         /// <summary>
-        /// Raises an error during creation of a syntactic production.
+        /// Builds an error during creation of a syntactic production.
         /// </summary>
-        /// <exception cref="UnexpectedTokenException"/>
-        private void RaiseFactoryError(ICompilationError errorToThrow)
+        private UnexpectedTokenException ParserError(ICompilationError errorToThrow)
         {
             errorHandler.RaiseCompilationError(errorToThrow);
-            throw new UnexpectedTokenException();
+            return new UnexpectedTokenException();
         }
 
         #endregion
@@ -99,11 +100,11 @@ namespace CNull.Parser
                 return null;
 
             ConsumeToken();
-            var moduleName = ValidateCurrentToken<string>(TokenType.Identifier, null!);
-            ValidateCurrentToken(TokenType.DotOperator, null!);
-            var functionName = ValidateCurrentToken<string>(TokenType.Identifier, null!);
+            var moduleName = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
+            ValidateCurrentToken(TokenType.DotOperator);
+            var functionName = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
 
-            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+            ValidateCurrentToken(TokenType.SemicolonOperator);
             return new ImportDirective(moduleName, functionName, position);
         }
 
@@ -113,20 +114,21 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private FunctionDefinition? ParseFunctionDefinition()
         {
-            var position = _currentToken.Position;
-            var returnType = ParseReturnType();
-
-            if (returnType == null)
+            if (_currentToken.TokenType == TokenType.End)
                 return null;
 
-            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
+            var position = _currentToken.Position;
+            var returnType = ParseReturnType() ?? throw ParserError(new InvalidReturnTypeError(_currentToken.Position));
+            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
 
-            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator);
             var parameters = ParseParametersList();
-            ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
+            ValidateCurrentToken(TokenType.RightParenthesisOperator);
 
             var functionBody = ParseBlockStatement();
-            return new FunctionDefinition(returnType, identifier, parameters, functionBody, position);
+            return functionBody == null
+                ? throw ParserError(new ExpectedBlockStatementError(_currentToken.Position))
+                : new FunctionDefinition(returnType, identifier, parameters, functionBody, position);
         }
 
         #endregion
@@ -172,22 +174,22 @@ namespace CNull.Parser
         private DictionaryType ParseDictionaryType()
         {
             var dictPosition = _currentToken.Position;
-            ValidateCurrentToken(TokenType.DictKeyword, null!);
-            ValidateCurrentToken(TokenType.LessThanOperator, null!);
+            ValidateCurrentToken(TokenType.DictKeyword);
+            ValidateCurrentToken(TokenType.LessThanOperator);
 
             if(!_currentToken.TokenType.IsPrimitiveType())
-                RaiseFactoryError(null!);
+                throw ParserError(new TypeNotPrimitiveError(_currentToken.Position));
 
             var keyType = ParsePrimitiveType();
 
-            ValidateCurrentToken(TokenType.CommaOperator, null!);
+            ValidateCurrentToken(TokenType.CommaOperator);
 
             if (!_currentToken.TokenType.IsPrimitiveType())
-                RaiseFactoryError(null!);
+                throw ParserError(new TypeNotPrimitiveError(_currentToken.Position));
 
             var valueType = ParsePrimitiveType();
 
-            ValidateCurrentToken(TokenType.GreaterThanOperator, null!);
+            ValidateCurrentToken(TokenType.GreaterThanOperator);
             return new DictionaryType(keyType, valueType, dictPosition);
         }
 
@@ -201,7 +203,7 @@ namespace CNull.Parser
                 return ParseDictionaryType();
 
             if (!_currentToken.TokenType.IsPrimitiveType())
-                RaiseFactoryError(null!);
+                throw ParserError(new TypeNotPrimitiveError(_currentToken.Position));
 
             var position = _currentToken.Position;
             var type = (PrimitiveTypes)_currentToken.TokenType;
@@ -225,11 +227,7 @@ namespace CNull.Parser
             while (_currentToken.TokenType == TokenType.CommaOperator)
             {
                 ConsumeToken();
-                var nextParameter = ParseParameter();
-
-                if (nextParameter == null)
-                    RaiseFactoryError(null!);
-
+                var nextParameter = ParseParameter() ?? throw ParserError(new ExpectedParameterError(_currentToken.Position));
                 parameters.Add(nextParameter!);
             }
 
@@ -247,7 +245,7 @@ namespace CNull.Parser
 
             var position = _currentToken.Position;
             var type = ParseDeclarableType();
-            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
+            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
             return new Parameter(type, identifier, position);
         }
 
@@ -270,7 +268,7 @@ namespace CNull.Parser
             while (ParseBasicStatement() is { } statement)
                 statementsList.Add(statement);
 
-            ValidateCurrentToken(TokenType.CloseBlockOperator, null!);
+            ValidateCurrentToken(TokenType.CloseBlockOperator);
             return new BlockStatement(statementsList);
         }
 
@@ -308,13 +306,13 @@ namespace CNull.Parser
         private IfStatement ParseIfStatement()
         {
             var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.IfKeyword, null!);
+            ValidateCurrentToken(TokenType.IfKeyword);
 
-            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
-            var expression = ParseExpression();
-            ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator);
+            var expression = ParseExpression() ?? throw ParserError(new InvalidExpressionError(_currentToken.Position));
+            ValidateCurrentToken(TokenType.RightParenthesisOperator);
 
-            var body = ParseBlockStatement();
+            var body = ParseBlockStatement() ?? throw ParserError(new ExpectedBlockStatementError(_currentToken.Position));
             BlockStatement? elseBlock = null;
             IfStatement? elseIfStatement = null;
 
@@ -328,7 +326,7 @@ namespace CNull.Parser
                 elseBlock = ParseBlockStatement();
             }
 
-            return new IfStatement(expression, body, elseIfStatement, elseBlock, position);
+            return new IfStatement(expression!, body!, elseIfStatement, elseBlock, position);
         }
 
         /// <summary>
@@ -338,14 +336,16 @@ namespace CNull.Parser
         private WhileStatement ParseWhileStatement()
         {
             var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.WhileKeyword, null!);
+            ValidateCurrentToken(TokenType.WhileKeyword);
 
-            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
-            var expression = ParseExpression();
-            ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator);
+            var expression = ParseExpression() ?? throw ParserError(new InvalidExpressionError(_currentToken.Position));
+            ValidateCurrentToken(TokenType.RightParenthesisOperator);
 
             var body = ParseBlockStatement();
-            return new WhileStatement(expression, body, position);
+            return body == null
+                ? throw ParserError(new ExpectedBlockStatementError(_currentToken.Position))
+                : new WhileStatement(expression, body, position);
         }
 
         /// <summary>
@@ -356,17 +356,17 @@ namespace CNull.Parser
         {
             var position = _currentToken.Position;
             var type = ParseDeclarableType();
-            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
+            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
 
             if (_currentToken.TokenType != TokenType.AssignmentOperator)
             {
-                ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+                ValidateCurrentToken(TokenType.SemicolonOperator);
                 return new VariableDeclaration(type, identifier, position);
             }
 
             ConsumeToken();
             var initializationExpression = ParseExpression();
-            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+            ValidateCurrentToken(TokenType.SemicolonOperator);
 
             return new VariableDeclaration(type, identifier, position, initializationExpression);
         }
@@ -385,13 +385,13 @@ namespace CNull.Parser
 
             if (_currentToken.TokenType != TokenType.AssignmentOperator)
             {
-                ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+                ValidateCurrentToken(TokenType.SemicolonOperator);
                 return new ExpressionStatement(expression, position);
             }
 
             ConsumeToken();
             var initializationExpression = ParseExpression();
-            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+            ValidateCurrentToken(TokenType.SemicolonOperator);
 
             return new ExpressionStatement(expression, position, initializationExpression);
         }
@@ -403,8 +403,8 @@ namespace CNull.Parser
         private ContinueStatement ParseContinueStatement()
         {
             var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.ContinueKeyword, null!);
-            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+            ValidateCurrentToken(TokenType.ContinueKeyword);
+            ValidateCurrentToken(TokenType.SemicolonOperator);
             return new ContinueStatement(position);
         }
 
@@ -415,8 +415,8 @@ namespace CNull.Parser
         private BreakStatement ParseBreakStatement()
         {
             var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.BreakKeyword, null!);
-            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+            ValidateCurrentToken(TokenType.BreakKeyword);
+            ValidateCurrentToken(TokenType.SemicolonOperator);
             return new BreakStatement(position);
         }
 
@@ -427,9 +427,9 @@ namespace CNull.Parser
         private ThrowStatement ParseThrowStatement()
         {
             var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.ThrowKeyword, null!);
-            var message = ValidateCurrentToken<string>(TokenType.StringLiteral, null!);
-            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
+            ValidateCurrentToken(TokenType.ThrowKeyword);
+            var message = ValidateCurrentToken<string>(TokenType.StringLiteral, new ExpectedStringLiteralError(_currentToken.Position));
+            ValidateCurrentToken(TokenType.SemicolonOperator);
 
             return new ThrowStatement(message, position);
         }
@@ -441,16 +441,16 @@ namespace CNull.Parser
         private TryStatement ParseTryStatement()
         {
             var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.TryKeyword, null!);
+            ValidateCurrentToken(TokenType.TryKeyword);
 
-            var body = ParseBlockStatement();
+            var body = ParseBlockStatement() ?? throw ParserError(new ExpectedBlockStatementError(_currentToken.Position));
             var catchClauses = new List<CatchClause>();
 
             while (ParseCatchClause() is { } catchClause)
                 catchClauses.Add(catchClause);
 
             if (catchClauses.Count == 0)
-                RaiseFactoryError(null!);
+                throw ParserError(new MissingCatchClauseError(_currentToken.Position));
 
             return new TryStatement(body, catchClauses, position);
         }
@@ -467,8 +467,8 @@ namespace CNull.Parser
             var position = _currentToken.Position;
 
             ConsumeToken();
-            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
-            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator);
+            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
 
             IExpression? filterExpression = null;
 
@@ -477,11 +477,13 @@ namespace CNull.Parser
             else
             {
                 filterExpression = ParseExpression();
-                ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
+                ValidateCurrentToken(TokenType.RightParenthesisOperator);
             }
 
             var body = ParseBlockStatement();
-            return new CatchClause(identifier, filterExpression, body, position);
+            return body == null
+                ? throw ParserError(new ExpectedBlockStatementError(_currentToken.Position))
+                : new CatchClause(identifier, filterExpression, body, position);
         }
 
         /// <summary>
@@ -491,10 +493,9 @@ namespace CNull.Parser
         private ReturnStatement ParseReturnStatement()
         {
             var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.ReturnKeyword, null!);
-            var expression = ParseExpression();
-            ValidateCurrentToken(TokenType.SemicolonOperator, null!);
-
+            ValidateCurrentToken(TokenType.ReturnKeyword);
+            var expression = ParseExpression() ?? throw ParserError(new InvalidExpressionError(_currentToken.Position));
+            ValidateCurrentToken(TokenType.SemicolonOperator);
             return new ReturnStatement(expression, position);
         }
 
@@ -507,11 +508,10 @@ namespace CNull.Parser
         /// </summary>
         /// <param name="tokenTypeToFactories">Map of token types to corresponding factory methods of binary expressions.</param>
         /// <param name="innerFactory">Factory method which parses an expression in the inner tree.</param>
-        /// <param name="errorOnInvalidInner">Error thrown when inner expression factory returned null.</param>
         /// <param name="connective">Determines whether the expression supports connectivity.</param>
         /// <returns>The parsed binary expression.</returns>
         private IExpression? ParseBinaryExpression(Dictionary<TokenType, BinaryExpressionFactory> tokenTypeToFactories,
-            Func<IExpression?> innerFactory, ICompilationError errorOnInvalidInner, bool connective)
+            Func<IExpression?> innerFactory, bool connective)
         {
             var leftFactor = innerFactory.Invoke();
 
@@ -522,12 +522,8 @@ namespace CNull.Parser
             {
                 var position = _currentToken.Position;
                 ConsumeToken();
-                var rightFactor = innerFactory.Invoke();
-
-                if (rightFactor == null)
-                    RaiseFactoryError(errorOnInvalidInner);
-
-                leftFactor = factory.Invoke(leftFactor, rightFactor!, position);
+                var rightFactor = innerFactory.Invoke() ?? throw ParserError(new InvalidExpressionError(_currentToken.Position));
+                leftFactor = factory.Invoke(leftFactor, rightFactor, position);
 
                 if (!connective)
                     break;
@@ -542,16 +538,14 @@ namespace CNull.Parser
         /// <param name="operatorType">Type of the operator of the expression.</param>
         /// <param name="expressionFactory">Factory method of the parsed expression.</param>
         /// <param name="innerFactory">Factory method which parses an expression in the inner tree.</param>
-        /// <param name="errorOnInvalidInner">Error thrown when inner expression factory returned null.</param>
         /// <param name="connective">Determines whether the expression supports connectivity.</param>
         /// <returns>The parsed binary expression.</returns>
         private IExpression? ParseBinaryExpression(TokenType operatorType, BinaryExpressionFactory expressionFactory,
-            Func<IExpression?> innerFactory, ICompilationError errorOnInvalidInner, bool connective)
+            Func<IExpression?> innerFactory, bool connective)
         {
             return ParseBinaryExpression(
                 new Dictionary<TokenType, BinaryExpressionFactory> { [operatorType] = expressionFactory }, 
                 innerFactory,
-                errorOnInvalidInner, 
                 connective);
         }
 
@@ -563,8 +557,7 @@ namespace CNull.Parser
             return ParseBinaryExpression(
                 TokenType.OrOperator,
                 (left, right, position) => new OrExpression(left, right, position), 
-                ParseAndExpression, 
-                null!, 
+                ParseAndExpression,
                 true);
         }
 
@@ -577,7 +570,6 @@ namespace CNull.Parser
                 TokenType.AndOperator,
                 (left, right, position) => new AndExpression(left, right, position),
                 ParseRelationalExpression,
-                null!,
                 true);
         }
 
@@ -596,7 +588,7 @@ namespace CNull.Parser
                 { TokenType.LessThanOrEqualOperator, (left, right, position) => new LessThanOrEqualExpression(left, right, position) }
             };
 
-            return ParseBinaryExpression(relationalExpressionsFactory, ParseAdditiveExpression, null!, false);
+            return ParseBinaryExpression(relationalExpressionsFactory, ParseAdditiveExpression, false);
         }
 
         /// <summary>
@@ -610,7 +602,7 @@ namespace CNull.Parser
                 { TokenType.MinusOperator, (left, right, position) => new SubtractionExpression(left, right, position) }
             };
 
-            return ParseBinaryExpression(additiveExpressionsFactory, ParseMultiplicativeExpression, null!, true);
+            return ParseBinaryExpression(additiveExpressionsFactory, ParseMultiplicativeExpression, true);
         }
 
         /// <summary>
@@ -625,7 +617,7 @@ namespace CNull.Parser
                 { TokenType.PercentOperator, (left, right, position) => new ModuloExpression(left, right, position) },
             };
 
-            return ParseBinaryExpression(multiplicativeExpressionsFactory, ParseUnaryExpression, null!, true);
+            return ParseBinaryExpression(multiplicativeExpressionsFactory, ParseUnaryExpression, true);
         }
 
         /// <summary>
@@ -650,7 +642,7 @@ namespace CNull.Parser
                 return factory?.Invoke(innerExpression, position) ?? innerExpression;
 
             if (hasOperator)
-                RaiseFactoryError(null!);
+                throw ParserError(new InvalidExpressionError(_currentToken.Position));
 
             return null;
         }
@@ -715,7 +707,7 @@ namespace CNull.Parser
         private IExpression ParseIdentifierOrCall()
         {
             var position = _currentToken.Position;
-            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, null!);
+            var identifier = ValidateCurrentToken<string>(TokenType.Identifier, new InvalidIdentifierError(_currentToken.Position));
 
             return _currentToken.TokenType != TokenType.LeftParenthesisOperator 
                 ? new IdentifierExpression(identifier, position) 
@@ -738,22 +730,20 @@ namespace CNull.Parser
                 return new CallExpression(functionName, argumentsList, position);
             }
 
-            var argument = ParseExpression();
-            if (argument == null)
-                RaiseFactoryError(null!);
-
-            argumentsList.Add(argument!);
+            var argument = ParseExpression() ?? throw ParserError(new ExpectedArgumentError(_currentToken.Position));
+            argumentsList.Add(argument);
 
             while (_currentToken.TokenType == TokenType.CommaOperator)
             {
                 ConsumeToken();
                 argument = ParseExpression();
                 if (argument == null)
-                    RaiseFactoryError(null!);
+                    throw ParserError(new ExpectedArgumentError(_currentToken.Position));
 
-                argumentsList.Add(argument!);
+                argumentsList.Add(argument);
             }
 
+            ValidateCurrentToken(TokenType.RightParenthesisOperator);
             return new CallExpression(functionName, argumentsList, position);
         }
 
@@ -761,13 +751,13 @@ namespace CNull.Parser
         {
             IExpression? value = literalType switch
             {
-                TokenType.IntegerLiteral => BuildLiteral<int>(TokenType.IntegerLiteral, null!),
-                TokenType.FloatLiteral => BuildLiteral<float>(TokenType.FloatLiteral, null!),
-                TokenType.StringLiteral => BuildLiteral<string>(TokenType.StringLiteral, null!),
-                TokenType.CharLiteral => BuildLiteral<char>(TokenType.CharLiteral, null!),
-                TokenType.TrueKeyword => BuildLiteral<bool>(TokenType.TrueKeyword, null!),
-                TokenType.FalseKeyword => BuildLiteral<bool>(TokenType.FalseKeyword, null!),
-                TokenType.NullKeyword => BuildLiteral<object?>(TokenType.NullKeyword, null!),
+                TokenType.IntegerLiteral => BuildLiteral<int>(TokenType.IntegerLiteral, new InvalidLiteralError<int>(_currentToken.Position)),
+                TokenType.FloatLiteral => BuildLiteral<float>(TokenType.FloatLiteral, new InvalidLiteralError<float>(_currentToken.Position)),
+                TokenType.StringLiteral => BuildLiteral<string>(TokenType.StringLiteral, new InvalidLiteralError<string>(_currentToken.Position)),
+                TokenType.CharLiteral => BuildLiteral<char>(TokenType.CharLiteral, new InvalidLiteralError<char>(_currentToken.Position)),
+                TokenType.TrueKeyword => BuildLiteral<bool>(TokenType.TrueKeyword, new InvalidLiteralError<bool>(_currentToken.Position)),
+                TokenType.FalseKeyword => BuildLiteral<bool>(TokenType.FalseKeyword, new InvalidLiteralError<bool>(_currentToken.Position)),
+                TokenType.NullKeyword => BuildLiteral<object?>(TokenType.NullKeyword, new MissingKeywordOrOperatorError(TokenType.NullKeyword.ToLiteralString(), _currentToken.Position)),
                 _ => null
             };
 
@@ -795,14 +785,10 @@ namespace CNull.Parser
         private ParenthesisedExpression ParseParenthesisedExpression()
         {
             var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.LeftParenthesisOperator, null!);
-            var innerExpression = ParseExpression();
-
-            if (innerExpression == null)
-                RaiseFactoryError(null!);
-
-            ValidateCurrentToken(TokenType.RightParenthesisOperator, null!);
-            return new ParenthesisedExpression(innerExpression!, position);
+            ValidateCurrentToken(TokenType.LeftParenthesisOperator);
+            var innerExpression = ParseExpression() ?? throw ParserError(new InvalidExpressionError(_currentToken.Position));
+            ValidateCurrentToken(TokenType.RightParenthesisOperator);
+            return new ParenthesisedExpression(innerExpression, position);
         }
 
         #endregion

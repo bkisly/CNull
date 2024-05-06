@@ -7,8 +7,8 @@ namespace CNull.Interpreter
         public void Execute(Func<string, string?> inputCallback, Action<string> outputCallback)
         {
             var program = parser.Parse();
-            Console.WriteLine("test");
-            //throw new NotImplementedException();
+            if (program != null)
+                Console.WriteLine("Parsed successfully.");
         }
     }
 }
