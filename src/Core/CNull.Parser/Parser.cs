@@ -71,9 +71,9 @@ namespace CNull.Parser
             if (_currentToken.TokenType != expectedType)
                 throw ParserError(errorToThrow);
 
-            var value = (_currentToken as Token<T>)!.Value;
+            var token = _currentToken as Token<T> ?? throw ParserError(new InvalidLiteralError<T>(_currentToken.Position));
             ConsumeToken();
-            return value;
+            return token.Value;
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace CNull.Parser
             {
                 ConsumeToken();
                 var nextParameter = ParseParameter() ?? throw ParserError(new ExpectedParameterError(_currentToken.Position));
-                parameters.Add(nextParameter!);
+                parameters.Add(nextParameter);
             }
 
             return parameters;
@@ -326,7 +326,7 @@ namespace CNull.Parser
                 elseBlock = ParseBlockStatement();
             }
 
-            return new IfStatement(expression!, body!, elseIfStatement, elseBlock, position);
+            return new IfStatement(expression, body, elseIfStatement, elseBlock, position);
         }
 
         /// <summary>
