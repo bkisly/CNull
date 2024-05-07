@@ -1,10 +1,11 @@
 ﻿using CNull.ErrorHandler.Errors;
 using CNull.ErrorHandler.Events.Args;
 using CNull.ErrorHandler.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace CNull.ErrorHandler
 {
-    public class ErrorHandler : IErrorHandler
+    public class ErrorHandler(ILogger<IErrorHandler> logger) : IErrorHandler
     {
         public event EventHandler<ErrorOccurredEventArgs>? ErrorOccurred;
 
@@ -27,7 +28,11 @@ namespace CNull.ErrorHandler
             OnErrorOccurred($"{messageHeader}{error.Message}");
         }
 
-        private void OnErrorOccurred(string message) => ErrorOccurred?.Invoke(this, new ErrorOccurredEventArgs(message));
+        private void OnErrorOccurred(string message)
+        {
+            logger.LogError("TEST ERROR LOG");
+            ErrorOccurred?.Invoke(this, new ErrorOccurredEventArgs(message));
+        }
 
         private static void FatalError()
         {
