@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Globalization;
+using System.Reflection;
 using CNull.Common.Extensions;
 using CNull.Common.Mediators;
 using CNull.ErrorHandler;
@@ -50,7 +51,8 @@ namespace CNull.Core
                 .AddCommonServices();
 
             builder.Configuration.AddUserSecrets(Assembly.GetAssembly(typeof(CNullCore))!);
-            builder.Services.AddLogging(options => options.ClearProviders().AddFile(builder.Configuration.GetValue<string>("LogOutput"), false));
+            builder.Services.AddLogging(options => options.ClearProviders()
+                .AddFile($"{DateTime.Now:yyyy-M-d-hh-mm-ss}.log", false));
 
             _host = builder.Build();
             _serviceScope = _host.Services.CreateScope();

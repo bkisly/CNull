@@ -12,6 +12,7 @@ namespace CNull.ErrorHandler
         public void RaiseSourceError(ISourceError error)
         {
             var messageHeader = $"C? initialization error: {error.GetType().Name}{Environment.NewLine}";
+            LogError(error);
             OnErrorOccurred($"{messageHeader}{error.Message}");
             FatalError();
         }
@@ -19,24 +20,30 @@ namespace CNull.ErrorHandler
         public void RaiseCompilationError(ICompilationError error)
         {
             var messageHeader = $"C? error (line: {error.Position.LineNumber}, column: {error.Position.ColumnNumber}): {error.GetType().Name}{Environment.NewLine}";
+            LogError(error);
             OnErrorOccurred($"{messageHeader}{error.Message}");
         }
 
         public void RaiseRuntimeError(IRuntimeError error)
         {
             var messageHeader = $"C? unhandled exception: {error.GetType().Name}{Environment.NewLine}";
+            LogError(error);
             OnErrorOccurred($"{messageHeader}{error.Message}");
         }
 
         private void OnErrorOccurred(string message)
         {
-            logger.LogError("TEST ERROR LOG");
             ErrorOccurred?.Invoke(this, new ErrorOccurredEventArgs(message));
         }
 
-        private static void FatalError()
+        private void FatalError()
         {
-            throw new FatalErrorException("Fatal error occurred, unable to continue program execution.");
+            const string message = "Fatal error occurred, unable to continue program execution.";
+            logger.LogError(message);
+            throw new FatalErrorException(message);
         }
+
+        private void LogError(IError error) =>
+            logger.LogError($"Error occurred ({error.GetType().Name}): {error.Message}");
     }
 }

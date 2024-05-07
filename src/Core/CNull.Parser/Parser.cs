@@ -10,10 +10,11 @@ using CNull.Parser.Errors;
 using CNull.Parser.Exceptions;
 using CNull.Parser.Extensions;
 using CNull.Parser.Productions;
+using Microsoft.Extensions.Logging;
 
 namespace CNull.Parser
 {
-    public class Parser(ILexer lexer, IErrorHandler errorHandler) : IParser
+    public class Parser(ILexer lexer, IErrorHandler errorHandler, ILogger<IParser> logger) : IParser
     {
         private Token _currentToken = null!;
 
@@ -21,6 +22,8 @@ namespace CNull.Parser
         {
             try
             {
+                logger.LogInformation("Beginning to parse the program.");
+
                 if (lexer.LastToken == null)
                     ConsumeToken();
 
@@ -33,10 +36,12 @@ namespace CNull.Parser
                 while (ParseFunctionDefinition() is { } functionDefinition)
                     functionDefinitions.Add(functionDefinition);
 
+                logger.LogInformation("Successfully parsed the program.");
                 return new Program(importDirectives, functionDefinitions);
             }
             catch (UnexpectedTokenException)
             {
+                logger.LogWarning("Failed to parse the program.");
                 return null;
             }
         }
