@@ -1,12 +1,10 @@
-﻿using System.Reflection;
-using CNull.Common.Extensions;
+﻿using CNull.Common.Extensions;
 using CNull.Common.Mediators;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Events.Args;
 using CNull.ErrorHandler.Exceptions;
 using CNull.ErrorHandler.Extensions;
 using CNull.Interpreter.Extensions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -48,7 +46,6 @@ namespace CNull.Interpreter
                 .AddErrorHandler()
                 .AddCommonServices();
 
-            builder.Configuration.AddUserSecrets(Assembly.GetAssembly(typeof(CNullCore))!);
             builder.Services.AddLogging(options => options.ClearProviders()
                 .AddFile($"{DateTime.Now:yyyy-M-d-hh-mm-ss}.log", false));
 
