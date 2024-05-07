@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\CNull.Core\CNull.Core.csproj" />
+    <ProjectReference Include="..\Core\CNull.Interpreter\CNull.Interpreter.csproj" />
   </ItemGroup>
 
 </Project>

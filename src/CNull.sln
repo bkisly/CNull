@@ -35,8 +35,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.IntegrationTests", "T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNull.Source.Tests", "Tests\UnitTests\CNull.Source.Tests\CNull.Source.Tests.csproj", "{272645F3-985C-4FEE-BB64-C906984BAE3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNull.Core", "Core\CNull.Core\CNull.Core.csproj", "{346B0CE8-402C-40FF-ACAB-B1E58E182329}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,10 +89,6 @@ Global
 		{272645F3-985C-4FEE-BB64-C906984BAE3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{272645F3-985C-4FEE-BB64-C906984BAE3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{272645F3-985C-4FEE-BB64-C906984BAE3B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{346B0CE8-402C-40FF-ACAB-B1E58E182329}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{346B0CE8-402C-40FF-ACAB-B1E58E182329}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{346B0CE8-402C-40FF-ACAB-B1E58E182329}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{346B0CE8-402C-40FF-ACAB-B1E58E182329}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -112,7 +106,6 @@ Global
 		{F0829328-2A53-4D86-9B27-3E5C8C482308} = {39405461-695E-47A9-94C1-A4AED5DA42A8}
 		{DD28E100-2266-487E-BE2E-0CF26D9E1B2D} = {E7ECB2F6-E4B3-4F0A-AAC0-C712276CC7BE}
 		{272645F3-985C-4FEE-BB64-C906984BAE3B} = {39405461-695E-47A9-94C1-A4AED5DA42A8}
-		{346B0CE8-402C-40FF-ACAB-B1E58E182329} = {418B8523-0AB0-4A2D-9471-852132032539}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F8584C62-8384-4AC3-A6DD-D3C1C3D24A23}
