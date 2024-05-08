@@ -3,9 +3,12 @@ using CNull.Common.Configuration;
 using CNull.Common.Mediators;
 using CNull.ErrorHandler.Errors;
 using CNull.Lexer;
+using CNull.Lexer.Constants;
+using CNull.Lexer.Extensions;
 using CNull.Lexer.Factories;
 using CNull.Lexer.ServicesContainers;
 using CNull.Parser.Enums;
+using CNull.Parser.Errors;
 using CNull.Parser.Productions;
 using CNull.Parser.Tests.Fixtures;
 using CNull.Source.Repositories;
@@ -20,32 +23,32 @@ namespace CNull.IntegrationTests.CrossComponents
         {
             // Arrange
 
-            var input = """
-                        import Module.Function1;
-                        import Module.Function2;
+            const string input = """
+                                 import Module.Function1;
+                                 import Module.Function2;
 
-                        // this is a sample comment
-                        
-                        int Main(bool parameter1, dict<int, string> parameter2)
-                        {
-                            int someVariable = 20;
-                            if(someVariable >= 10)
-                            {
-                                return someVariable;
-                            }
-                            else
-                            {
-                                someVariable = someVariable % 5;
-                                Foo();
-                            }
-                            
-                            return someVariable - 10;
-                        }
-                        
-                        void Foo()
-                        {
-                        }
-                        """;
+                                 // this is a sample comment
+
+                                 int Main(bool parameter1, dict<int, string> parameter2)
+                                 {
+                                     int someVariable = 20;
+                                     if(someVariable >= 10)
+                                     {
+                                         return someVariable;
+                                     }
+                                     else
+                                     {
+                                         someVariable = someVariable % 5;
+                                         Foo();
+                                     }
+                                     
+                                     return someVariable - 10;
+                                 }
+
+                                 void Foo()
+                                 {
+                                 }
+                                 """;
 
             var reader = new StringReader(input);
             var repository = new InputRepository();
@@ -159,6 +162,71 @@ namespace CNull.IntegrationTests.CrossComponents
             Assert.Equivalent(expectedProgram, program);
             fixture.ErrorHandler.Verify(e => e.RaiseCompilationError(It.IsAny<ICompilationError>()), Times.Never);
             fixture.ErrorHandler.Verify(e => e.RaiseSourceError(It.IsAny<ISourceError>()), Times.Never);
+        }
+
+        [Fact]
+        public void CannotParseInvalidPrograms()
+        { 
+            // Arrange
+
+            const string input = """
+                                 import Module.Function1;
+                                 import Module.Function2;
+
+                                 // this is a sample comment
+
+                                 int Main(bool parameter1, dict<int, string> parameter2)
+                                 {
+                                     int someVariable = 20;
+                                     if(someVariable >= 10)
+                                     {
+                                         return someVariable;
+                                     }
+                                     else
+                                     {
+                                         someVariable = someVariable % 5;
+                                         Foo()
+                                     }
+                                     
+                                     return someVariable - 10;
+                                 }
+
+                                 void Foo()
+                                 {
+                                 }
+                                 """;
+
+            var reader = new StringReader(input);
+            var repository = new InputRepository();
+            repository.SetupStream(reader);
+
+            var rawSource = new RawCodeSource(repository, fixture.ErrorHandler.Object,
+                new Mock<ICoreComponentsMediator>().Object);
+
+            var sourceProxy = new NewLineUnifierProxy(rawSource);
+
+            var lexerServicesContainer = new LexerStateServicesContainer(sourceProxy, fixture.ErrorHandler.Object,
+                new InternalCompilerConfiguration());
+
+            var stateFactory = new LexerStateFactory(lexerServicesContainer);
+
+            var lexer = new Lexer.Lexer(lexerServicesContainer, stateFactory);
+            var commentsFilterProxy = new CommentsFilterLexerProxy(lexer);
+
+            var parser = new Parser.Parser(commentsFilterProxy, fixture.ErrorHandler.Object, fixture.Logger.Object);
+
+            sourceProxy.MoveToNext();
+
+            // Act
+
+            var program = parser.Parse();
+
+            // Assert
+            
+            Assert.Null(program);
+            fixture.ErrorHandler.Verify(e =>
+                e.RaiseCompilationError(new MissingKeywordOrOperatorError(TokenType.SemicolonOperator.ToLiteralString(),
+                    new Position(17, 5))), Times.Once);
         }
     }
 }
