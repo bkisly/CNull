@@ -6,7 +6,7 @@ namespace CNull.Parser.Productions
     /// Syntactic production, which represents a list of statements grouped in a block.
     /// </summary>
     /// <param name="StatementsList">The list of statements.</param>
-    public record BlockStatement(IEnumerable<IBasicStatement> StatementsList);
+    public record BlockStatement(IEnumerable<IBasicStatement> StatementsList, Position Position) : ISyntacticProduction;
 
     /// <summary>
     /// Represents a general type of a single statement.

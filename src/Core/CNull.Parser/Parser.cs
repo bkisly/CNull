@@ -264,9 +264,10 @@ namespace CNull.Parser
         /// <exception cref="UnexpectedTokenException"/>
         private BlockStatement? ParseBlockStatement()
         {
-            if(_currentToken.TokenType != TokenType.OpenBlockOperator)
+            if (_currentToken.TokenType != TokenType.OpenBlockOperator)
                 return null;
 
+            var position = _currentToken.Position;
             ConsumeToken();
             var statementsList = new List<IBasicStatement>();
 
@@ -274,7 +275,7 @@ namespace CNull.Parser
                 statementsList.Add(statement);
 
             ValidateCurrentToken(TokenType.CloseBlockOperator);
-            return new BlockStatement(statementsList);
+            return new BlockStatement(statementsList, position);
         }
 
         /// <summary>

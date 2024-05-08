@@ -33,7 +33,7 @@ namespace CNull.Parser.Tests.Fixtures
 
         private Token DequeueToken()
         {
-            return _tokens.Any() ? _tokens.Dequeue() : new Token(TokenType.End, Position.FirstCharacter);
+            return _tokens.Count != 0 ? _tokens.Dequeue() : new Token(TokenType.End, Position.FirstCharacter);
         }
     }
 }
