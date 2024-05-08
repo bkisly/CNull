@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\Core\CNull.Lexer\CNull.Lexer.csproj" />
     <ProjectReference Include="..\..\Core\CNull.Parser\CNull.Parser.csproj" />
     <ProjectReference Include="..\UnitTests\CNull.Lexer.Tests\CNull.Lexer.Tests.csproj" />
+    <ProjectReference Include="..\UnitTests\CNull.Parser.Tests\CNull.Parser.Tests.csproj" />
   </ItemGroup>
 
 </Project>
