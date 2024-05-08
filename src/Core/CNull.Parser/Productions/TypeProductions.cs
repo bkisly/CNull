@@ -1,5 +1,6 @@
 ﻿using CNull.Common;
 using CNull.Parser.Enums;
+using CNull.Parser.Visitors;
 
 namespace CNull.Parser.Productions
 {
@@ -28,6 +29,8 @@ namespace CNull.Parser.Productions
         /// Specifier for the type.
         /// </summary>
         public virtual Types Type => Types.Void;
+
+        public virtual void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
 
     /// <summary>
@@ -38,6 +41,8 @@ namespace CNull.Parser.Productions
     {
         public override Types Type => (Types)TypeSpecifier;
         public bool IsPrimitive => true;
+
+        public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
 
     /// <summary>
@@ -49,5 +54,7 @@ namespace CNull.Parser.Productions
     {
         public override Types Type => Types.Dictionary;
         public bool IsPrimitive => false;
+
+        public override void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
 }
