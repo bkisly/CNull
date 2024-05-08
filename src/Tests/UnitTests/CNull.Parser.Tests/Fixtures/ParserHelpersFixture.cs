@@ -11,11 +11,27 @@ namespace CNull.Parser.Tests.Fixtures
     {
         private Queue<Token> _tokens = new();
 
-        public Mock<ILexer> Lexer { get; }
-        public Mock<IErrorHandler> ErrorHandler { get; }
-        public Mock<ILogger<IParser>> Logger { get; }
+        public Mock<ILexer> Lexer { get; private set; } = null!;
+        public Mock<IErrorHandler> ErrorHandler { get; private set; } = null!;
+        public Mock<ILogger<IParser>> Logger { get; private set; } = null!;
 
         public ParserHelpersFixture()
+        {
+            ResetFixture();
+        }
+
+        public void SetupTokensQueue(IEnumerable<Token> tokens)
+        {
+            ResetFixture();
+            _tokens = new Queue<Token>(tokens);
+        }
+
+        private Token DequeueToken()
+        {
+            return _tokens.Count != 0 ? _tokens.Dequeue() : new Token(TokenType.End, Position.FirstCharacter);
+        }
+
+        private void ResetFixture()
         {
             Lexer = new Mock<ILexer>();
             Lexer.Setup(l => l.GetNextToken()).Returns(DequeueToken);
@@ -24,16 +40,6 @@ namespace CNull.Parser.Tests.Fixtures
             ErrorHandler.Setup(e => e.RaiseCompilationError(It.IsAny<ICompilationError>()));
 
             Logger = new Mock<ILogger<IParser>>();
-        }
-
-        public void SetupTokensQueue(IEnumerable<Token> tokens)
-        {
-            _tokens = new Queue<Token>(tokens);
-        }
-
-        private Token DequeueToken()
-        {
-            return _tokens.Count != 0 ? _tokens.Dequeue() : new Token(TokenType.End, Position.FirstCharacter);
         }
     }
 }

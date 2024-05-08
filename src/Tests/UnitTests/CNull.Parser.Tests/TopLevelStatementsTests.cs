@@ -26,5 +26,23 @@ namespace CNull.Parser.Tests
             Assert.Equivalent(expectedProgram, program);
             fixture.ErrorHandler.Verify(e => e.RaiseCompilationError(It.IsAny<ICompilationError>()), Times.Never);
         }
+
+        [Theory, ClassData(typeof(InvalidTopLevelStatementsData))]
+        public void CannotBuildInvalidTopLevelStatements(IEnumerable<Token> tokens, ICompilationError expectedError)
+        {
+            // Arrange
+
+            fixture.SetupTokensQueue(tokens);
+            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.Logger.Object);
+
+            // Act
+
+            var program = parser.Parse();
+
+            // Assert
+
+            Assert.Null(program);
+            fixture.ErrorHandler.Verify(e => e.RaiseCompilationError(expectedError), Times.Once);
+        }
     }
 }
