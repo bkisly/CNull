@@ -26,26 +26,16 @@ namespace CNull.Parser.Visitors
         {
             _builder.Clear();
             AppendLine("AST of the program.");
-            AppendLine("Import directives:");
 
-            _indent++;
-            foreach (var importDirective in program.ImportDirectives)
-                importDirective.Accept(this);
-            _indent--;
-
-            AppendLine("Function definitions:");
-
-            _indent++;
-            foreach (var functionDefinition in program.FunctionDefinitions)
-                functionDefinition.Accept(this);
-            _indent--;
+            AppendLineWithInner("Import directives:", program.ImportDirectives);
+            AppendLineWithInner("Function definitions:", program.FunctionDefinitions);
 
             AppendLine("End of the program.");
         }
 
         public void Visit(ImportDirective directive)
         {
-            AppendLine($"Import directive at {directive.Position}.");
+            AppendLine($"Import directive at {directive.Position}");
             _indent++;
             AppendLine($"Module name: {directive.ModuleName}");
             AppendLine($"Function name: {directive.FunctionName}");
@@ -88,7 +78,7 @@ namespace CNull.Parser.Visitors
 
         public void Visit(DictionaryType dictionaryType)
         {
-            AppendLine($"{dictionaryType.Type} type at {dictionaryType.Type}");
+            AppendLine($"{dictionaryType.Type} type at {dictionaryType.Position}");
             _indent++;
 
             AppendLineWithInner("Key type:", dictionaryType.KeyType);
@@ -429,7 +419,7 @@ namespace CNull.Parser.Visitors
         private void AppendLine(string obj)
         {
             for (var i = 0; i < _indent; i++)
-                _builder.Append('\t');
+                _builder.Append("  ");
             _builder.AppendLine(obj);
         }
 

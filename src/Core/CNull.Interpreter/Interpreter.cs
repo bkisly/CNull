@@ -1,4 +1,5 @@
 ﻿using CNull.Parser;
+using CNull.Parser.Visitors;
 
 namespace CNull.Interpreter
 {
@@ -7,8 +8,10 @@ namespace CNull.Interpreter
         public void Execute(Func<string, string?> inputCallback, Action<string> outputCallback)
         {
             var program = parser.Parse();
+            var stringifier = new AstStringifierVisitor();
+
             if (program != null)
-                Console.WriteLine("Parsed successfully.");
+                Console.WriteLine(stringifier.GetString(program));
         }
     }
 }
