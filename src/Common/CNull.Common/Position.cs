@@ -11,5 +11,7 @@
         /// Returns a position, which indicates at the first character.
         /// </summary>
         public static Position FirstCharacter => new(1, 1);
+
+        public override string ToString() => $"({LineNumber}, {ColumnNumber})";
     }
 }
