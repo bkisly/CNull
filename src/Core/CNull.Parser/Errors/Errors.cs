@@ -12,6 +12,9 @@ namespace CNull.Parser.Errors
     public record TypeNotPrimitiveError(Position Position) 
         : SyntaxError("Usage of non-primitive type is not valid in this context.", Position);
 
+    public record TypeNotValidError(Position Position)
+        : SyntaxError("Expected a valid, non-void type.", Position);
+
     public record ExpectedParameterError(Position Position) 
         : SyntaxError("Expected a valid parameter.", Position);
 
