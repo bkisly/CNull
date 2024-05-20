@@ -375,16 +375,6 @@ namespace CNull.Parser.Visitors
             _indent--;
         }
 
-        public void Visit(ParenthesisedExpression parenthesisedExpression)
-        {
-            AppendLine($"Parenthesised expression at: {parenthesisedExpression.Position}");
-            _indent++;
-
-            AppendLineWithInner("Inner expression:", parenthesisedExpression.InnerExpression);
-
-            _indent--;
-        }
-
         public void Visit(IdentifierExpression identifierExpression)
         {
             AppendLine($"Identifier expression at: {identifierExpression.Position}");
@@ -402,16 +392,6 @@ namespace CNull.Parser.Visitors
 
             AppendLine($"Function name: {callExpression.FunctionName}");
             AppendLineWithInner("Arguments:", callExpression.Arguments);
-
-            _indent--;
-        }
-
-        public void Visit(MemberAccessExpression memberAccessExpression)
-        {
-            AppendLine($"Member access expression at: {memberAccessExpression.Position}");
-            _indent++;
-
-            AppendLineWithInner("Parent member:", memberAccessExpression.ParentMember);
 
             _indent--;
         }

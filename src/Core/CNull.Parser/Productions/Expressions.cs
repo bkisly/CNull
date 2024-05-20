@@ -36,6 +36,17 @@ namespace CNull.Parser.Productions
     }
 
     /// <summary>
+    /// Represents an expression that can be a memeber of some data structure.
+    /// </summary>
+    public interface IMemberExpression : IExpression
+    {
+        /// <summary>
+        /// Parent of this expression.
+        /// </summary>
+        IExpression? ParentExpression { get; }
+    }
+
+    /// <summary>
     /// Defines a factory for binary expressions.
     /// </summary>
     /// <param name="left">Left logic factor.</param>
@@ -189,17 +200,9 @@ namespace CNull.Parser.Productions
     }
 
     /// <summary>
-    /// Syntactic production which represents the parenthesised expression.
-    /// </summary>
-    public record ParenthesisedExpression(IExpression InnerExpression, Position Position) : IExpression
-    {
-        public void Accept(IAstVisitor visitor) => visitor.Visit(this);
-    }
-
-    /// <summary>
     /// Syntactic production which represents the reference to an identifier.
     /// </summary>
-    public record IdentifierExpression(string Identifier, Position Position) : IExpression
+    public record IdentifierExpression(string Identifier, Position Position, IExpression? ParentExpression = null) : IMemberExpression
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
@@ -207,15 +210,8 @@ namespace CNull.Parser.Productions
     /// <summary>
     /// Syntactic production which represents the function call.
     /// </summary>
-    public record CallExpression(string FunctionName, IEnumerable<IExpression> Arguments, Position Position) : IExpression
-    {
-        public void Accept(IAstVisitor visitor) => visitor.Visit(this);
-    }
-
-    /// <summary>
-    /// Syntactic production which represents the member access.
-    /// </summary>
-    public record MemberAccessExpression(IExpression AccessedMember, Position Position, MemberAccessExpression? ParentMember = null) : IExpression
+    public record CallExpression(string FunctionName, IEnumerable<IExpression> Arguments, Position Position,
+        IExpression? ParentExpression = null) : IMemberExpression
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }

@@ -48,10 +48,8 @@ namespace CNull.Parser.Visitors
         void Visit(NullCheckExpression nullCheckExpression);
 
         void Visit<T>(LiteralExpression<T> literalExpression);
-        void Visit(ParenthesisedExpression parenthesisedExpression);
         void Visit(IdentifierExpression identifierExpression);
         void Visit(CallExpression callExpression);
-        void Visit(MemberAccessExpression memberAccessExpression);
     }
 
     public interface IAstVisitable

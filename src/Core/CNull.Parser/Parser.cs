@@ -1,5 +1,4 @@
-﻿using CNull.Common;
-using CNull.ErrorHandler;
+﻿using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
 using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer;
@@ -126,9 +125,9 @@ namespace CNull.Parser
         /// <param name="productionFactory"></param>
         /// <returns></returns>
         private T LoggingWrapper<T>(Func<T> productionFactory) where T : ISyntacticProduction?
-            => LoggingWrapper(productionFactory, typeof(T).Name);
+            => LoggingWrapper(typeof(T).Name, productionFactory);
 
-        private T LoggingWrapper<T>(Func<T> productionFactory, string builtTypeName) where T : ISyntacticProduction?
+        private T LoggingWrapper<T>(string builtTypeName, Func<T> productionFactory) where T : ISyntacticProduction?
         {
             var position = _currentToken.Position;
             var logHeader = $"[Parser factory at: {position}]";
@@ -402,8 +401,6 @@ namespace CNull.Parser
             {
                 ConsumeToken();
                 initializationExpression = ParseExpression();
-                ValidateCurrentToken(TokenType.SemicolonOperator);
-                return new VariableDeclaration(type, identifier, position);
             }
 
             ValidateCurrentToken(TokenType.SemicolonOperator);
@@ -568,7 +565,7 @@ namespace CNull.Parser
         /// <param name="connective">Determines whether the expression supports connectivity.</param>
         /// <returns>The parsed binary expression.</returns>
         private IExpression? ParseBinaryExpression(Dictionary<TokenType, BinaryExpressionFactory> tokenTypeToFactories,
-            Func<IExpression?> innerFactory, bool connective) => LoggingWrapper(() =>
+            Func<IExpression?> innerFactory, bool connective)
         {
             var leftFactor = innerFactory.Invoke();
 
@@ -579,8 +576,7 @@ namespace CNull.Parser
             {
                 var position = _currentToken.Position;
                 ConsumeToken();
-                var rightFactor = innerFactory.Invoke() ??
-                                  throw ParserError(new InvalidExpressionError(_currentToken.Position));
+                var rightFactor = innerFactory.Invoke() ?? throw ParserError(new InvalidExpressionError(_currentToken.Position));
                 leftFactor = factory.Invoke(leftFactor, rightFactor, position);
 
                 if (!connective)
@@ -588,7 +584,7 @@ namespace CNull.Parser
             }
 
             return leftFactor;
-        }, "");
+        }
         
 
         /// <summary>
@@ -635,31 +631,27 @@ namespace CNull.Parser
         /// <summary>
         /// EBNF: <c>relationalExpression = additiveExpression, [ relationalOperator, additiveExpression ];</c>
         /// </summary>
-        private IExpression? ParseRelationalExpression()
-        {
-            return ParseBinaryExpression(_relationalExpressionsFactoryMap, ParseAdditiveExpression, false);
-        }
+        private IExpression? ParseRelationalExpression() => LoggingWrapper("RelationalExpression", ()
+                => ParseBinaryExpression(_relationalExpressionsFactoryMap, ParseAdditiveExpression, false));
+
 
         /// <summary>
         /// EBNF: <c>additiveExpression = multiplicativeExpression, [ additiveOperator, multiplicativeExpression ];</c>
         /// </summary>
-        private IExpression? ParseAdditiveExpression() 
-        {
-            return ParseBinaryExpression(_additiveExpressionsFactoryMap, ParseMultiplicativeExpression, true);
-        }
+        private IExpression? ParseAdditiveExpression() => LoggingWrapper("AdditiveExpression", ()
+                => ParseBinaryExpression(_additiveExpressionsFactoryMap, ParseMultiplicativeExpression, true));
 
         /// <summary>
         /// EBNF: <c>multiplicativeExpression = unaryExpression, [ multiplicativeOperator, unaryExpression ];</c>
         /// </summary>
-        private IExpression? ParseMultiplicativeExpression()
-        {
-            return ParseBinaryExpression(_multiplicativeExpressionsFactoryMap, ParseUnaryExpression, true);
-        }
+        private IExpression? ParseMultiplicativeExpression() => LoggingWrapper("MultiplicativeExpression", ()
+                => ParseBinaryExpression(_multiplicativeExpressionsFactoryMap, ParseUnaryExpression, true));
+
 
         /// <summary>
         /// EBNF: <c>unaryExpression = [ ( '!' | '-' ) ], secondaryExpression;</c>
         /// </summary>
-        private IExpression? ParseUnaryExpression() => LoggingWrapper(() =>
+        private IExpression? ParseUnaryExpression() => LoggingWrapper("UnaryExpression", () =>
         {
             var hasOperator = _unaryExpressionsFactoryMap.TryGetValue(_currentToken.TokenType, out var factory);
             var position = _currentToken.Position;
@@ -675,13 +667,13 @@ namespace CNull.Parser
                 throw ParserError(new InvalidExpressionError(_currentToken.Position));
 
             return null;
-        }, "");
+        });
 
 
         /// <summary>
         /// EBNF: <c>secondaryExpression = primaryExpression, [ '?' ];</c>
         /// </summary>
-        private IExpression? ParseSecondaryExpression() => LoggingWrapper(() =>
+        private IExpression? ParseSecondaryExpression() => LoggingWrapper("SecondaryExpression", () =>
         {
             var innerExpression = ParsePrimaryExpression();
             if (innerExpression == null)
@@ -693,7 +685,7 @@ namespace CNull.Parser
             var position = _currentToken.Position;
             ConsumeToken();
             return new NullCheckExpression(innerExpression, position);
-        }, nameof(NullCheckExpression));
+        });
 
 
         /// <summary>
@@ -702,64 +694,44 @@ namespace CNull.Parser
         /// <returns></returns>
         private IExpression? ParsePrimaryExpression()
         {
-            var position = _currentToken.Position;
-            IExpression? firstExpression;
-
-            if (_currentToken.TokenType.IsLiteral())
-                firstExpression = ParseLiteral(_currentToken.TokenType);
-            else
-                firstExpression = _currentToken.TokenType switch
-                {
-                    TokenType.LeftParenthesisOperator => ParseParenthesisedExpression(),
-                    TokenType.Identifier => ParseIdentifierOrCall(),
-                    _ => null
-                };
-
-            if (firstExpression == null)
+            var expression = ParseLiteral() ?? ParseIdentifierOrCall() ?? ParseParenthesisedExpression();
+            if (expression == null)
                 return null;
 
             if (_currentToken.TokenType != TokenType.DotOperator)
-                return firstExpression;
+                return expression;
 
-            var parentMember = new MemberAccessExpression(firstExpression, position);
             while (_currentToken.TokenType == TokenType.DotOperator)
             {
-                position = _currentToken.Position;
                 ConsumeToken();
-                var identifierOrCall = ParseIdentifierOrCall();
-                parentMember = new MemberAccessExpression(identifierOrCall, position, parentMember);
+                expression = ParseIdentifierOrCall(expression);
             }
 
-            return parentMember;
+            return expression;
         }
 
         /// <summary>
         /// EBNF: <c>identifierOrCall = identifier, [ '(', { expression }, ')' ];</c>
         /// </summary>
-        private IExpression ParseIdentifierOrCall()
+        private IExpression? ParseIdentifierOrCall(IExpression? parentExpression = null) 
+            => LoggingWrapper<IExpression?>("IdentifierOrCall", () =>
         {
+            if (_currentToken.TokenType != TokenType.Identifier)
+                return null;
+
             var position = _currentToken.Position;
             var identifier = ValidateCurrentToken<string>(TokenType.Identifier, new InvalidIdentifierError(_currentToken.Position));
 
-            return ParseCallExpression(identifier, position) ?? new IdentifierExpression(identifier, position);
-        }
-
-        /// <summary>
-        /// Parses a function call. Can be executed only by identifier or call parser.
-        /// </summary>
-        /// <param name="functionName">The name of the function to parse.</param>
-        /// <param name="position">Position of the function.</param>
-        private IExpression? ParseCallExpression(string functionName, Position position) => LoggingWrapper(() =>
-        {
             if (_currentToken.TokenType != TokenType.LeftParenthesisOperator)
-                return null;
+                return new IdentifierExpression(identifier, position, parentExpression);
 
             ConsumeToken();
             var argumentsList = ParseArgumentsList();
 
             ValidateCurrentToken(TokenType.RightParenthesisOperator);
-            return new CallExpression(functionName, argumentsList, position);
-        }, nameof(CallExpression));
+            return new CallExpression(identifier, argumentsList, position, parentExpression);
+        });
+        
 
         private List<IExpression> ParseArgumentsList()
         {
@@ -780,9 +752,9 @@ namespace CNull.Parser
             return arguments;
         }
 
-        private IExpression? ParseLiteral(TokenType literalType) => LoggingWrapper(() =>
+        private IExpression? ParseLiteral() => LoggingWrapper("LiteralExpression", () =>
         {
-            IExpression? value = literalType switch
+            IExpression? value = _currentToken.TokenType switch
             {
                 TokenType.IntegerLiteral => BuildLiteral<int>(TokenType.IntegerLiteral,
                     new InvalidLiteralError<int>(_currentToken.Position)),
@@ -802,8 +774,7 @@ namespace CNull.Parser
             };
 
             return value;
-        }, "LiteralExpression");
-
+        });
 
         /// <summary>
         /// Builds a literal expression basing on the expected type.
@@ -823,14 +794,16 @@ namespace CNull.Parser
         /// EBNF: <c>parenthesisedExpression = '(', expression, ')';</c>
         /// </summary>
         /// <returns></returns>
-        private ParenthesisedExpression ParseParenthesisedExpression() => LoggingWrapper(() =>
+        private IExpression? ParseParenthesisedExpression() => LoggingWrapper("ParenthesisedExpression", () =>
         {
-            var position = _currentToken.Position;
-            ValidateCurrentToken(TokenType.LeftParenthesisOperator);
+            if (_currentToken.TokenType != TokenType.LeftParenthesisOperator)
+                return null;
+
+            ConsumeToken();
             var innerExpression = ParseExpression() ?? throw ParserError(new InvalidExpressionError(_currentToken.Position));
             ValidateCurrentToken(TokenType.RightParenthesisOperator);
-            return new ParenthesisedExpression(innerExpression, position);
-        }, nameof(ParenthesisedExpression));
+            return innerExpression;
+        });
 
         #endregion
     }

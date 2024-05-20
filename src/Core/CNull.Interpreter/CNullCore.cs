@@ -48,7 +48,6 @@ namespace CNull.Interpreter
 
             builder.Logging.ClearProviders();
             builder.Logging.AddFile($"{DateTime.Now:yyyy-M-d-hh-mm-ss}.log", false);
-            builder.Logging.AddConsole();
 
             _host = builder.Build();
             _serviceScope = _host.Services.CreateScope();
