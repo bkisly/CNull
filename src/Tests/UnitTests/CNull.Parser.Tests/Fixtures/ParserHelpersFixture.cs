@@ -31,7 +31,7 @@ namespace CNull.Parser.Tests.Fixtures
             return _tokens.Count != 0 ? _tokens.Dequeue() : new Token(TokenType.End, Position.FirstCharacter);
         }
 
-        private void ResetFixture()
+        public void ResetFixture()
         {
             Lexer = new Mock<ILexer>();
             Lexer.Setup(l => l.GetNextToken()).Returns(DequeueToken);

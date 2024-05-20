@@ -1,9 +1,9 @@
 ﻿namespace CNull.Common.Configuration
 {
     /// <summary>
-    /// Aggregates configuration parameters for the compiler.
+    /// Aggregates configuration parameters for the C? interpreter.
     /// </summary>
-    public interface ICompilerConfiguration
+    public interface ICNullConfiguration
     {
         /// <summary>
         /// Maximum length of string literal.
@@ -29,5 +29,10 @@
         /// Maximum token length.
         /// </summary>
         public int MaxTokenLength { get; }
+
+        /// <summary>
+        /// Maximum number of displayed compilation errors.
+        /// </summary>
+        public int MaxErrorsCount { get; }
     }
 }

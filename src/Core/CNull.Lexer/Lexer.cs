@@ -14,7 +14,7 @@ namespace CNull.Lexer
         private readonly ICodeSource _source;
         private readonly ILexerStateFactory _stateFactory;
         private readonly IErrorHandler _errorHandler;
-        private readonly ICompilerConfiguration _configuration;
+        private readonly ICNullConfiguration _configuration;
         private ILexerState? _state;
 
         public Token? LastToken { get; private set; }
@@ -24,7 +24,7 @@ namespace CNull.Lexer
             _source = servicesContainer.CodeSource;
             _stateFactory = stateFactory;
             _errorHandler = servicesContainer.ErrorHandler;
-            _configuration = servicesContainer.CompilerConfiguration;
+            _configuration = servicesContainer.CNullConfiguration;
             _source.SourceInitialized += Source_SourceInitialized;
         }
 

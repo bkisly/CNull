@@ -85,13 +85,12 @@ namespace CNull.Parser
         /// Checks if the current token matches the expected type.
         /// </summary>
         /// <param name="expectedType">Expected token type.</param>
-        /// <exception cref="UnexpectedTokenException"/>
         private void ValidateCurrentToken(TokenType expectedType)
         {
             if (_currentToken.TokenType != expectedType)
-                throw ParserError(new MissingKeywordOrOperatorError(expectedType.ToLiteralString(), _currentToken.Position));
-
-            ConsumeToken();
+                errorHandler.RaiseCompilationError(
+                    new MissingKeywordOrOperatorError(expectedType.ToLiteralString(), _currentToken.Position));
+            else ConsumeToken();
         }
 
         /// <summary>
@@ -752,41 +751,31 @@ namespace CNull.Parser
             return arguments;
         }
 
-        private IExpression? ParseLiteral() => LoggingWrapper("LiteralExpression", () =>
+        private IExpression? ParseLiteral() => LoggingWrapper<IExpression?>("LiteralExpression", () =>
         {
-            IExpression? value = _currentToken.TokenType switch
+            return _currentToken.TokenType switch
             {
-                TokenType.IntegerLiteral => BuildLiteral<int>(TokenType.IntegerLiteral,
-                    new InvalidLiteralError<int>(_currentToken.Position)),
-                TokenType.FloatLiteral => BuildLiteral<float>(TokenType.FloatLiteral,
-                    new InvalidLiteralError<float>(_currentToken.Position)),
-                TokenType.StringLiteral => BuildLiteral<string>(TokenType.StringLiteral,
-                    new InvalidLiteralError<string>(_currentToken.Position)),
-                TokenType.CharLiteral => BuildLiteral<char>(TokenType.CharLiteral,
-                    new InvalidLiteralError<char>(_currentToken.Position)),
-                TokenType.TrueKeyword => BuildLiteral<bool>(TokenType.TrueKeyword,
-                    new InvalidLiteralError<bool>(_currentToken.Position)),
-                TokenType.FalseKeyword => BuildLiteral<bool>(TokenType.FalseKeyword,
-                    new InvalidLiteralError<bool>(_currentToken.Position)),
-                TokenType.NullKeyword => BuildLiteral<object?>(TokenType.NullKeyword,
-                    new MissingKeywordOrOperatorError(TokenType.NullKeyword.ToLiteralString(), _currentToken.Position)),
+                TokenType.IntegerLiteral => BuildLiteral<int>(),
+                TokenType.FloatLiteral => BuildLiteral<float>(),
+                TokenType.StringLiteral => BuildLiteral<string>(),
+                TokenType.CharLiteral => BuildLiteral<char>(),
+                TokenType.TrueKeyword => BuildLiteral<bool>(),
+                TokenType.FalseKeyword => BuildLiteral<bool>(),
+                TokenType.NullKeyword => BuildLiteral<object?>(),
                 _ => null
             };
-
-            return value;
         });
 
         /// <summary>
-        /// Builds a literal expression basing on the expected type.
+        /// Builds a literal expression, basing on the expected type.
         /// </summary>
         /// <typeparam name="T">Type of the literal to build.</typeparam>
-        /// <param name="literalType">Token type of the expected literal.</param>
-        /// <param name="errorToThrow">Error to throw when building a literal failed.</param>
-        /// <returns></returns>
-        private LiteralExpression<T> BuildLiteral<T>(TokenType literalType, ICompilationError errorToThrow)
+        /// <returns>The built LiteralExpression.</returns>
+        private LiteralExpression<T> BuildLiteral<T>()
         {
             var position = _currentToken.Position;
-            var value = ValidateCurrentToken<T>(literalType, errorToThrow);
+            var value = ((Token<T>)_currentToken).Value;
+            ConsumeToken();
             return new LiteralExpression<T>(value, position);
         }
 

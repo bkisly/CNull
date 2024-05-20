@@ -16,7 +16,7 @@ namespace CNull.Lexer.States
     {
         protected ICodeSource Source;
         protected IErrorHandler ErrorHandler;
-        protected ICompilerConfiguration Configuration;
+        protected ICNullConfiguration Configuration;
 
         protected char? CurrentCharacter => Source.CurrentCharacter;
         protected readonly Position TokenPosition;
@@ -25,7 +25,7 @@ namespace CNull.Lexer.States
         {
             Source = lexerStateServices.CodeSource;
             ErrorHandler = lexerStateServices.ErrorHandler;
-            Configuration = lexerStateServices.CompilerConfiguration;
+            Configuration = lexerStateServices.CNullConfiguration;
             TokenPosition = Source.Position;
         }
 

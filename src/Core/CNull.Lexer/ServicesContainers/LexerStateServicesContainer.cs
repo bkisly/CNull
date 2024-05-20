@@ -4,11 +4,11 @@ using CNull.Source;
 
 namespace CNull.Lexer.ServicesContainers
 {
-    public class LexerStateServicesContainer(ICodeSource source, IErrorHandler errorHandler, ICompilerConfiguration configuration) 
+    public class LexerStateServicesContainer(ICodeSource source, IErrorHandler errorHandler, ICNullConfiguration configuration) 
         : ILexerStateServicesContainer
     {
         public ICodeSource CodeSource => source;
         public IErrorHandler ErrorHandler => errorHandler;
-        public ICompilerConfiguration CompilerConfiguration => configuration;
+        public ICNullConfiguration CNullConfiguration => configuration;
     }
 }

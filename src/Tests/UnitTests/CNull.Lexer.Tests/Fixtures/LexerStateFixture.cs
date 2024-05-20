@@ -25,7 +25,7 @@ namespace CNull.Lexer.Tests.Fixtures
             ServicesContainerMock = new Mock<ILexerStateServicesContainer>();
             ServicesContainerMock.SetupGet(s => s.ErrorHandler).Returns(ErrorHandlerMock.Object);
             ServicesContainerMock.SetupGet(s => s.CodeSource).Returns(CodeSourceMock.Object);
-            ServicesContainerMock.SetupGet(s => s.CompilerConfiguration).Returns(CompilerConfigurationMock.Object);
+            ServicesContainerMock.SetupGet(s => s.CNullConfiguration).Returns(CompilerConfigurationMock.Object);
         }
     }
 }

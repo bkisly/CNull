@@ -20,8 +20,8 @@ namespace CNull.Lexer.ServicesContainers
         public IErrorHandler ErrorHandler { get; }
 
         /// <summary>
-        /// <inheritdoc cref="ICompilerConfiguration"/>
+        /// <inheritdoc cref="ICNullConfiguration"/>
         /// </summary>
-        public ICompilerConfiguration CompilerConfiguration { get; }
+        public ICNullConfiguration CNullConfiguration { get; }
     }
 }

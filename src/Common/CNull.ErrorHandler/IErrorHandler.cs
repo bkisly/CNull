@@ -9,6 +9,11 @@ namespace CNull.ErrorHandler
     public interface IErrorHandler
     {
         /// <summary>
+        /// Number of currently stored errors.
+        /// </summary>
+        int ErrorsCount { get; }
+
+        /// <summary>
         /// Event raised when an error occurred.
         /// </summary>
         event EventHandler<ErrorOccurredEventArgs> ErrorOccurred;

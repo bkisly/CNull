@@ -8,7 +8,7 @@ namespace CNull.Source.Tests.Helpers
     {
         public Mock<IRawCodeSource> CodeSourceMock { get; private set; } = new();
         public Mock<IErrorHandler> ErrorHandlerMock { get; private set; } = new();
-        public Mock<ICompilerConfiguration> CompilerConfigurationMock { get; private set; } = new();
+        public Mock<ICNullConfiguration> CompilerConfigurationMock { get; private set; } = new();
 
         public override void Reset()
         {
@@ -17,7 +17,7 @@ namespace CNull.Source.Tests.Helpers
 
             CodeSourceMock = new Mock<IRawCodeSource>();
             ErrorHandlerMock = new Mock<IErrorHandler>();
-            CompilerConfigurationMock = new Mock<ICompilerConfiguration>();
+            CompilerConfigurationMock = new Mock<ICNullConfiguration>();
 
             CodeSourceMock.Setup(s => s.MoveToNext()).Callback(() =>
             {

@@ -50,6 +50,8 @@ namespace CNull.IntegrationTests.CrossComponents
                                  }
                                  """;
 
+            fixture.ResetFixture();
+
             var reader = new StringReader(input);
             var repository = new InputRepository();
             repository.SetupStream(reader);
@@ -60,7 +62,7 @@ namespace CNull.IntegrationTests.CrossComponents
             var sourceProxy = new NewLineUnifierProxy(rawSource);
 
             var lexerServicesContainer = new LexerStateServicesContainer(sourceProxy, fixture.ErrorHandler.Object,
-                new InternalCompilerConfiguration());
+                new InMemoryCNullConfiguration());
 
             var stateFactory = new LexerStateFactory(lexerServicesContainer);
 
@@ -165,7 +167,7 @@ namespace CNull.IntegrationTests.CrossComponents
         }
 
         [Fact]
-        public void CannotParseInvalidPrograms()
+        public void CanProceedWithParsingWhenMissingSemicolon()
         { 
             // Arrange
 
@@ -196,6 +198,8 @@ namespace CNull.IntegrationTests.CrossComponents
                                  }
                                  """;
 
+            fixture.ResetFixture();
+
             var reader = new StringReader(input);
             var repository = new InputRepository();
             repository.SetupStream(reader);
@@ -206,7 +210,7 @@ namespace CNull.IntegrationTests.CrossComponents
             var sourceProxy = new NewLineUnifierProxy(rawSource);
 
             var lexerServicesContainer = new LexerStateServicesContainer(sourceProxy, fixture.ErrorHandler.Object,
-                new InternalCompilerConfiguration());
+                new InMemoryCNullConfiguration());
 
             var stateFactory = new LexerStateFactory(lexerServicesContainer);
 
@@ -217,13 +221,96 @@ namespace CNull.IntegrationTests.CrossComponents
 
             sourceProxy.MoveToNext();
 
+            var expectedImports = new[]
+            {
+                new ImportDirective("Module", "Function1", Position.FirstCharacter),
+                new ImportDirective("Module", "Function2", new Position(2, 1))
+            };
+
+            var expectedFunctions = new[]
+            {
+                new FunctionDefinition(
+                    new PrimitiveType(PrimitiveTypes.Integer, new Position(6, 1)),
+                    "Main",
+                    new[]
+                    {
+                        new Parameter(
+                            new PrimitiveType(PrimitiveTypes.Boolean, new Position(6, 10)),
+                            "parameter1",
+                            new Position(6, 10)),
+                        new Parameter(
+                            new DictionaryType(
+                                new PrimitiveType(PrimitiveTypes.Integer, new Position(6, 32)),
+                                new PrimitiveType(PrimitiveTypes.String, new Position(6, 37)),
+                                new Position(6, 27)),
+                            "parameter2",
+                            new Position(6, 27))
+                    },
+                    new BlockStatement(
+                        new IBasicStatement[]
+                        {
+                            new VariableDeclaration(
+                                new PrimitiveType(PrimitiveTypes.Integer, new Position(8, 5)),
+                                "someVariable",
+                                new Position(8, 5),
+                                new LiteralExpression<int>(20, new Position(8, 24))),
+                            new IfStatement(
+                                new GreaterThanOrEqualExpression(
+                                    new IdentifierExpression("someVariable", new Position(9, 8)),
+                                    new LiteralExpression<int>(10, new Position(9, 24)),
+                                    new Position(9, 21)),
+                                new BlockStatement(
+                                    new[]
+                                    {
+                                        new ReturnStatement(
+                                            new IdentifierExpression("someVariable", new Position(11, 16)),
+                                            new Position(11, 9))
+                                    },
+                                    new Position(10, 5)),
+                                null,
+                                new BlockStatement(
+                                    new[]
+                                    {
+                                        new ExpressionStatement(
+                                            new IdentifierExpression("someVariable", new Position(15, 9)),
+                                            new Position(15, 9),
+                                            new ModuloExpression(
+                                                new IdentifierExpression("someVariable", new Position(15, 24)),
+                                                new LiteralExpression<int>(5, new Position(15, 39)),
+                                                new Position(15, 37)))
+                                    },
+                                    new Position(14, 5)),
+                                new Position(9, 5)),
+                            new ReturnStatement(
+                                new SubtractionExpression(
+                                    new IdentifierExpression("someVariable", new Position(19, 12)),
+                                    new LiteralExpression<int>(10, new Position(19, 27)),
+                                    new Position(19, 25)),
+                                new Position(19, 5))
+                        },
+                        new Position(7, 1)),
+                    new Position(6, 1)),
+                new FunctionDefinition(
+                    new ReturnType(new Position(22, 1)),
+                    "Foo",
+                    new List<Parameter>(),
+                    new BlockStatement(
+                        new List<IBasicStatement>(),
+                        new Position(23, 1)),
+                    new Position(22, 1))
+            };
+
+            var expectedProgram = new Program(expectedImports, expectedFunctions);
+
             // Act
 
             var program = parser.Parse();
 
             // Assert
             
-            Assert.Null(program);
+            Assert.NotNull(program);
+            Assert.Equivalent(expectedProgram, program);
+
             fixture.ErrorHandler.Verify(e =>
                 e.RaiseCompilationError(new MissingKeywordOrOperatorError(TokenType.SemicolonOperator.ToLiteralString(),
                     new Position(17, 5))), Times.Once);
