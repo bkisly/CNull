@@ -13,7 +13,7 @@ namespace CNull.Parser.Productions
     }
 
     /// <summary>
-    /// Represents a general type of a single statement.
+    /// Represents a general type of single statement.
     /// </summary>
     public interface IBasicStatement : ISyntacticProduction;
 

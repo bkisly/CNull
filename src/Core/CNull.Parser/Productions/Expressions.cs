@@ -4,12 +4,12 @@ using CNull.Parser.Visitors;
 namespace CNull.Parser.Productions
 {
     /// <summary>
-    /// Represents a general type of an expression.
+    /// Represents a general type of expression.
     /// </summary>
     public interface IExpression : ISyntacticProduction;
 
     /// <summary>
-    /// Represents a general type of a binary expression.
+    /// Represents a general type of binary expression.
     /// </summary>
     public interface IBinaryExpression : IExpression
     {
@@ -25,7 +25,7 @@ namespace CNull.Parser.Productions
     }
 
     /// <summary>
-    /// Represents a general type of an unary expression.
+    /// Represents a general type of unary expression.
     /// </summary>
     public interface IUnaryExpression : IExpression
     {

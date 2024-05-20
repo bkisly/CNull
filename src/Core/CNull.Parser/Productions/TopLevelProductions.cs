@@ -4,7 +4,7 @@ using CNull.Parser.Visitors;
 namespace CNull.Parser.Productions
 {
     /// <summary>
-    /// Represents a general type of a syntactic production.
+    /// Represents a general type of syntactic production.
     /// </summary>
     public interface ISyntacticProduction : IAstVisitable
     {

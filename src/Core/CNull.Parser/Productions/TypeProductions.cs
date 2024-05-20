@@ -1,5 +1,4 @@
 ﻿using CNull.Common;
-using CNull.Parser.Enums;
 using CNull.Parser.Visitors;
 
 namespace CNull.Parser.Productions

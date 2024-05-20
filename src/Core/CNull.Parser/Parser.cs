@@ -4,7 +4,6 @@ using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
 using CNull.Lexer.Extensions;
-using CNull.Parser.Enums;
 using CNull.Parser.Errors;
 using CNull.Parser.Exceptions;
 using CNull.Parser.Extensions;
@@ -13,6 +12,32 @@ using Microsoft.Extensions.Logging;
 
 namespace CNull.Parser
 {
+    /// <summary>
+    /// Enumeration of primitive types specifiers.
+    /// </summary>
+    public enum PrimitiveTypes
+    {
+        Integer = TokenType.IntKeyword,
+        Float = TokenType.FloatKeyword,
+        String = TokenType.StringKeyword,
+        Char = TokenType.CharKeyword,
+        Boolean = TokenType.BoolKeyword,
+    }
+
+    /// <summary>
+    /// Enumeration of type specifiers.
+    /// </summary>
+    public enum Types
+    {
+        Integer = TokenType.IntKeyword,
+        Float = TokenType.FloatKeyword,
+        String = TokenType.StringKeyword,
+        Char = TokenType.CharKeyword,
+        Boolean = TokenType.BoolKeyword,
+        Dictionary = TokenType.DictKeyword,
+        Void = TokenType.VoidKeyword,
+    }
+
     public class Parser(ILexer lexer, IErrorHandler errorHandler, ILogger<IParser> logger) : IParser
     {
         private Token _currentToken = null!;
@@ -120,12 +145,18 @@ namespace CNull.Parser
         /// <summary>
         /// Wraps parser factory method to log information before and after its execution.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="productionFactory"></param>
-        /// <returns></returns>
+        /// <typeparam name="T">Return type of the production factory.</typeparam>
+        /// <param name="productionFactory">Factory method of the production.</param>
+        /// <returns>The result of the wrapped factory.</returns>
         private T LoggingWrapper<T>(Func<T> productionFactory) where T : ISyntacticProduction?
             => LoggingWrapper(typeof(T).Name, productionFactory);
 
+
+        /// <summary>
+        /// <inheritdoc cref="LoggingWrapper{T}(System.Func{T})"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns>The result of the wrapped factory.</returns>
         private T LoggingWrapper<T>(string builtTypeName, Func<T> productionFactory) where T : ISyntacticProduction?
         {
             var position = _currentToken.Position;
@@ -406,7 +437,6 @@ namespace CNull.Parser
             return new VariableDeclaration(type, identifier, position, initializationExpression);
         });
 
-
         /// <summary>
         /// EBNF: <c>expressionStatement = expression, [ '=', expression ], ';'</c>
         /// </summary>
@@ -584,7 +614,6 @@ namespace CNull.Parser
 
             return leftFactor;
         }
-        
 
         /// <summary>
         /// Helper method which parses a binary expression, that does not support connectivity.
@@ -633,7 +662,6 @@ namespace CNull.Parser
         private IExpression? ParseRelationalExpression() => LoggingWrapper("RelationalExpression", ()
                 => ParseBinaryExpression(_relationalExpressionsFactoryMap, ParseAdditiveExpression, false));
 
-
         /// <summary>
         /// EBNF: <c>additiveExpression = multiplicativeExpression, [ additiveOperator, multiplicativeExpression ];</c>
         /// </summary>
@@ -645,7 +673,6 @@ namespace CNull.Parser
         /// </summary>
         private IExpression? ParseMultiplicativeExpression() => LoggingWrapper("MultiplicativeExpression", ()
                 => ParseBinaryExpression(_multiplicativeExpressionsFactoryMap, ParseUnaryExpression, true));
-
 
         /// <summary>
         /// EBNF: <c>unaryExpression = [ ( '!' | '-' ) ], secondaryExpression;</c>
@@ -668,14 +695,12 @@ namespace CNull.Parser
             return null;
         });
 
-
         /// <summary>
         /// EBNF: <c>secondaryExpression = primaryExpression, [ '?' ];</c>
         /// </summary>
         private IExpression? ParseSecondaryExpression() => LoggingWrapper("SecondaryExpression", () =>
         {
-            var innerExpression = ParsePrimaryExpression();
-            if (innerExpression == null)
+            if (ParsePrimaryExpression() is not { } innerExpression)
                 return null;
 
             if (_currentToken.TokenType != TokenType.IsNullOperator)
@@ -685,7 +710,6 @@ namespace CNull.Parser
             ConsumeToken();
             return new NullCheckExpression(innerExpression, position);
         });
-
 
         /// <summary>
         /// EBNF: <c>primaryExpression = ( literal | identifierOrCall | parenthesisedExpression ), { memberAccess };</c>
@@ -730,7 +754,6 @@ namespace CNull.Parser
             ValidateCurrentToken(TokenType.RightParenthesisOperator);
             return new CallExpression(identifier, argumentsList, position, parentExpression);
         });
-        
 
         private List<IExpression> ParseArgumentsList()
         {
