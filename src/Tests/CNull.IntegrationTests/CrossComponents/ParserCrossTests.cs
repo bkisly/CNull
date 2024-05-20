@@ -7,7 +7,7 @@ using CNull.Lexer.Constants;
 using CNull.Lexer.Extensions;
 using CNull.Lexer.Factories;
 using CNull.Lexer.ServicesContainers;
-using CNull.Parser.Enums;
+using CNull.Parser;
 using CNull.Parser.Errors;
 using CNull.Parser.Productions;
 using CNull.Parser.Tests.Fixtures;

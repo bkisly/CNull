@@ -1,10 +1,8 @@
 ﻿using CNull.Common;
 using CNull.ErrorHandler.Errors;
-using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
 using CNull.Lexer.Extensions;
-using CNull.Parser.Enums;
 using CNull.Parser.Errors;
 using CNull.Parser.Productions;
 
