@@ -5,11 +5,11 @@ namespace CNull.Source
     /// <summary>
     /// Class responsible for unifying new line representation to '\n' form. Proxy layer between lexer and input.
     /// </summary>
-    public class NewLineUnifierProxy : ICodeSource
+    public class NewLineUnifierCodeSourceProxy : ICodeSource
     {
         private readonly IRawCodeSource _source;
 
-        public NewLineUnifierProxy(IRawCodeSource source)
+        public NewLineUnifierCodeSourceProxy(IRawCodeSource source)
         {
             _source = source;
             _source.SourceInitialized += (_, _) => OnSourceInitialized();

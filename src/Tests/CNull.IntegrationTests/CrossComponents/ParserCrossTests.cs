@@ -56,7 +56,7 @@ namespace CNull.IntegrationTests.CrossComponents
             var rawSource = new RawCodeSource(reader, fixture.ErrorHandler.Object,
                 new Mock<ICoreComponentsMediator>().Object);
 
-            var sourceProxy = new NewLineUnifierProxy(rawSource);
+            var sourceProxy = new NewLineUnifierCodeSourceProxy(rawSource);
 
             var lexerServicesContainer = new LexerStateServicesContainer(sourceProxy, fixture.ErrorHandler.Object,
                 new InMemoryCNullConfiguration());
@@ -202,7 +202,7 @@ namespace CNull.IntegrationTests.CrossComponents
             var rawSource = new RawCodeSource(reader, fixture.ErrorHandler.Object,
                 new Mock<ICoreComponentsMediator>().Object);
 
-            var sourceProxy = new NewLineUnifierProxy(rawSource);
+            var sourceProxy = new NewLineUnifierCodeSourceProxy(rawSource);
 
             var lexerServicesContainer = new LexerStateServicesContainer(sourceProxy, fixture.ErrorHandler.Object,
                 new InMemoryCNullConfiguration());

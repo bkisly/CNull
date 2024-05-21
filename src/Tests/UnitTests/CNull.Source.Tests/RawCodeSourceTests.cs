@@ -1,6 +1,6 @@
 using CNull.Common;
 using CNull.Common.Events;
-using CNull.ErrorHandler.Errors.Source;
+using CNull.Source.Errors;
 using CNull.Source.Tests.Helpers;
 
 namespace CNull.Source.Tests

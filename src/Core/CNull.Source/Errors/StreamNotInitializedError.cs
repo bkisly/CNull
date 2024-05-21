@@ -1,4 +1,6 @@
-﻿namespace CNull.ErrorHandler.Errors.Source
+﻿using CNull.ErrorHandler.Errors;
+
+namespace CNull.Source.Errors
 {
     /// <summary>
     /// Error raised when input stream was not initialized.

@@ -2,7 +2,7 @@
 using CNull.Common.Events;
 using CNull.Common.Mediators;
 using CNull.ErrorHandler;
-using CNull.ErrorHandler.Errors.Source;
+using CNull.Source.Errors;
 
 namespace CNull.Source
 {

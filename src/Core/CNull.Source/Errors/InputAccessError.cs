@@ -1,4 +1,6 @@
-﻿namespace CNull.ErrorHandler.Errors.Source
+﻿using CNull.ErrorHandler.Errors;
+
+namespace CNull.Source.Errors
 {
     /// <summary>
     /// Represents an error which occurrs when the source input could not be found or accessed.

@@ -7,7 +7,7 @@ namespace CNull.Source.Extensions
         public static IServiceCollection AddSourceServices(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IRawCodeSource, RawCodeSource>();
-            serviceCollection.AddSingleton<ICodeSource, NewLineUnifierProxy>();
+            serviceCollection.AddSingleton<ICodeSource, NewLineUnifierCodeSourceProxy>();
             return serviceCollection;
         }
     }
