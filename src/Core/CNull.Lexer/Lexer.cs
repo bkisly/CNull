@@ -6,6 +6,7 @@ using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
 using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
+using CNull.Lexer.States;
 using CNull.Source;
 
 namespace CNull.Lexer
@@ -199,7 +200,43 @@ namespace CNull.Lexer
 
         private Token BuildOperatorOrComment()
         {
-            throw new NotImplementedException();
+            var position = _source.Position;
+            var builtOperator = CurrentCharacter.ToString() ?? string.Empty;
+            _source.MoveToNext();
+
+            var doubleOperatorCandidate = builtOperator + CurrentCharacter;
+            if (TokenHelpers.OperatorsAndPunctors.Contains(doubleOperatorCandidate))
+            {
+                _source.MoveToNext();
+                return new Token(TokenHelpers.OperatorsToTokenTypes[doubleOperatorCandidate], position);
+            }
+
+            if (doubleOperatorCandidate != "//")
+                return TokenHelpers.OperatorsAndPunctors.Contains(builtOperator)
+                    ? new Token(TokenHelpers.OperatorsToTokenTypes[builtOperator], position)
+                    : TokenFailed(new UnknownOperatorError(position));
+
+            return BuildComment(position);
+        }
+
+        private Token BuildComment(Position position)
+        {
+            var builder = new StringBuilder();
+
+            while (CurrentCharacter.IsWhiteSpace() && !_source.IsCurrentCharacterNewLine)
+                _source.MoveToNext();
+
+            while (_source is { IsCurrentCharacterNewLine: false, CurrentCharacter: not null })
+            {
+                if (builder.Length >= _config.MaxCommentLength)
+                    return TokenFailed(new InvalidTokenLengthError(_source.Position, _config.MaxCommentLength), false);
+
+                builder.Append(CurrentCharacter);
+                _source.MoveToNext();
+            }
+
+            _source.MoveToNext();
+            return new Token<string>(builder.ToString(), TokenType.Comment, position);
         }
 
         private Token BuildStringLiteral()
