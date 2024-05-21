@@ -15,7 +15,7 @@ namespace CNull.Lexer.States
 
         public override Token BuildToken()
         {
-            if (CurrentCharacter.IsTokenTerminator())
+            if (!CurrentCharacter.CanContinueToken())
                 return TokenFailed(new InvalidTokenStartCharacter(TokenPosition), false);
 
             var lengthCounter = 0;
@@ -30,7 +30,7 @@ namespace CNull.Lexer.States
 
                 Source.MoveToNext();
             } 
-            while (!CurrentCharacter.IsTokenTerminator());
+            while (CurrentCharacter.CanContinueToken());
 
             var literalToken = _tokenBuilder.ToString();
             var isKeyword = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType);

@@ -1,5 +1,5 @@
 ﻿using CNull.ErrorHandler.Errors;
-using CNull.ErrorHandler.Events.Args;
+using CNull.ErrorHandler.Events;
 
 namespace CNull.ErrorHandler
 {

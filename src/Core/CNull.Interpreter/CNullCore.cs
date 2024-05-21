@@ -1,7 +1,7 @@
 ﻿using CNull.Common.Extensions;
 using CNull.Common.Mediators;
 using CNull.ErrorHandler;
-using CNull.ErrorHandler.Events.Args;
+using CNull.ErrorHandler.Events;
 using CNull.ErrorHandler.Exceptions;
 using CNull.ErrorHandler.Extensions;
 using CNull.Interpreter.Extensions;

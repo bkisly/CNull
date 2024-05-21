@@ -37,13 +37,13 @@ namespace CNull.Lexer.States
                 SkipToken();
 
             ErrorHandler.RaiseCompilationError(error);
-            return Token.Unknown(TokenPosition);
+            return Token.Unknown(error.Position);
         }
 
         protected virtual void SkipToken()
         {
             var counter = 0;
-            while (!Source.CurrentCharacter.IsTokenTerminator())
+            while (!Source.CurrentCharacter.CanContinueToken())
             {
                 if (++counter > Configuration.MaxTokenLength)
                     ErrorHandler.RaiseCompilationError(new InvalidTokenLengthError(TokenPosition, Configuration.MaxTokenLength));

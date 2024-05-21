@@ -1,6 +1,6 @@
 ﻿using CNull.Common.Configuration;
 using CNull.ErrorHandler.Errors;
-using CNull.ErrorHandler.Events.Args;
+using CNull.ErrorHandler.Events;
 using CNull.ErrorHandler.Exceptions;
 using Microsoft.Extensions.Logging;
 

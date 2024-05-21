@@ -65,18 +65,18 @@
         /// <summary>
         /// Contains a collection of recognizable operators and punctors.
         /// </summary>
-        public static readonly string[] OperatorsAndPunctors = OperatorsToTokenTypes.Keys.ToArray();
+        public static readonly string[] OperatorsAndPunctors = [.. OperatorsToTokenTypes.Keys];
 
         private static readonly char[] OperatorsFirstCharacters =
             OperatorsAndPunctors.Select(o => o.First()).Distinct().ToArray();
 
         /// <summary>
-        /// Determines whether given character can terminate a token.
+        /// Determines whether given character can continue building a token.
         /// </summary>
         /// <param name="c">Checked character.</param>
         /// <returns></returns>
-        public static bool IsTokenTerminator(this char? c) =>
-            !c.HasValue || (!char.IsLetter(c.Value) && !char.IsNumber(c.Value) && c.Value != '_');
+        public static bool CanContinueToken(this char? c) =>
+            c.HasValue && (char.IsLetter(c.Value) || char.IsNumber(c.Value) || c.Value == '_');
 
         /// <summary>
         /// Determines whether given character can be a starting point to build an operator.

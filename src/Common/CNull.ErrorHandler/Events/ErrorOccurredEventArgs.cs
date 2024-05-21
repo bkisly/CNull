@@ -1,4 +1,4 @@
-﻿namespace CNull.ErrorHandler.Events.Args
+﻿namespace CNull.ErrorHandler.Events
 {
     /// <summary>
     /// Args for the event raised when an error occurred.
