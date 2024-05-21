@@ -131,9 +131,6 @@ namespace CNull.Lexer
                 _source.MoveToNext();
             }
 
-            if (builder.Length == 0)
-                return TokenFailed(new InvalidTokenStartCharacter(position));
-
             var literalToken = builder.ToString();
             var isKeyword = TokenHelpers.KeywordsToTokenTypes.TryGetValue(literalToken, out var tokenType);
 
@@ -156,7 +153,48 @@ namespace CNull.Lexer
 
         private Token BuildNumericValue()
         {
-            throw new NotImplementedException();
+            long integerPart = 0, fractionPart = 0;
+            var maxFractionDigits = long.MaxValue.Length();
+            var position = _source.Position;
+
+            if (CurrentCharacter is '0')
+            {
+                _source.MoveToNext();
+                if (CurrentCharacter.IsAsciiDigit())
+                    return TokenFailed(new PrefixedZeroError(position));
+            }
+            else if (!TryBuildNumberPart(ref integerPart, out _, int.MaxValue, _config.MaxTokenLength))
+                return TokenFailed(new NumericValueOverflowError(position));
+
+            if (CurrentCharacter is not '.')
+                return new Token<int>((int)integerPart, TokenType.IntegerLiteral, position);
+
+            _source.MoveToNext();
+
+            if (!TryBuildNumberPart(ref fractionPart, out var fractionLength, maxDigits: maxFractionDigits))
+                return TokenFailed(new NumericValueOverflowError(_source.Position));
+
+            var fractionValue = fractionLength / (decimal)Math.Pow(10, fractionLength);
+            return new Token<float>(integerPart + (float)fractionValue, TokenType.FloatLiteral, position);
+        }
+
+        private bool TryBuildNumberPart(ref long partValue, out int partLength, long maxValue = long.MaxValue, int maxDigits = int.MaxValue)
+        {
+            partLength = 0;
+
+            while (CurrentCharacter.IsAsciiDigit())
+            {
+                var digitValue = CurrentCharacter!.Value - '0';
+                if (partLength > maxDigits || partValue > (maxValue - digitValue) / 10)
+                    return false;
+
+                partValue = partValue * 10 + digitValue;
+                partLength++;
+
+                _source.MoveToNext();
+            }
+
+            return true;
         }
 
         private Token BuildOperatorOrComment()
