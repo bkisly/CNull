@@ -1,5 +1,4 @@
-﻿using CNull.Source.Repositories;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace CNull.Source.Extensions
 {
@@ -7,7 +6,6 @@ namespace CNull.Source.Extensions
     {
         public static IServiceCollection AddSourceServices(this IServiceCollection serviceCollection)
         {
-            serviceCollection.AddSingleton<IInputRepository, InputRepository>();
             serviceCollection.AddSingleton<IRawCodeSource, RawCodeSource>();
             serviceCollection.AddSingleton<ICodeSource, NewLineUnifierProxy>();
             return serviceCollection;

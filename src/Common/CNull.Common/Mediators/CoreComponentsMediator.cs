@@ -1,4 +1,4 @@
-﻿using CNull.Common.Events.Args;
+﻿using CNull.Common.Events;
 
 namespace CNull.Common.Mediators
 {
@@ -10,15 +10,22 @@ namespace CNull.Common.Mediators
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public event EventHandler<FileInputRequestedEventArgs>? FileInputRequested; 
+        public string CurrentSourcePath { get; private set; } = "<unknown>";
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="sourcePath"><inheritdoc/></param>
-        public void NotifyFileInputRequested(string sourcePath)
+        public event EventHandler<InputRequestedEventArgs>? InputRequested;
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="reader"><inheritdoc/></param>
+        /// <param name="path"><inheritdoc/></param>
+        public void NotifyInputRequested(Lazy<TextReader> reader, string path)
         {
-            FileInputRequested?.Invoke(this, new FileInputRequestedEventArgs(sourcePath));
+            CurrentSourcePath = path;
+            InputRequested?.Invoke(this, new InputRequestedEventArgs(reader, path));
         }
     }
 }

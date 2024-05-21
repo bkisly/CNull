@@ -1,26 +1,20 @@
 using CNull.Common;
-using CNull.Common.Events.Args;
-using CNull.ErrorHandler;
-using CNull.ErrorHandler.Errors;
+using CNull.Common.Events;
 using CNull.ErrorHandler.Errors.Source;
 using CNull.Source.Tests.Helpers;
 
 namespace CNull.Source.Tests
 {
-    public class RawCodeSourceTests(CodeSourceFixture fixture) : IClassFixture<CodeSourceFixture>
+    public class RawCodeSourceTests(RawSourceHelpersFixture fixture) : IClassFixture<RawSourceHelpersFixture>
     {
         [Theory, ClassData(typeof(StreamBufferReadsData))]
         public void CanAdvanceToNextCharacter(string testBuffer, int numberOfReads)
         {
             // Arrange
 
-            fixture.Reset();
-            fixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
-            fixture.MockedBuffer = testBuffer;
+            fixture.Setup(testBuffer);
 
-            var codeInput = new RawCodeSource(
-                fixture.InputRepositoryMock.Object, 
-                null!, 
+            var codeInput = new RawCodeSource(fixture.Reader, fixture.ErrorHandlerMock.Object,
                 fixture.MediatorMock.Object);
             var results = new List<char?>();
 
@@ -43,13 +37,9 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            fixture.Reset();
-            fixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
-            fixture.MockedBuffer = testBuffer;
+            fixture.Setup(testBuffer);
 
-            var codeInput = new RawCodeSource(
-                fixture.InputRepositoryMock.Object, 
-                null!, 
+            var codeInput = new RawCodeSource(fixture.Reader, fixture.ErrorHandlerMock.Object,
                 fixture.MediatorMock.Object);
 
             // Act
@@ -69,12 +59,9 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            fixture.Reset();
-            fixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(true);
+            fixture.Setup(string.Empty);
 
-            var codeInput = new RawCodeSource(
-                fixture.InputRepositoryMock.Object, 
-                null!, 
+            var codeInput = new RawCodeSource(fixture.Reader, fixture.ErrorHandlerMock.Object,
                 fixture.MediatorMock.Object);
 
             // Act
@@ -91,16 +78,8 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            fixture.Reset();
-            fixture.InputRepositoryMock.SetupGet(s => s.IsInitialized).Returns(false);
-
-            var errorHandlerMock = new Mock<IErrorHandler>();
-            errorHandlerMock.Setup(e => e.RaiseSourceError(It.IsAny<ISourceError>()));
-
-            var codeInput = new RawCodeSource(
-                fixture.InputRepositoryMock.Object, 
-                errorHandlerMock.Object, 
-                fixture.MediatorMock.Object);
+            fixture.Setup();
+            var codeInput = new RawCodeSource(fixture.ErrorHandlerMock.Object, fixture.MediatorMock.Object);
 
             // Act
 
@@ -110,7 +89,7 @@ namespace CNull.Source.Tests
             // Assert
 
             Assert.Null(character);
-            errorHandlerMock.Verify(e => e.RaiseSourceError(It.IsAny<StreamNotInitializedError>()), Times.Once);
+            fixture.ErrorHandlerMock.Verify(e => e.RaiseSourceError(It.IsAny<StreamNotInitializedError>()), Times.Once);
         }
 
         [Fact]
@@ -118,24 +97,21 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            fixture.Reset();
-            fixture.InputRepositoryMock.Setup(r => r.SetupFileStream(It.IsAny<string>()));
-            fixture.InputRepositoryMock.SetupGet(r => r.IsInitialized).Returns(true);
+            fixture.Setup();
 
             const string testPath = "Sample path";
             var codeInput = new RawCodeSource(
-                fixture.InputRepositoryMock.Object, 
-                null!,
+                fixture.ErrorHandlerMock.Object, 
                 fixture.MediatorMock.Object);
 
             // Act
 
-            fixture.MediatorMock.Raise(m => m.FileInputRequested += null,
-                new FileInputRequestedEventArgs(testPath));
+            fixture.MediatorMock.Raise(m => m.InputRequested += null,
+                new InputRequestedEventArgs(new Lazy<TextReader>(() => new StringReader("ABCDE")), testPath));
 
             // Assert
 
-            fixture.InputRepositoryMock.Verify(r => r.SetupFileStream(testPath), Times.Once);
+            Assert.Equal(codeInput.CurrentCharacter, 'A');
         }
 
         [Fact]
@@ -143,30 +119,23 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            fixture.Reset();
-            fixture.InputRepositoryMock.
-                Setup(r => r.SetupFileStream(It.IsAny<string>()))
-                .Throws<IOException>();
-            fixture.InputRepositoryMock.SetupGet(r => r.IsInitialized).Returns(false);
+            fixture.Setup();
 
-            var errorHandlerMock = new Mock<IErrorHandler>();
-            errorHandlerMock.Setup(e => e.RaiseSourceError(It.IsAny<ISourceError>()));
-
+            var failingReader = new Lazy<TextReader>(() => throw new IOException());
             const string testPath = "Sample path";
-            var codeInput = new RawCodeSource(
-                fixture.InputRepositoryMock.Object, 
-                errorHandlerMock.Object,
-                fixture.MediatorMock.Object);
+
+            var codeInput = new RawCodeSource(fixture.ErrorHandlerMock.Object, fixture.MediatorMock.Object);
 
             // Act
 
-            fixture.MediatorMock.Raise(m => m.FileInputRequested += null,
-                new FileInputRequestedEventArgs(testPath));
+            fixture.MediatorMock.Raise(m => m.InputRequested += null,
+                new InputRequestedEventArgs(failingReader, testPath));
 
             // Assert
 
-            errorHandlerMock.Verify(e => e.RaiseSourceError(
-                It.Is<FileAccessError>(error => error.FilePath == new FileAccessError(testPath).FilePath)), Times.Once);
+            Assert.Null(codeInput.CurrentCharacter);
+            fixture.ErrorHandlerMock.Verify(e => e.RaiseSourceError(
+                It.Is<InputAccessError>(error => error.SourcePath == new InputAccessError(testPath).SourcePath)), Times.Once);
         }
 
         [Theory, ClassData(typeof(PositionCounterData))]
@@ -174,12 +143,9 @@ namespace CNull.Source.Tests
         {
             // Arrange
 
-            var reader = new StringReader(input);
-            fixture.Reset();
-            fixture.InputRepositoryMock.Setup(r => r.Read()).Returns(reader.Read);
-            fixture.InputRepositoryMock.SetupGet(r => r.IsInitialized).Returns(true);
-
-            var source = new RawCodeSource(fixture.InputRepositoryMock.Object, new Mock<IErrorHandler>().Object, fixture.MediatorMock.Object);
+            fixture.Setup(input);
+            var source = new RawCodeSource(fixture.Reader, fixture.ErrorHandlerMock.Object,
+                fixture.MediatorMock.Object);
 
             // Act
 

@@ -2,15 +2,14 @@
 
 namespace CNull.Source.Tests
 {
-    public class NewLineUnifierProxyTests(NewLineProxyFixture sourceFixture) : IClassFixture<NewLineProxyFixture>
+    public class NewLineUnifierProxyTests(CodeSourceHelpersFixture sourceFixture) : IClassFixture<CodeSourceHelpersFixture>
     {
         [Theory, ClassData(typeof(StreamBufferReadsData))]
         public void CanReadAndFilterCrCharacters(string testBuffer, int numberOfReads)
         {
             // Arrange
 
-            sourceFixture.Reset();
-            sourceFixture.MockedBuffer = testBuffer;
+            sourceFixture.Setup(testBuffer);
 
             var results = new List<char?>();
             var proxy = new NewLineUnifierProxy(sourceFixture.CodeSourceMock.Object);

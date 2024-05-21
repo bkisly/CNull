@@ -1,4 +1,4 @@
-﻿using CNull.Common.Events.Args;
+﻿using CNull.Common.Events;
 
 namespace CNull.Common.Mediators
 {
@@ -8,14 +8,20 @@ namespace CNull.Common.Mediators
     public interface ICoreComponentsMediator
     {
         /// <summary>
-        /// Event raised when input source has been given.
+        /// Returns the path to the currently processed source.
         /// </summary>
-        event EventHandler<FileInputRequestedEventArgs> FileInputRequested;
+        string CurrentSourcePath { get; }
+
+        /// <summary>
+        /// Event raised when input source has been requested.
+        /// </summary>
+        event EventHandler<InputRequestedEventArgs> InputRequested;
 
         /// <summary>
         /// Raises FileInputRequested event.
         /// </summary>
-        /// <param name="sourcePath">Path to the input source.</param>
-        void NotifyFileInputRequested(string sourcePath);
+        /// <param name="reader">Lazy initializer of the reader from which code will be read.</param>
+        /// <param name="path">Formatted path to the source.</param>
+        void NotifyInputRequested(Lazy<TextReader> reader, string path);
     }
 }

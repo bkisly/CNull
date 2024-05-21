@@ -6,7 +6,6 @@ using CNull.Lexer.Factories;
 using CNull.Lexer.ServicesContainers;
 using CNull.Lexer.Tests.Fixtures;
 using CNull.Source;
-using CNull.Source.Repositories;
 
 namespace CNull.IntegrationTests.CrossComponents
 {
@@ -59,10 +58,8 @@ namespace CNull.IntegrationTests.CrossComponents
             };
 
             var reader = new StringReader(testBuffer);
-            var repository = new InputRepository();
-            repository.SetupStream(reader);
 
-            var rawSource = new RawCodeSource(repository, fixture.ErrorHandlerMock.Object,
+            var rawSource = new RawCodeSource(reader, fixture.ErrorHandlerMock.Object,
                 new Mock<ICoreComponentsMediator>().Object);
 
             var sourceProxy = new NewLineUnifierProxy(rawSource);

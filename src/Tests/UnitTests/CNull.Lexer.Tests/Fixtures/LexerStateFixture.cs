@@ -3,7 +3,7 @@ using CNull.Source.Tests.Helpers;
 
 namespace CNull.Lexer.Tests.Fixtures
 {
-    public sealed class LexerStateFixture : NewLineProxyFixture
+    public sealed class LexerStateFixture : CodeSourceHelpersFixture
     {
         public Mock<ILexerStateServicesContainer> ServicesContainerMock { get; private set; } = new();
 
@@ -12,9 +12,9 @@ namespace CNull.Lexer.Tests.Fixtures
             Reset();
         }
 
-        public override void Reset()
+        public void Reset()
         {
-            base.Reset();
+            //base.Reset();
 
             CompilerConfigurationMock.SetupGet(c => c.MaxCommentLength).Returns(1000);
             CompilerConfigurationMock.SetupGet(c => c.MaxIdentifierLength).Returns(1000);

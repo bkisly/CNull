@@ -70,7 +70,7 @@ namespace CNull.Interpreter
         /// <param name="path">Path to read the program from.</param>
         public async Task ExecuteFromFileAsync(string path) => await BeginExecutionAsync(() =>
         {
-            _mediator.NotifyFileInputRequested(path);
+            _mediator.NotifyInputRequested(new Lazy<TextReader>(() => new StreamReader(path)), path);
             _interpreter.Execute(_inputCallback, _outputCallback);
         });
 

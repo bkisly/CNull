@@ -11,7 +11,6 @@ using CNull.Parser;
 using CNull.Parser.Errors;
 using CNull.Parser.Productions;
 using CNull.Parser.Tests.Fixtures;
-using CNull.Source.Repositories;
 using CNull.Source;
 
 namespace CNull.IntegrationTests.CrossComponents
@@ -53,10 +52,8 @@ namespace CNull.IntegrationTests.CrossComponents
             fixture.ResetFixture();
 
             var reader = new StringReader(input);
-            var repository = new InputRepository();
-            repository.SetupStream(reader);
 
-            var rawSource = new RawCodeSource(repository, fixture.ErrorHandler.Object,
+            var rawSource = new RawCodeSource(reader, fixture.ErrorHandler.Object,
                 new Mock<ICoreComponentsMediator>().Object);
 
             var sourceProxy = new NewLineUnifierProxy(rawSource);
@@ -201,10 +198,8 @@ namespace CNull.IntegrationTests.CrossComponents
             fixture.ResetFixture();
 
             var reader = new StringReader(input);
-            var repository = new InputRepository();
-            repository.SetupStream(reader);
 
-            var rawSource = new RawCodeSource(repository, fixture.ErrorHandler.Object,
+            var rawSource = new RawCodeSource(reader, fixture.ErrorHandler.Object,
                 new Mock<ICoreComponentsMediator>().Object);
 
             var sourceProxy = new NewLineUnifierProxy(rawSource);

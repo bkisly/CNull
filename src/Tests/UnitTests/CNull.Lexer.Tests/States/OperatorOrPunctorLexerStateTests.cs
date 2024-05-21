@@ -26,7 +26,7 @@ namespace CNull.Lexer.Tests.States
             // Arrange
 
             fixture.Reset();
-            fixture.MockedBuffer = "// some comment";
+            fixture.Setup("// some comment");
             fixture.CodeSourceMock.Object.MoveToNext();
 
             var commentStateMock = new Mock<ILexerState>();

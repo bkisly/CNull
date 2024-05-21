@@ -31,7 +31,7 @@ namespace CNull.Source
     }
 
     /// <summary>
-    /// Represents a non filtered input code source.
+    /// Represents a non-filtered input code source.
     /// </summary>
     public interface IRawCodeSource : ICodeSource
     {

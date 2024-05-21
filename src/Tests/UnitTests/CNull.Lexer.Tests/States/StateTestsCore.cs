@@ -10,8 +10,7 @@ namespace CNull.Lexer.Tests.States
         {
             // Arrange
 
-            fixture.Reset();
-            fixture.MockedBuffer = input;
+            fixture.Setup(input);
             fixture.CodeSourceMock.Object.MoveToNext();
 
             // Act
@@ -28,8 +27,7 @@ namespace CNull.Lexer.Tests.States
         {
             // Arrange
 
-            fixture.Reset();
-            fixture.MockedBuffer = input;
+            fixture.Setup(input);
             fixture.CodeSourceMock.Object.MoveToNext();
 
             // Act

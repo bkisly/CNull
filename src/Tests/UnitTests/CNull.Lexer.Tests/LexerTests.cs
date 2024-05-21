@@ -38,8 +38,7 @@ namespace CNull.Lexer.Tests
             factoryMock.Setup(f => f.Create('B')).Returns(stateMock2.Object);
             factoryMock.Setup(f => f.Create('C')).Returns(stateMock3.Object);
 
-            fixture.Reset();
-            fixture.MockedBuffer = "  \n\tA B BBA C B\nB\t\nA";
+            fixture.Setup("  \n\tA B BBA C B\nB\t\nA");
             fixture.CodeSourceMock.Object.MoveToNext();
 
             var lexer = new Lexer(fixture.ServicesContainerMock.Object, factoryMock.Object);

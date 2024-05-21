@@ -1,12 +1,12 @@
 ﻿namespace CNull.ErrorHandler.Errors.Source
 {
     /// <summary>
-    /// Represents an error which occurrs when the source file could not be found or accessed.
+    /// Represents an error which occurrs when the source input could not be found or accessed.
     /// </summary>
-    /// <param name="filePath">Path of the requested file.</param>
-    public class FileAccessError(string filePath) : ISourceError
+    /// <param name="path">Path of the requested source.</param>
+    public class InputAccessError(string path) : ISourceError
     {
-        public string Message => $"Given file could not be found or accessed. Requested path: {FilePath}";
-        public string FilePath => Path.GetFullPath(filePath);
+        public string Message => $"Given file could not be found or accessed. Requested path: {SourcePath}";
+        public string SourcePath => path;
     }
 }

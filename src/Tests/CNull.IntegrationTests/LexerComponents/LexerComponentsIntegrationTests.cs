@@ -52,8 +52,7 @@ namespace CNull.IntegrationTests.LexerComponents
                 new Token(TokenType.End, Position.FirstCharacter),
             };
 
-            fixture.Reset();
-            fixture.MockedBuffer = testBuffer;
+            fixture.Setup(testBuffer);
             fixture.CodeSourceMock.Object.MoveToNext();
 
             var factory = new LexerStateFactory(fixture.ServicesContainerMock.Object);
