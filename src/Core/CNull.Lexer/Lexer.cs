@@ -4,9 +4,8 @@ using CNull.Common.Configuration;
 using CNull.Common.Extensions;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
-using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer.Constants;
-using CNull.Lexer.States;
+using CNull.Lexer.Errors;
 using CNull.Source;
 
 namespace CNull.Lexer
@@ -102,7 +101,7 @@ namespace CNull.Lexer
         protected virtual void SkipToken()
         {
             var counter = 0;
-            while (!_source.CurrentCharacter.CanContinueToken())
+            while (_source.CurrentCharacter.CanContinueToken())
             {
                 if (++counter > _config.MaxTokenLength)
                     _errorHandler.RaiseCompilationError(new InvalidTokenLengthError(_source.Position, _config.MaxTokenLength));
@@ -241,12 +240,78 @@ namespace CNull.Lexer
 
         private Token BuildStringLiteral()
         {
-            throw new NotImplementedException();
+            var builder = new StringBuilder();
+            var position = _source.Position;
+
+            _source.MoveToNext();
+            var isEscapeSequence = false;
+
+            while (CurrentCharacter != '"' || (isEscapeSequence && CurrentCharacter == '"'))
+            {
+                if (builder.Length >= _config.MaxStringLiteralLength)
+                    return TokenFailed(new InvalidTokenLengthError(_source.Position, _config.MaxStringLiteralLength), false);
+
+                if (!CurrentCharacter.HasValue || _source.IsCurrentCharacterNewLine)
+                    return TokenFailed(new LineBreakedTextLiteralError(_source.Position));
+
+                if (isEscapeSequence)
+                {
+                    char sequenceCharacter = default;
+
+                    if (!TokenHelpers.TryBuildEscapeSequence(CurrentCharacter.Value, ref sequenceCharacter))
+                        return TokenFailed(new InvalidEscapeSequenceError(_source.Position));
+
+                    builder.Append(sequenceCharacter);
+                    isEscapeSequence = false;
+                }
+                else
+                {
+                    if (CurrentCharacter == '\\')
+                        isEscapeSequence = true;
+                    else builder.Append(CurrentCharacter);
+                }
+
+                _source.MoveToNext();
+            }
+
+            _source.MoveToNext();
+            return new Token<string>(builder.ToString(), TokenType.StringLiteral, position);
         }
 
         private Token BuildCharLiteral()
         {
-            throw new NotImplementedException();
+            var position = _source.Position;
+            _source.MoveToNext();
+
+            var isEscapeSequence = false;
+            char literalContent = default;
+
+            switch (CurrentCharacter)
+            {
+                case '\'' or null:
+                    return TokenFailed(new EmptyCharLiteralError(position));
+                case '\\':
+                    isEscapeSequence = true;
+                    _source.MoveToNext();
+                    break;
+                default:
+                    if (_source.IsCurrentCharacterNewLine)
+                        return TokenFailed(new LineBreakedTextLiteralError(_source.Position));
+                    break;
+            }
+
+            if (!isEscapeSequence)
+                literalContent = CurrentCharacter.Value;
+            else if (!TokenHelpers.TryBuildEscapeSequence(CurrentCharacter.Value, ref literalContent))
+                return TokenFailed(new InvalidEscapeSequenceError(_source.Position));
+
+            _source.MoveToNext();
+
+            if (CurrentCharacter != '\'')
+                return TokenFailed(new UnterminatedCharLiteralError(_source.Position));
+
+            _source.MoveToNext();
+            return new Token<char>(literalContent, TokenType.CharLiteral, position);
         }
 
         #endregion

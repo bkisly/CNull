@@ -1,4 +1,5 @@
-﻿using CNull.Source.Tests.Helpers;
+﻿using CNull.Source.Tests.Data;
+using CNull.Source.Tests.Fixtures;
 
 namespace CNull.Source.Tests
 {

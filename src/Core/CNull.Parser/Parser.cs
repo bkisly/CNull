@@ -1,8 +1,8 @@
 ﻿using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
-using CNull.ErrorHandler.Errors.Compilation;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
+using CNull.Lexer.Errors;
 using CNull.Lexer.Extensions;
 using CNull.Parser.Errors;
 using CNull.Parser.Exceptions;

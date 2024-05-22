@@ -5,7 +5,7 @@ namespace CNull.Common.Mediators
     /// <summary>
     /// <inheritdoc cref="ICoreComponentsMediator"/>
     /// </summary>
-    internal class CoreComponentsMediator : ICoreComponentsMediator
+    public class CoreComponentsMediator : ICoreComponentsMediator
     {
         /// <summary>
         /// <inheritdoc/>

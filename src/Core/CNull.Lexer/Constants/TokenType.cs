@@ -1,7 +1,7 @@
 ﻿namespace CNull.Lexer.Constants
 {
     /// <summary>
-    /// Represents the type of a token.
+    /// Represents the type of token.
     /// </summary>
     public enum TokenType
     {

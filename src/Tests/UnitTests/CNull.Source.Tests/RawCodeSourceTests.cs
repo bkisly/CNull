@@ -1,7 +1,8 @@
 using CNull.Common;
 using CNull.Common.Events;
 using CNull.Source.Errors;
-using CNull.Source.Tests.Helpers;
+using CNull.Source.Tests.Data;
+using CNull.Source.Tests.Fixtures;
 
 namespace CNull.Source.Tests
 {
@@ -111,7 +112,7 @@ namespace CNull.Source.Tests
 
             // Assert
 
-            Assert.Equal(codeInput.CurrentCharacter, 'A');
+            Assert.Equal('A', codeInput.CurrentCharacter);
         }
 
         [Fact]
