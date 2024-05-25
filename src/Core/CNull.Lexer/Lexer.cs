@@ -174,7 +174,7 @@ namespace CNull.Lexer
             if (!TryBuildNumberPart(ref fractionPart, out var fractionLength, maxDigits: maxFractionDigits))
                 return TokenFailed(new NumericValueOverflowError(_source.Position), position);
 
-            var fractionValue = fractionLength / (decimal)Math.Pow(10, fractionLength);
+            var fractionValue = fractionPart / (decimal)Math.Pow(10, fractionLength);
             return new Token<float>(integerPart + (float)fractionValue, TokenType.FloatLiteral, position);
         }
 

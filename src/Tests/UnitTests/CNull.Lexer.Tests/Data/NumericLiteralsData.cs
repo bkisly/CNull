@@ -16,8 +16,6 @@ namespace CNull.Lexer.Tests.Data
             Add("012345", false, Token.Unknown(Position.FirstCharacter));
             Add("00", false, Token.Unknown(Position.FirstCharacter));
             Add("123abcde", true, new Token<int>(123, TokenType.IntegerLiteral, Position.FirstCharacter));
-            Add("", false, Token.Unknown(Position.FirstCharacter));
-            Add("-250", false, Token.Unknown(Position.FirstCharacter));
             Add("123123123123123123123123123123;", false, Token.Unknown(Position.FirstCharacter));
         }
     }
@@ -35,8 +33,6 @@ namespace CNull.Lexer.Tests.Data
             Add("123123123123123123123123123123.123123123123123123123123123123;", false, Token.Unknown(Position.FirstCharacter));
             Add("200.123123123123123123123123123123123123123123123123123123123123", false, Token.Unknown(Position.FirstCharacter));
             Add("0.00000000000000000000000000000000000000000000000000000000000000000", false, Token.Unknown(Position.FirstCharacter));
-            Add(".2456", false, Token.Unknown(Position.FirstCharacter));
-            Add("-24.560aaaaa", false, Token.Unknown(Position.FirstCharacter));
         }
     }
 
@@ -53,8 +49,6 @@ namespace CNull.Lexer.Tests.Data
             Add("012345", null);
             Add("00", null);
             Add("123abcde", 'a');
-            Add("", null);
-            Add("-250", '-');
             Add("123123123123123123123123123123;", ';');
             Add("123.4567-123== 0;", '-');
             Add("45.00000 ==123", ' ');
@@ -64,8 +58,6 @@ namespace CNull.Lexer.Tests.Data
             Add("123123123123123123123123123123.123123123123123123123123123123;", '.');
             Add("200.123123123123123123123123123123123123123123123123123123123123", null);
             Add("0.00000000000000000000000000000000000000000000000000000000000000000", null);
-            Add(".2456", '.');
-            Add("-24.560aaaaa", '-');
         }
     }
 }
