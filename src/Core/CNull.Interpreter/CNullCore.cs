@@ -20,9 +20,9 @@ namespace CNull.Interpreter
         private readonly IHost _host;
         private readonly IServiceScope _serviceScope;
 
-        private readonly Func<string, string?> _inputCallback;
-        private readonly Action<string> _outputCallback;
-        private readonly Action<string> _errorCallback;
+        private readonly StandardInput _inputCallback;
+        private readonly StandardOutput _outputCallback;
+        private readonly StandardError _errorCallback;
 
         private readonly ICoreComponentsMediator _mediator;
         private readonly IErrorHandler _errorHandler;
@@ -31,10 +31,10 @@ namespace CNull.Interpreter
         /// <summary>
         /// <inheritdoc cref="CNullCore"/>
         /// </summary>
-        /// <param name="inputCallback">Standard input provider. Parameter passes the string to display before requesting for input.</param>
-        /// <param name="outputCallback">Standard output provider.</param>
-        /// <param name="errorCallback">Error output provider.</param>
-        public CNullCore(Func<string, string?> inputCallback, Action<string> outputCallback, Action<string> errorCallback)
+        /// <param name="inputCallback">Standard input callback.</param>
+        /// <param name="outputCallback">Standard output callback.</param>
+        /// <param name="errorCallback">Error output callback.</param>
+        public CNullCore(StandardInput inputCallback, StandardOutput outputCallback, StandardError errorCallback)
         {
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;
@@ -51,10 +51,11 @@ namespace CNull.Interpreter
 
             _host = builder.Build();
             _serviceScope = _host.Services.CreateScope();
+            var serviceProvider = _serviceScope.ServiceProvider;
 
-            _mediator = _serviceScope.ServiceProvider.GetRequiredService<ICoreComponentsMediator>();
-            _errorHandler = _serviceScope.ServiceProvider.GetRequiredService<IErrorHandler>();
-            _interpreter = _serviceScope.ServiceProvider.GetRequiredService<IInterpreter>();
+            _mediator = serviceProvider.GetRequiredService<ICoreComponentsMediator>();
+            _errorHandler = serviceProvider.GetRequiredService<IErrorHandler>();
+            _interpreter = serviceProvider.GetRequiredService<IInterpreter>();
 
             _errorHandler.ErrorOccurred += ErrorHandler_ErrorOccurred;
         }
