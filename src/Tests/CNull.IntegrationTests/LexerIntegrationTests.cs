@@ -75,10 +75,7 @@ namespace CNull.IntegrationTests
 
             // Assert
 
-            foreach (var (expectedToken, actualToken) in expectedTokens.Zip(resultTokens))
-            {
-                Assert.Equivalent(expectedToken, actualToken);
-            }
+            Assert.Equivalent(expectedTokens, resultTokens);
         }
     }
 }

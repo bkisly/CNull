@@ -64,7 +64,7 @@ namespace CNull.Lexer.Tests
 
             // Assert
 
-            resultTokens.Should().BeEquivalentTo(expectedTokens);
+            Assert.Equivalent(expectedTokens, resultTokens);
         }
     }
 }

@@ -8,7 +8,9 @@ namespace CNull.ErrorHandler
 {
     public class ErrorHandler(ILogger<IErrorHandler> logger, ICNullConfiguration config) : IErrorHandler
     {
-        public int ErrorsCount { get; private set; }
+        private readonly Queue<IError> _errors = new();
+        public IEnumerable<IError> Errors => _errors;
+
         public event EventHandler<ErrorOccurredEventArgs>? ErrorOccurred;
 
         public void RaiseSourceError(ISourceError error)
@@ -22,7 +24,7 @@ namespace CNull.ErrorHandler
             RaiseError(error,
                 $"C? error (line: {error.Position.LineNumber}, column: {error.Position.ColumnNumber}): {error.GetType().Name}{Environment.NewLine}");
 
-            if (ErrorsCount >= config.MaxErrorsCount)
+            if (_errors.Count >= config.MaxErrorsCount)
                 throw FatalError();
         }
 
@@ -33,7 +35,7 @@ namespace CNull.ErrorHandler
 
         private void RaiseError(IError error, string message)
         {
-            ErrorsCount++;
+            _errors.Enqueue(error);
             logger.LogError($"Error occurred ({error.GetType().Name}): {error.Message}");
             ErrorOccurred?.Invoke(this, new ErrorOccurredEventArgs($"{message}{error.Message}"));
         }

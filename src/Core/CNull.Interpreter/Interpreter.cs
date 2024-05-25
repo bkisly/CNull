@@ -11,7 +11,7 @@ namespace CNull.Interpreter
             var program = parser.Parse();
             var stringifier = new AstStringifierVisitor();
 
-            if (errorHandler.ErrorsCount > 0)
+            if (errorHandler.Errors.Any())
                 return;
 
             if (program != null)

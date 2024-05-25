@@ -3,6 +3,7 @@ using CNull.Common.Configuration;
 using CNull.Common.Mediators;
 using CNull.Lexer;
 using CNull.Parser;
+using CNull.Parser.Errors;
 using CNull.Parser.Productions;
 using CNull.Source;
 using Microsoft.Extensions.Logging;
@@ -144,7 +145,7 @@ namespace CNull.IntegrationTests
 
             Assert.NotNull(program);
             Assert.Equivalent(expectedProgram, program);
-            Assert.Equal(0, errorHandler.ErrorsCount);
+            Assert.Empty(errorHandler.Errors);
         }
 
         [Fact]
@@ -280,11 +281,9 @@ namespace CNull.IntegrationTests
 
             Assert.NotNull(program);
             Assert.Equivalent(expectedProgram, program);
-            Assert.Equal(1, errorHandler.ErrorsCount);
-
-            //fixture.ErrorHandler.Verify(e =>
-            //    e.RaiseCompilationError(new MissingKeywordOrOperatorError(TokenType.SemicolonOperator.ToLiteralString(),
-            //        new Position(17, 5))), Times.Once);
+            Assert.Single(errorHandler.Errors);
+            Assert.Equivalent(new MissingKeywordOrOperatorError(";", new Position(17, 5)),
+                errorHandler.Errors.FirstOrDefault());
         }
     }
 }
