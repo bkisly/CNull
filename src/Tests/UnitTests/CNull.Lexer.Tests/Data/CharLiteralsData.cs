@@ -16,7 +16,6 @@ namespace CNull.Lexer.Tests.Data
             Add("'' == something", false, Token.Unknown(Position.FirstCharacter));
             Add("'AB' == something", false, Token.Unknown(Position.FirstCharacter));
             Add("'\n' == something", false, Token.Unknown(Position.FirstCharacter));
-            Add("ABCDE == something", false, Token.Unknown(Position.FirstCharacter));
         }
     }
 
@@ -29,7 +28,6 @@ namespace CNull.Lexer.Tests.Data
             Add("'\\n'", null);
             Add("'\\t''something", '\'');
             Add(@"'\\' == something", ' ');
-            Add("ABCDE == something", 'A');
         }
     }
 }

@@ -89,13 +89,13 @@ namespace CNull.Lexer
                 .FirstOrDefault();
         }
 
-        protected Token TokenFailed(ICompilationError error, bool shouldSkipToken = true)
+        protected Token TokenFailed(ICompilationError error, Position position, bool shouldSkipToken = true)
         {
             if (shouldSkipToken)
                 SkipToken();
 
             _errorHandler.RaiseCompilationError(error);
-            return Token.Unknown(error.Position);
+            return Token.Unknown(position);
         }
 
         protected virtual void SkipToken()
@@ -122,11 +122,11 @@ namespace CNull.Lexer
             while (CurrentCharacter.CanContinueToken())
             {
                 if (builder.Length >= _config.MaxIdentifierLength)
-                    return TokenFailed(new InvalidTokenLengthError(_source.Position, _config.MaxIdentifierLength), shouldSkipToken: false);
+                    return TokenFailed(new InvalidTokenLengthError(_source.Position, _config.MaxIdentifierLength), position, shouldSkipToken: false);
 
                 if (IsValidCharacter(CurrentCharacter, builder.Length))
                     builder.Append(CurrentCharacter!.Value);
-                else return TokenFailed(new InvalidIdentifierError(position));
+                else return TokenFailed(new InvalidIdentifierError(position), position);
 
                 _source.MoveToNext();
             }
@@ -148,7 +148,7 @@ namespace CNull.Lexer
         private static bool IsValidCharacter(char? character, int currentLength)
         {
             var validationBase = character.HasValue && (char.IsLetter(character.Value) || character.Value == '_');
-            return currentLength > 0 ? validationBase : validationBase || character.IsAsciiDigit();
+            return currentLength == 0 ? validationBase : validationBase || character.IsAsciiDigit();
         }
 
         private Token BuildNumericValue()
@@ -161,10 +161,10 @@ namespace CNull.Lexer
             {
                 _source.MoveToNext();
                 if (CurrentCharacter.IsAsciiDigit())
-                    return TokenFailed(new PrefixedZeroError(position));
+                    return TokenFailed(new PrefixedZeroError(position), position);
             }
             else if (!TryBuildNumberPart(ref integerPart, out _, int.MaxValue, _config.MaxTokenLength))
-                return TokenFailed(new NumericValueOverflowError(position));
+                return TokenFailed(new NumericValueOverflowError(position), position);
 
             if (CurrentCharacter is not '.')
                 return new Token<int>((int)integerPart, TokenType.IntegerLiteral, position);
@@ -172,7 +172,7 @@ namespace CNull.Lexer
             _source.MoveToNext();
 
             if (!TryBuildNumberPart(ref fractionPart, out var fractionLength, maxDigits: maxFractionDigits))
-                return TokenFailed(new NumericValueOverflowError(_source.Position));
+                return TokenFailed(new NumericValueOverflowError(_source.Position), position);
 
             var fractionValue = fractionLength / (decimal)Math.Pow(10, fractionLength);
             return new Token<float>(integerPart + (float)fractionValue, TokenType.FloatLiteral, position);
@@ -213,8 +213,9 @@ namespace CNull.Lexer
             if (doubleOperatorCandidate != "//")
                 return TokenHelpers.OperatorsAndPunctors.Contains(builtOperator)
                     ? new Token(TokenHelpers.OperatorsToTokenTypes[builtOperator], position)
-                    : TokenFailed(new UnknownOperatorError(position));
+                    : TokenFailed(new UnknownOperatorError(position), position);
 
+            _source.MoveToNext();
             return BuildComment(position);
         }
 
@@ -228,7 +229,7 @@ namespace CNull.Lexer
             while (_source is { IsCurrentCharacterNewLine: false, CurrentCharacter: not null })
             {
                 if (builder.Length >= _config.MaxCommentLength)
-                    return TokenFailed(new InvalidTokenLengthError(_source.Position, _config.MaxCommentLength), false);
+                    return TokenFailed(new InvalidTokenLengthError(_source.Position, _config.MaxCommentLength), position, false);
 
                 builder.Append(CurrentCharacter);
                 _source.MoveToNext();
@@ -249,17 +250,17 @@ namespace CNull.Lexer
             while (CurrentCharacter != '"' || (isEscapeSequence && CurrentCharacter == '"'))
             {
                 if (builder.Length >= _config.MaxStringLiteralLength)
-                    return TokenFailed(new InvalidTokenLengthError(_source.Position, _config.MaxStringLiteralLength), false);
+                    return TokenFailed(new InvalidTokenLengthError(_source.Position, _config.MaxStringLiteralLength), position, false);
 
                 if (!CurrentCharacter.HasValue || _source.IsCurrentCharacterNewLine)
-                    return TokenFailed(new LineBreakedTextLiteralError(_source.Position));
+                    return TokenFailed(new LineBreakedTextLiteralError(_source.Position), position);
 
                 if (isEscapeSequence)
                 {
                     char sequenceCharacter = default;
 
                     if (!TokenHelpers.TryBuildEscapeSequence(CurrentCharacter.Value, ref sequenceCharacter))
-                        return TokenFailed(new InvalidEscapeSequenceError(_source.Position));
+                        return TokenFailed(new InvalidEscapeSequenceError(_source.Position), position);
 
                     builder.Append(sequenceCharacter);
                     isEscapeSequence = false;
@@ -289,26 +290,26 @@ namespace CNull.Lexer
             switch (CurrentCharacter)
             {
                 case '\'' or null:
-                    return TokenFailed(new EmptyCharLiteralError(position));
+                    return TokenFailed(new EmptyCharLiteralError(position), position);
                 case '\\':
                     isEscapeSequence = true;
                     _source.MoveToNext();
                     break;
                 default:
                     if (_source.IsCurrentCharacterNewLine)
-                        return TokenFailed(new LineBreakedTextLiteralError(_source.Position));
+                        return TokenFailed(new LineBreakedTextLiteralError(_source.Position), position);
                     break;
             }
 
             if (!isEscapeSequence)
                 literalContent = CurrentCharacter.Value;
             else if (!TokenHelpers.TryBuildEscapeSequence(CurrentCharacter.Value, ref literalContent))
-                return TokenFailed(new InvalidEscapeSequenceError(_source.Position));
+                return TokenFailed(new InvalidEscapeSequenceError(_source.Position), position);
 
             _source.MoveToNext();
 
             if (CurrentCharacter != '\'')
-                return TokenFailed(new UnterminatedCharLiteralError(_source.Position));
+                return TokenFailed(new UnterminatedCharLiteralError(_source.Position), position);
 
             _source.MoveToNext();
             return new Token<char>(literalContent, TokenType.CharLiteral, position);

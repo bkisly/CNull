@@ -21,7 +21,11 @@ namespace CNull.Source.Tests.Fixtures
             CodeSourceMock = new Mock<IRawCodeSource>();
             CompilerConfigurationMock = new Mock<ICNullConfiguration>();
 
-            CodeSourceMock.Setup(s => s.MoveToNext()).Callback(() => SetCurrentCharacter(Reader.Read()));
+            CodeSourceMock.Setup(s => s.MoveToNext()).Callback(() =>
+            {
+                _currentPosition++;
+                SetCurrentCharacter(Reader.Read());
+            });
             CodeSourceMock.SetupGet(s => s.CurrentCharacter)
                 .Returns(() => _currentCharacter);
             CodeSourceMock.SetupGet(s => s.IsCurrentCharacterNewLine).Returns(() => _currentCharacter == '\n');

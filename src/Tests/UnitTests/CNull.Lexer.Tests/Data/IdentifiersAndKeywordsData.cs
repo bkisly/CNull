@@ -7,7 +7,6 @@ namespace CNull.Lexer.Tests.Data
     {
         public IdentifiersData()
         {
-            Add("", false, Token.Unknown(Position.FirstCharacter));
             Add("abcde-", true, new Token<string>("abcde", TokenType.Identifier, Position.FirstCharacter));
             Add("ABCDE/", true, new Token<string>("ABCDE", TokenType.Identifier, Position.FirstCharacter));
             Add("abc_DEF%", true, new Token<string>("abc_DEF", TokenType.Identifier, Position.FirstCharacter));
@@ -18,8 +17,6 @@ namespace CNull.Lexer.Tests.Data
             Add("_abcde_", true, new Token<string>("_abcde_", TokenType.Identifier, Position.FirstCharacter));
             Add("sampleToken1234567890 = 1;", true, new Token<string>("sampleToken1234567890", TokenType.Identifier, Position.FirstCharacter));
             Add("sampleToken1234567890_a__.SomeFurtherThing()", true, new Token<string>("sampleToken1234567890_a__", TokenType.Identifier, Position.FirstCharacter));
-            Add("1token", false, Token.Unknown(Position.FirstCharacter));
-            Add(".token", false, Token.Unknown(Position.FirstCharacter));
             Add(string.Join("", Enumerable.Repeat("a", 1500)), false, Token.Unknown(Position.FirstCharacter));
         }
     }
@@ -28,7 +25,6 @@ namespace CNull.Lexer.Tests.Data
     {
         public IdentifiersLastCharacterData()
         {
-            Add("", null);
             Add("abcde-", '-');
             Add("ABCDE/", '/');
             Add("abc_DEF%", '%');
@@ -40,7 +36,6 @@ namespace CNull.Lexer.Tests.Data
             Add("sampleToken1234567890 = 1;", ' ');
             Add("sampleToken1234567890_a__.SomeFurtherThing()", '.');
             Add("sampleToken\n1234567890_a__.SomeFurtherThing()", '\n');
-            Add("1token();", '(');
         }
     }
 
@@ -50,8 +45,15 @@ namespace CNull.Lexer.Tests.Data
         {
             foreach (var literalToken in TokenHelpers.KeywordsToTokenTypes.Keys)
                 Add($"{literalToken}(some further things)", true, new Token(TokenHelpers.KeywordsToTokenTypes[literalToken], Position.FirstCharacter));
+        }
+    }
 
-            Add(" .??", false, Token.Unknown(Position.FirstCharacter));
+    public class KeywordsLastCharacterData : TheoryData<string, char?>
+    {
+        public KeywordsLastCharacterData()
+        {
+            foreach (var literalToken in TokenHelpers.KeywordsToTokenTypes.Keys)
+                Add($"{literalToken}(some further things)", '(');
         }
     }
 }

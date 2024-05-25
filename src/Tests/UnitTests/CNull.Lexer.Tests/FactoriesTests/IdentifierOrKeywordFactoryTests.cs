@@ -14,7 +14,11 @@ namespace CNull.Lexer.Tests.FactoriesTests
             => TokenFactoriesTestsCore.TestTokensCreation(input, expectedResult, expectedToken, fixture);
 
         [Theory, ClassData(typeof(IdentifiersLastCharacterData))]
-        public void CanFinishAtProperCharacter(string input, char? expectedCharacter)
+        public void CanFinishIdentifiersAtProperCharacter(string input, char? expectedCharacter)
+            => TokenFactoriesTestsCore.TestFinishedCharacter(input, expectedCharacter, fixture);
+
+        [Theory, ClassData(typeof(KeywordsLastCharacterData))]
+        public void CanFinishKeywordsAtProperCharacter(string input, char? expectedCharacter)
             => TokenFactoriesTestsCore.TestFinishedCharacter(input, expectedCharacter, fixture);
     }
 }
