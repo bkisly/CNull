@@ -1,12 +1,8 @@
 ﻿using CNull.Common;
 using CNull.Common.Configuration;
 using CNull.Common.Mediators;
-using CNull.ErrorHandler.Errors;
 using CNull.Lexer;
-using CNull.Lexer.Constants;
-using CNull.Lexer.Extensions;
 using CNull.Parser;
-using CNull.Parser.Errors;
 using CNull.Parser.Productions;
 using CNull.Source;
 using Microsoft.Extensions.Logging;
@@ -72,8 +68,7 @@ namespace CNull.IntegrationTests
                 new FunctionDefinition(
                     new PrimitiveType(PrimitiveTypes.Integer, new Position(6, 1)),
                     "Main",
-                    new[]
-                    {
+                    [
                         new Parameter(
                             new PrimitiveType(PrimitiveTypes.Boolean, new Position(6, 10)),
                             "parameter1",
@@ -85,10 +80,9 @@ namespace CNull.IntegrationTests
                                 new Position(6, 27)),
                             "parameter2",
                             new Position(6, 27))
-                    },
+                    ],
                     new BlockStatement(
-                        new IBasicStatement[]
-                        {
+                        [
                             new VariableDeclaration(
                                 new PrimitiveType(PrimitiveTypes.Integer, new Position(8, 5)),
                                 "someVariable",
@@ -127,15 +121,15 @@ namespace CNull.IntegrationTests
                                     new LiteralExpression<int>(10, new Position(19, 27)),
                                     new Position(19, 25)),
                                 new Position(19, 5))
-                        },
+                        ],
                         new Position(7, 1)),
                     new Position(6, 1)),
                 new FunctionDefinition(
                     new ReturnType(new Position(22, 1)),
                     "Foo",
-                    new List<Parameter>(),
+                    [],
                     new BlockStatement(
-                        new List<IBasicStatement>(),
+                        [],
                         new Position(23, 1)),
                     new Position(22, 1))
             };
@@ -210,8 +204,7 @@ namespace CNull.IntegrationTests
                 new FunctionDefinition(
                     new PrimitiveType(PrimitiveTypes.Integer, new Position(6, 1)),
                     "Main",
-                    new[]
-                    {
+                    [
                         new Parameter(
                             new PrimitiveType(PrimitiveTypes.Boolean, new Position(6, 10)),
                             "parameter1",
@@ -223,10 +216,9 @@ namespace CNull.IntegrationTests
                                 new Position(6, 27)),
                             "parameter2",
                             new Position(6, 27))
-                    },
+                    ],
                     new BlockStatement(
-                        new IBasicStatement[]
-                        {
+                        [
                             new VariableDeclaration(
                                 new PrimitiveType(PrimitiveTypes.Integer, new Position(8, 5)),
                                 "someVariable",
@@ -265,15 +257,15 @@ namespace CNull.IntegrationTests
                                     new LiteralExpression<int>(10, new Position(19, 27)),
                                     new Position(19, 25)),
                                 new Position(19, 5))
-                        },
+                        ],
                         new Position(7, 1)),
                     new Position(6, 1)),
                 new FunctionDefinition(
                     new ReturnType(new Position(22, 1)),
                     "Foo",
-                    new List<Parameter>(),
+                    [],
                     new BlockStatement(
-                        new List<IBasicStatement>(),
+                        [],
                         new Position(23, 1)),
                     new Position(22, 1))
             };

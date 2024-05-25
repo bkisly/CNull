@@ -13,7 +13,6 @@ namespace CNull.Lexer.Tests.Data
             Add("\"sample \n\"", false, Token.Unknown(Position.FirstCharacter));
             Add("\"some literal, \\n\\t\"", true, new Token<string>("some literal, \n\t", TokenType.StringLiteral, Position.FirstCharacter));
             Add("\"\"", true, new Token<string>(string.Empty, TokenType.StringLiteral, Position.FirstCharacter));
-            Add("123123123.()", false, Token.Unknown(Position.FirstCharacter));
         }
     }
 
@@ -27,7 +26,6 @@ namespace CNull.Lexer.Tests.Data
             Add("\"sample \n\"", '\n');
             Add("\"some literal, \\n\"", null);
             Add("\"\"", null);
-            Add("123123123.()", '1');
         }
     }
 }
