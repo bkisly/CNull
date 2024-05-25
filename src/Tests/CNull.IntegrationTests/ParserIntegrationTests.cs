@@ -46,7 +46,8 @@ namespace CNull.IntegrationTests
 
             var configuration = new InMemoryCNullConfiguration();
             var mediator = new CoreComponentsMediator();
-            var errorHandler = new ErrorHandler.ErrorHandler(new Mock<ILogger<ErrorHandler.ErrorHandler>>().Object, configuration);
+            var errorHandler = new ErrorHandler.ErrorHandler(new Mock<ILogger<ErrorHandler.ErrorHandler>>().Object,
+                configuration, mediator);
 
             var rawSource = new RawCodeSource(errorHandler, mediator);
             var sourceProxy = new NewLineUnifierCodeSourceProxy(rawSource);
@@ -182,7 +183,8 @@ namespace CNull.IntegrationTests
 
             var configuration = new InMemoryCNullConfiguration();
             var mediator = new CoreComponentsMediator();
-            var errorHandler = new ErrorHandler.ErrorHandler(new Mock<ILogger<ErrorHandler.ErrorHandler>>().Object, configuration);
+            var errorHandler = new ErrorHandler.ErrorHandler(new Mock<ILogger<ErrorHandler.ErrorHandler>>().Object,
+                configuration, mediator);
 
             var rawSource = new RawCodeSource(errorHandler, mediator);
             var sourceProxy = new NewLineUnifierCodeSourceProxy(rawSource);
