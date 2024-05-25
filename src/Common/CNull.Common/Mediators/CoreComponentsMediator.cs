@@ -24,7 +24,7 @@ namespace CNull.Common.Mediators
         /// <param name="path"><inheritdoc/></param>
         public void NotifyInputRequested(Lazy<TextReader> reader, string path)
         {
-            CurrentSourcePath = path;
+            CurrentSourcePath = Path.GetFullPath(path);
             InputRequested?.Invoke(this, new InputRequestedEventArgs(reader, path));
         }
     }
