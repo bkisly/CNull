@@ -7,15 +7,18 @@ using CNull.Parser.Visitors;
 
 namespace CNull.Interpreter
 {
-    public class Interpreter(IParser parser, IErrorHandler errorHandler) : IInterpreter, IAstVisitor
+    public class Interpreter(IParser parser, IErrorHandler errorHandler, ICoreComponentsMediator mediator) : IInterpreter, IAstVisitor
     {
         private StandardInput? _inputCallback;
         private StandardOutput? _outputCallback;
 
+        private Program _rootProgram = null!;
         private Program _currentProgram = null!;
-        private DependencyTree<string> _dependencyTree = new();
-        private Queue<string> _modulesToVisit = [];
 
+        private DependencyTree<string> _dependencyTree = new();
+        private Queue<ImportDirective> _modulesToVisit = [];
+
+        private Dictionary<string, Program> _parsedProgramsCache = [];
         private Dictionary<string, FunctionDefinition> _functionDefinitions = [];
 
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
@@ -25,14 +28,21 @@ namespace CNull.Interpreter
             _dependencyTree = new DependencyTree<string>();
             _functionDefinitions = [];
             _modulesToVisit = [];
+            _parsedProgramsCache = [];
 
-            var program = parser.Parse();
+            var program = ParseAndCacheProgram();
 
             if (program == null || errorHandler.Errors.Any())
                 return;
 
-            program.Accept(new AstStringifierVisitor());
+            _rootProgram = program;
+            //program.Accept(new AstStringifierVisitor());
             program.Accept(this);
+
+            foreach (var functionDefinition in _rootProgram.FunctionDefinitions)
+                RegisterFunction(functionDefinition);
+
+            //_functionDefinitions["Main"].Accept(this);
         }
 
         public void Visit(Program program)
@@ -42,16 +52,24 @@ namespace CNull.Interpreter
             foreach (var importDirective in program.ImportDirectives)
                 importDirective.Accept(this);
 
-            foreach (var functionDefinition in program.FunctionDefinitions)
+            while (_modulesToVisit.Count != 0)
             {
-                try
-                {
-                    _functionDefinitions.Add(functionDefinition.Name, functionDefinition);
-                }
-                catch (ArgumentException)
-                {
-                    throw errorHandler.RaiseFatalCompilationError(new FunctionRedefinitionError(functionDefinition.Name, functionDefinition.Position));
-                }
+                var module = _modulesToVisit.Dequeue();
+                mediator.NotifyInputRequested(
+                    new Lazy<TextReader>(() => new StreamReader($"{module.ModuleName}.cnull")),
+                    $"{module.ModuleName}.cnull");
+
+                if (!_parsedProgramsCache.TryGetValue(module.ModuleName, out var importedProgram))
+                    importedProgram = ParseAndCacheProgram();
+
+                if (importedProgram == null)
+                    throw new NotImplementedException();
+
+                importedProgram.Accept(this);
+                var desiredFunction = importedProgram.FunctionDefinitions.SingleOrDefault(f => f.Name == module.FunctionName) 
+                                      ?? throw new NotImplementedException();
+
+                RegisterFunction(desiredFunction);
             }
         }
 
@@ -61,6 +79,9 @@ namespace CNull.Interpreter
 
             if (!_dependencyTree.Build())
                 throw errorHandler.RaiseFatalCompilationError(new CircularDependencyError(directive.Position));
+
+            if(!_modulesToVisit.Contains(directive))
+                _modulesToVisit.Enqueue(directive);
         }
 
         public void Visit(FunctionDefinition functionDefinition)
@@ -236,6 +257,29 @@ namespace CNull.Interpreter
         public void Visit(CallExpression callExpression)
         {
             throw new NotImplementedException();
+        }
+
+        private Program? ParseAndCacheProgram()
+        {
+            var program = parser.Parse();
+
+            if (program == null)
+                return program;
+
+            _parsedProgramsCache.TryAdd(program.ModuleName, program);
+            return program;
+        }
+
+        private void RegisterFunction(FunctionDefinition functionDefinition)
+        {
+            try
+            {
+                _functionDefinitions.Add(functionDefinition.Name, functionDefinition);
+            }
+            catch (ArgumentException)
+            {
+                throw errorHandler.RaiseFatalCompilationError(new FunctionRedefinitionError(functionDefinition.Name, functionDefinition.Position));
+            }
         }
     }
 }

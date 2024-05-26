@@ -3,8 +3,8 @@
     public class DependencyTree<T> where T : notnull
     {
         private readonly Dictionary<T, List<T>> _graph = [];
-        private readonly HashSet<T> _visited = [];
-        private readonly HashSet<T> _onPath = [];
+        private HashSet<T> _visited = [];
+        private HashSet<T> _onPath = [];
         private List<T> _sortedOrder = [];
 
         public void AddDependency(T obj, T dependency)
@@ -20,6 +20,9 @@
 
         public bool Build()
         {
+            _visited = [];
+            _onPath = [];
+
             if (_graph.Keys.Where(node => !_visited.Contains(node)).Any(node => !DepthFirstSearch(node)))
                 return false;
 
