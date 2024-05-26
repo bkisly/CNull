@@ -1,4 +1,6 @@
-﻿using CNull.ErrorHandler;
+﻿using CNull.Common.Mediators;
+using CNull.ErrorHandler;
+using CNull.Interpreter.Errors;
 using CNull.Parser;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
@@ -10,26 +12,55 @@ namespace CNull.Interpreter
         private StandardInput? _inputCallback;
         private StandardOutput? _outputCallback;
 
+        private Program _currentProgram = null!;
+        private DependencyTree<string> _dependencyTree = new();
+        private Queue<string> _modulesToVisit = [];
+
+        private Dictionary<string, FunctionDefinition> _functionDefinitions = [];
+
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
         {
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;
+            _dependencyTree = new DependencyTree<string>();
+            _functionDefinitions = [];
+            _modulesToVisit = [];
 
             var program = parser.Parse();
-            var stringifier = new AstStringifierVisitor();
 
-            if (program != null && !errorHandler.Errors.Any())
-                Console.WriteLine(stringifier.GetString(program));
+            if (program == null || errorHandler.Errors.Any())
+                return;
+
+            program.Accept(new AstStringifierVisitor());
+            program.Accept(this);
         }
 
         public void Visit(Program program)
         {
-            throw new NotImplementedException();
+            _currentProgram = program;
+
+            foreach (var importDirective in program.ImportDirectives)
+                importDirective.Accept(this);
+
+            foreach (var functionDefinition in program.FunctionDefinitions)
+            {
+                try
+                {
+                    _functionDefinitions.Add(functionDefinition.Name, functionDefinition);
+                }
+                catch (ArgumentException)
+                {
+                    throw errorHandler.RaiseFatalCompilationError(new FunctionRedefinitionError(functionDefinition.Name, functionDefinition.Position));
+                }
+            }
         }
 
         public void Visit(ImportDirective directive)
         {
-            throw new NotImplementedException();
+            _dependencyTree.AddDependency(_currentProgram.ModuleName, directive.ModuleName);
+
+            if (!_dependencyTree.Build())
+                throw errorHandler.RaiseFatalCompilationError(new CircularDependencyError(directive.Position));
         }
 
         public void Visit(FunctionDefinition functionDefinition)

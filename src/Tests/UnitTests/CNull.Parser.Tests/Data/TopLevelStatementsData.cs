@@ -84,7 +84,7 @@ namespace CNull.Parser.Tests.Data
                     new Position(6, 1)),
             };
 
-            var expectedProgram = new Program(expectedImports, expectedFunctions);
+            var expectedProgram = new Program("Program", expectedImports, expectedFunctions);
             Add(tokens, expectedProgram);
         }
 
@@ -111,7 +111,7 @@ namespace CNull.Parser.Tests.Data
                 new ImportDirective("AnotherModule", "AnotherFunction", new Position(2, 1))
             };
 
-            var expectedProgram = new Program(expectedImports, new List<FunctionDefinition>());
+            var expectedProgram = new Program("Program", expectedImports, new List<FunctionDefinition>());
             Add(tokens, expectedProgram);
         }
 
@@ -164,7 +164,7 @@ namespace CNull.Parser.Tests.Data
                     new Position(6, 1)),
             };
 
-            var expectedProgram = new Program(new List<ImportDirective>(), expectedFunctions);
+            var expectedProgram = new Program("Program", new List<ImportDirective>(), expectedFunctions);
             Add(tokens, expectedProgram);
         }
     }

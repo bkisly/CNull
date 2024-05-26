@@ -1,5 +1,6 @@
 ﻿using CNull.ErrorHandler.Errors;
 using CNull.ErrorHandler.Events;
+using CNull.ErrorHandler.Exceptions;
 
 namespace CNull.ErrorHandler
 {
@@ -22,18 +23,24 @@ namespace CNull.ErrorHandler
         /// Raises an error which occurred during interacting with the source.
         /// </summary>
         /// <param name="error">Error to raise.</param>
-        void RaiseSourceError(ISourceError error);
+        FatalErrorException RaiseSourceError(ISourceError error);
 
         /// <summary>
-        /// Raises an error which occurred during static analysis of the code.
+        /// Raises an error which occurred during static analysis of the code, which is not fatal.
         /// </summary>
         /// <param name="error">Error to raise.</param>
         void RaiseCompilationError(ICompilationError error);
 
         /// <summary>
+        /// Raises an error which occurred during static analysis of the code, which is fatal and makes program execution uncontinuable.
+        /// </summary>
+        /// <param name="error"></param>
+        FatalErrorException RaiseFatalCompilationError(ICompilationError error);
+
+        /// <summary>
         /// Raises an error which occurred at runtime.
         /// </summary>
         /// <param name="error">Error to raise.</param>
-        void RaiseRuntimeError(IRuntimeError error);
+        FatalErrorException RaiseRuntimeError(IRuntimeError error);
     }
 }

@@ -14,7 +14,7 @@ namespace CNull.Parser.Tests
             // Arrange
 
             fixture.SetupTokensQueue(tokens);
-            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.Logger.Object);
+            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.Mediator.Object, fixture.Logger.Object);
 
             // Act
 
@@ -25,6 +25,7 @@ namespace CNull.Parser.Tests
             Assert.NotNull(program);
             Assert.Equivalent(expectedProgram, program);
             fixture.ErrorHandler.Verify(e => e.RaiseCompilationError(It.IsAny<ICompilationError>()), Times.Never);
+            fixture.ErrorHandler.Verify(e => e.RaiseFatalCompilationError(It.IsAny<ICompilationError>()), Times.Never);
         }
 
         [Theory, ClassData(typeof(InvalidTopLevelStatementsData))]
@@ -33,7 +34,7 @@ namespace CNull.Parser.Tests
             // Arrange
 
             fixture.SetupTokensQueue(tokens);
-            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.Logger.Object);
+            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.Mediator.Object, fixture.Logger.Object);
 
             // Act
 
@@ -43,6 +44,7 @@ namespace CNull.Parser.Tests
 
             Assert.Null(program);
             fixture.ErrorHandler.Verify(e => e.RaiseCompilationError(expectedError), Times.Once);
+            fixture.ErrorHandler.Verify(e => e.RaiseFatalCompilationError(expectedError), Times.Never);
         }
     }
 }

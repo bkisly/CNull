@@ -1,4 +1,5 @@
-﻿using CNull.ErrorHandler;
+﻿using CNull.Common.Mediators;
+using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
@@ -38,7 +39,7 @@ namespace CNull.Parser
         Void = TokenType.VoidKeyword,
     }
 
-    public class Parser(ILexer lexer, IErrorHandler errorHandler, ILogger<IParser> logger) : IParser
+    public class Parser(ILexer lexer, IErrorHandler errorHandler, ICoreComponentsMediator mediator, ILogger<IParser> logger) : IParser
     {
         private Token _currentToken = null!;
 
@@ -90,7 +91,7 @@ namespace CNull.Parser
                     functionDefinitions.Add(functionDefinition);
 
                 logger.LogInformation("Successfully parsed the program.");
-                return new Program(importDirectives, functionDefinitions);
+                return new Program(mediator.CurrentModuleName, importDirectives, functionDefinitions);
             }
             catch (UnexpectedTokenException)
             {

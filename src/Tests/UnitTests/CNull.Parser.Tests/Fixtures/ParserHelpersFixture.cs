@@ -1,6 +1,8 @@
 ﻿using CNull.Common;
+using CNull.Common.Mediators;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Errors;
+using CNull.ErrorHandler.Exceptions;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
 using Microsoft.Extensions.Logging;
@@ -14,6 +16,7 @@ namespace CNull.Parser.Tests.Fixtures
         public Mock<ILexer> Lexer { get; private set; } = null!;
         public Mock<IErrorHandler> ErrorHandler { get; private set; } = null!;
         public Mock<ILogger<IParser>> Logger { get; private set; } = null!;
+        public Mock<ICoreComponentsMediator> Mediator { get; private set; } = null!;
 
         public ParserHelpersFixture()
         {
@@ -38,6 +41,11 @@ namespace CNull.Parser.Tests.Fixtures
 
             ErrorHandler = new Mock<IErrorHandler>();
             ErrorHandler.Setup(e => e.RaiseCompilationError(It.IsAny<ICompilationError>()));
+            ErrorHandler.Setup(e => e.RaiseFatalCompilationError(It.IsAny<ICompilationError>())).Returns(new FatalErrorException(""));
+
+            Mediator = new Mock<ICoreComponentsMediator>();
+            Mediator.Setup(m => m.CurrentSourcePath).Returns("<unknown>");
+            Mediator.Setup(m => m.CurrentModuleName).Returns("Program");
 
             Logger = new Mock<ILogger<IParser>>();
         }

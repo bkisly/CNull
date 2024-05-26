@@ -14,10 +14,10 @@ namespace CNull.ErrorHandler
 
         public event EventHandler<ErrorOccurredEventArgs>? ErrorOccurred;
 
-        public void RaiseSourceError(ISourceError error)
+        public FatalErrorException RaiseSourceError(ISourceError error)
         {
             RaiseError(error, $"C? initialization error: {error.GetType().Name}{Environment.NewLine}");
-            throw FatalError();
+            return FatalError();
         }
 
         public void RaiseCompilationError(ICompilationError error)
@@ -29,9 +29,16 @@ namespace CNull.ErrorHandler
                 throw FatalError();
         }
 
-        public void RaiseRuntimeError(IRuntimeError error)
+        public FatalErrorException RaiseFatalCompilationError(ICompilationError error)
+        {
+            RaiseCompilationError(error);
+            return FatalError();
+        }
+
+        public FatalErrorException RaiseRuntimeError(IRuntimeError error)
         {
             RaiseError(error, $"C? unhandled exception: {error.GetType().Name}{Environment.NewLine}");
+            return FatalError();
         }
 
         private void RaiseError(IError error, string message)

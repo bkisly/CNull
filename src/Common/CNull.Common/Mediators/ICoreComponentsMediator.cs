@@ -1,4 +1,5 @@
-﻿using CNull.Common.Events;
+﻿using System.Text.RegularExpressions;
+using CNull.Common.Events;
 
 namespace CNull.Common.Mediators
 {
@@ -11,6 +12,13 @@ namespace CNull.Common.Mediators
         /// Returns the path to the currently processed source.
         /// </summary>
         string CurrentSourcePath { get; }
+
+        /// <summary>
+        /// Returns the name of the currently processed module.
+        /// </summary>
+        string CurrentModuleName { get; }
+
+        private static readonly char[] Separator = [' '];
 
         /// <summary>
         /// Event raised when input source has been requested.

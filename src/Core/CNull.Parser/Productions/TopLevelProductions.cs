@@ -17,7 +17,7 @@ namespace CNull.Parser.Productions
     /// <summary>
     /// Syntactic production which represents the whole program.
     /// </summary>
-    public record Program(IEnumerable<ImportDirective> ImportDirectives,
+    public record Program(string ModuleName, IEnumerable<ImportDirective> ImportDirectives,
         IEnumerable<FunctionDefinition> FunctionDefinitions) : IAstVisitable
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);

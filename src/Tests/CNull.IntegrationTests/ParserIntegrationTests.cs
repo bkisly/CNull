@@ -55,7 +55,7 @@ namespace CNull.IntegrationTests
             var lexer = new Lexer.Lexer(sourceProxy, errorHandler, configuration);
             var commentsFilterProxy = new CommentsFilterLexerProxy(lexer);
 
-            var parser = new Parser.Parser(commentsFilterProxy, errorHandler, new Mock<ILogger<Parser.Parser>>().Object);
+            var parser = new Parser.Parser(commentsFilterProxy, errorHandler, mediator, new Mock<ILogger<Parser.Parser>>().Object);
 
             mediator.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(input)), "sample path");
 
@@ -136,7 +136,7 @@ namespace CNull.IntegrationTests
                     new Position(22, 1))
             };
 
-            var expectedProgram = new Program(expectedImports, expectedFunctions);
+            var expectedProgram = new Program("SamplePath", expectedImports, expectedFunctions);
 
             // Act
 
@@ -192,7 +192,7 @@ namespace CNull.IntegrationTests
             var lexer = new Lexer.Lexer(sourceProxy, errorHandler, configuration);
             var commentsFilterProxy = new CommentsFilterLexerProxy(lexer);
 
-            var parser = new Parser.Parser(commentsFilterProxy, errorHandler, new Mock<ILogger<Parser.Parser>>().Object);
+            var parser = new Parser.Parser(commentsFilterProxy, errorHandler, mediator, new Mock<ILogger<Parser.Parser>>().Object);
 
             mediator.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(input)), "sample path");
 
@@ -273,7 +273,7 @@ namespace CNull.IntegrationTests
                     new Position(22, 1))
             };
 
-            var expectedProgram = new Program(expectedImports, expectedFunctions);
+            var expectedProgram = new Program("SamplePath", expectedImports, expectedFunctions);
 
             // Act
 
