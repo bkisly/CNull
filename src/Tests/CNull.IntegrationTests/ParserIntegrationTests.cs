@@ -1,6 +1,6 @@
 ﻿using CNull.Common;
 using CNull.Common.Configuration;
-using CNull.Common.Mediators;
+using CNull.Common.State;
 using CNull.Lexer;
 using CNull.Parser;
 using CNull.Parser.Errors;
@@ -45,19 +45,19 @@ namespace CNull.IntegrationTests
                                  """;
 
             var configuration = new InMemoryCNullConfiguration();
-            var mediator = new CoreComponentsMediator();
+            var stateManager = new StateManager();
             var errorHandler = new ErrorHandler.ErrorHandler(new Mock<ILogger<ErrorHandler.ErrorHandler>>().Object,
-                configuration, mediator);
+                configuration, stateManager);
 
-            var rawSource = new RawCodeSource(errorHandler, mediator);
+            var rawSource = new RawCodeSource(errorHandler, stateManager);
             var sourceProxy = new NewLineUnifierCodeSourceProxy(rawSource);
 
             var lexer = new Lexer.Lexer(sourceProxy, errorHandler, configuration);
             var commentsFilterProxy = new CommentsFilterLexerProxy(lexer);
 
-            var parser = new Parser.Parser(commentsFilterProxy, errorHandler, mediator, new Mock<ILogger<Parser.Parser>>().Object);
+            var parser = new Parser.Parser(commentsFilterProxy, errorHandler, stateManager, new Mock<ILogger<Parser.Parser>>().Object);
 
-            mediator.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(input)), "sample path");
+            stateManager.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(input)), "sample path");
 
             var expectedImports = new[]
             {
@@ -182,19 +182,19 @@ namespace CNull.IntegrationTests
                                  """;
 
             var configuration = new InMemoryCNullConfiguration();
-            var mediator = new CoreComponentsMediator();
+            var stateManager = new StateManager();
             var errorHandler = new ErrorHandler.ErrorHandler(new Mock<ILogger<ErrorHandler.ErrorHandler>>().Object,
-                configuration, mediator);
+                configuration, stateManager);
 
-            var rawSource = new RawCodeSource(errorHandler, mediator);
+            var rawSource = new RawCodeSource(errorHandler, stateManager);
             var sourceProxy = new NewLineUnifierCodeSourceProxy(rawSource);
 
             var lexer = new Lexer.Lexer(sourceProxy, errorHandler, configuration);
             var commentsFilterProxy = new CommentsFilterLexerProxy(lexer);
 
-            var parser = new Parser.Parser(commentsFilterProxy, errorHandler, mediator, new Mock<ILogger<Parser.Parser>>().Object);
+            var parser = new Parser.Parser(commentsFilterProxy, errorHandler, stateManager, new Mock<ILogger<Parser.Parser>>().Object);
 
-            mediator.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(input)), "sample path");
+            stateManager.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(input)), "sample path");
 
             var expectedImports = new[]
             {

@@ -16,7 +16,7 @@ namespace CNull.Source.Tests
             fixture.Setup(testBuffer);
 
             var codeInput = new RawCodeSource(fixture.Reader, fixture.ErrorHandlerMock.Object,
-                fixture.MediatorMock.Object);
+                fixture.StateManagerMock.Object);
             var results = new List<char?>();
 
             // Act
@@ -41,7 +41,7 @@ namespace CNull.Source.Tests
             fixture.Setup(testBuffer);
 
             var codeInput = new RawCodeSource(fixture.Reader, fixture.ErrorHandlerMock.Object,
-                fixture.MediatorMock.Object);
+                fixture.StateManagerMock.Object);
 
             // Act
 
@@ -63,7 +63,7 @@ namespace CNull.Source.Tests
             fixture.Setup(string.Empty);
 
             var codeInput = new RawCodeSource(fixture.Reader, fixture.ErrorHandlerMock.Object,
-                fixture.MediatorMock.Object);
+                fixture.StateManagerMock.Object);
 
             // Act
 
@@ -80,7 +80,7 @@ namespace CNull.Source.Tests
             // Arrange
 
             fixture.Setup();
-            var codeInput = new RawCodeSource(fixture.ErrorHandlerMock.Object, fixture.MediatorMock.Object);
+            var codeInput = new RawCodeSource(fixture.ErrorHandlerMock.Object, fixture.StateManagerMock.Object);
 
             // Act
 
@@ -103,11 +103,11 @@ namespace CNull.Source.Tests
             const string testPath = "Sample path";
             var codeInput = new RawCodeSource(
                 fixture.ErrorHandlerMock.Object, 
-                fixture.MediatorMock.Object);
+                fixture.StateManagerMock.Object);
 
             // Act
 
-            fixture.MediatorMock.Raise(m => m.InputRequested += null,
+            fixture.StateManagerMock.Raise(m => m.InputRequested += null,
                 new InputRequestedEventArgs(new Lazy<TextReader>(() => new StringReader("ABCDE")), testPath));
 
             // Assert
@@ -125,11 +125,11 @@ namespace CNull.Source.Tests
             var failingReader = new Lazy<TextReader>(() => throw new IOException());
             const string testPath = "Sample path";
 
-            var codeInput = new RawCodeSource(fixture.ErrorHandlerMock.Object, fixture.MediatorMock.Object);
+            var codeInput = new RawCodeSource(fixture.ErrorHandlerMock.Object, fixture.StateManagerMock.Object);
 
             // Act
 
-            fixture.MediatorMock.Raise(m => m.InputRequested += null,
+            fixture.StateManagerMock.Raise(m => m.InputRequested += null,
                 new InputRequestedEventArgs(failingReader, testPath));
 
             // Assert
@@ -146,7 +146,7 @@ namespace CNull.Source.Tests
 
             fixture.Setup(input);
             var source = new RawCodeSource(fixture.Reader, fixture.ErrorHandlerMock.Object,
-                fixture.MediatorMock.Object);
+                fixture.StateManagerMock.Object);
 
             // Act
 

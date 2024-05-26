@@ -14,7 +14,7 @@ namespace CNull.Parser.Tests
             // Arrange
 
             fixture.SetupTokensQueue(tokens);
-            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.Mediator.Object, fixture.Logger.Object);
+            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.StateManager.Object, fixture.Logger.Object);
 
             // Act
 
@@ -34,7 +34,7 @@ namespace CNull.Parser.Tests
             // Arrange
 
             fixture.SetupTokensQueue(tokens);
-            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.Mediator.Object, fixture.Logger.Object);
+            var parser = new Parser(fixture.Lexer.Object, fixture.ErrorHandler.Object, fixture.StateManager.Object, fixture.Logger.Object);
 
             // Act
 

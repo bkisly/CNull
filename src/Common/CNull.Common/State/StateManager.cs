@@ -1,12 +1,12 @@
 ﻿using CNull.Common.Events;
 using System.Text.RegularExpressions;
 
-namespace CNull.Common.Mediators
+namespace CNull.Common.State
 {
     /// <summary>
-    /// <inheritdoc cref="ICoreComponentsMediator"/>
+    /// <inheritdoc cref="IStateManager"/>
     /// </summary>
-    public class CoreComponentsMediator : ICoreComponentsMediator
+    public class StateManager : IStateManager
     {
         private string _currentSourcePath = "<unknown>";
 

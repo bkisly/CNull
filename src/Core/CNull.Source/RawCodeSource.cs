@@ -1,6 +1,6 @@
 ﻿using CNull.Common;
 using CNull.Common.Events;
-using CNull.Common.Mediators;
+using CNull.Common.State;
 using CNull.ErrorHandler;
 using CNull.Source.Errors;
 
@@ -12,7 +12,7 @@ namespace CNull.Source
     public class RawCodeSource : IRawCodeSource, IDisposable
     {
         private readonly IErrorHandler _errorHandler;
-        private readonly ICoreComponentsMediator _coreComponentsMediator;
+        private readonly IStateManager _stateManager;
 
         private TextReader? _reader;
         private char? _previousCharacter;
@@ -34,16 +34,16 @@ namespace CNull.Source
 
         public event EventHandler? SourceInitialized;
 
-        public RawCodeSource(IErrorHandler errorHandler, ICoreComponentsMediator coreComponentsMediator)
+        public RawCodeSource(IErrorHandler errorHandler, IStateManager stateManager)
         {
             _errorHandler = errorHandler;
-            _coreComponentsMediator = coreComponentsMediator;
+            _stateManager = stateManager;
 
-            _coreComponentsMediator.InputRequested += Mediator_InputRequested;
+            _stateManager.InputRequested += StateManager_InputRequested;
         }
 
-        public RawCodeSource(TextReader reader, IErrorHandler errorHandler, ICoreComponentsMediator mediator) 
-            : this(errorHandler, mediator)
+        public RawCodeSource(TextReader reader, IErrorHandler errorHandler, IStateManager stateManager) 
+            : this(errorHandler, stateManager)
         {
             _reader = reader;
         }
@@ -65,7 +65,7 @@ namespace CNull.Source
 
         public void Dispose() => _reader?.Dispose();
 
-        private void Mediator_InputRequested(object? sender, InputRequestedEventArgs e)
+        private void StateManager_InputRequested(object? sender, InputRequestedEventArgs e)
         {
             try
             {

@@ -1,5 +1,5 @@
 ﻿using CNull.Common.Extensions;
-using CNull.Common.Mediators;
+using CNull.Common.State;
 using CNull.ErrorHandler;
 using CNull.ErrorHandler.Events;
 using CNull.ErrorHandler.Exceptions;
@@ -24,7 +24,7 @@ namespace CNull.Interpreter
         private readonly StandardOutput _outputCallback;
         private readonly StandardError _errorCallback;
 
-        private readonly ICoreComponentsMediator _mediator;
+        private readonly IStateManager _stateManager;
         private readonly IErrorHandler _errorHandler;
         private readonly IInterpreter _interpreter;
 
@@ -53,7 +53,7 @@ namespace CNull.Interpreter
             _serviceScope = _host.Services.CreateScope();
             var serviceProvider = _serviceScope.ServiceProvider;
 
-            _mediator = serviceProvider.GetRequiredService<ICoreComponentsMediator>();
+            _stateManager = serviceProvider.GetRequiredService<IStateManager>();
             _errorHandler = serviceProvider.GetRequiredService<IErrorHandler>();
             _interpreter = serviceProvider.GetRequiredService<IInterpreter>();
 
@@ -71,7 +71,7 @@ namespace CNull.Interpreter
         /// <param name="path">Path to read the program from.</param>
         public async Task ExecuteFromFileAsync(string path) => await BeginExecutionAsync(() =>
         {
-            _mediator.NotifyInputRequested(new Lazy<TextReader>(() => new StreamReader(path)), path);
+            _stateManager.NotifyInputRequested(new Lazy<TextReader>(() => new StreamReader(path)), path);
             _interpreter.Execute(_inputCallback, _outputCallback);
         });
 

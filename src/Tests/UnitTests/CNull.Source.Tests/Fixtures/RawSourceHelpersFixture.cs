@@ -1,10 +1,10 @@
-﻿using CNull.Common.Mediators;
+﻿using CNull.Common.State;
 
 namespace CNull.Source.Tests.Fixtures
 {
     public class RawSourceHelpersFixture : BaseSourceHelpersFixture
     {
-        public Mock<ICoreComponentsMediator> MediatorMock { get; private set; } = new();
+        public Mock<IStateManager> StateManagerMock { get; private set; } = new();
 
         public override void Setup(string buffer)
         {
@@ -14,7 +14,7 @@ namespace CNull.Source.Tests.Fixtures
 
         public void Setup()
         {
-            MediatorMock = new Mock<ICoreComponentsMediator>();
+            StateManagerMock = new Mock<IStateManager>();
         }
     }
 }

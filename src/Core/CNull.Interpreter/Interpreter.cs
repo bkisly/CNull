@@ -1,4 +1,4 @@
-﻿using CNull.Common.Mediators;
+﻿using CNull.Common.State;
 using CNull.ErrorHandler;
 using CNull.Interpreter.Errors;
 using CNull.Parser;
@@ -7,12 +7,11 @@ using CNull.Parser.Visitors;
 
 namespace CNull.Interpreter
 {
-    public class Interpreter(IParser parser, IErrorHandler errorHandler, ICoreComponentsMediator mediator) : IInterpreter, IAstVisitor
+    public class Interpreter(IParser parser, IErrorHandler errorHandler, IStateManager stateManager) : IInterpreter, IAstVisitor
     {
         private StandardInput? _inputCallback;
         private StandardOutput? _outputCallback;
 
-        private Program _rootProgram = null!;
         private Program _currentProgram = null!;
 
         private DependencyTree<string> _dependencyTree = new();
@@ -31,15 +30,13 @@ namespace CNull.Interpreter
             _parsedProgramsCache = [];
 
             var program = ParseAndCacheProgram();
-
             if (program == null || errorHandler.Errors.Any())
                 return;
 
-            _rootProgram = program;
             //program.Accept(new AstStringifierVisitor());
             program.Accept(this);
 
-            foreach (var functionDefinition in _rootProgram.FunctionDefinitions)
+            foreach (var functionDefinition in program.FunctionDefinitions)
                 RegisterFunction(functionDefinition);
 
             //_functionDefinitions["Main"].Accept(this);
@@ -55,7 +52,7 @@ namespace CNull.Interpreter
             while (_modulesToVisit.Count != 0)
             {
                 var module = _modulesToVisit.Dequeue();
-                mediator.NotifyInputRequested(
+                stateManager.NotifyInputRequested(
                     new Lazy<TextReader>(() => new StreamReader($"{module.ModuleName}.cnull")),
                     $"{module.ModuleName}.cnull");
 

@@ -1,12 +1,11 @@
-﻿using System.Text.RegularExpressions;
-using CNull.Common.Events;
+﻿using CNull.Common.Events;
 
-namespace CNull.Common.Mediators
+namespace CNull.Common.State
 {
     /// <summary>
-    /// Mediator which enables independent communication between different core modules.
+    /// Stores information about the current state of the input of the processed program modules.
     /// </summary>
-    public interface ICoreComponentsMediator
+    public interface IStateManager
     {
         /// <summary>
         /// Returns the path to the currently processed source.
@@ -17,8 +16,6 @@ namespace CNull.Common.Mediators
         /// Returns the name of the currently processed module.
         /// </summary>
         string CurrentModuleName { get; }
-
-        private static readonly char[] Separator = [' '];
 
         /// <summary>
         /// Event raised when input source has been requested.

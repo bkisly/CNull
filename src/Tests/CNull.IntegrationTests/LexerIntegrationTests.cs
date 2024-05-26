@@ -1,6 +1,6 @@
 ﻿using CNull.Common;
 using CNull.Common.Configuration;
-using CNull.Common.Mediators;
+using CNull.Common.State;
 using CNull.Lexer;
 using CNull.Lexer.Constants;
 using CNull.Source;
@@ -57,15 +57,16 @@ namespace CNull.IntegrationTests
             };
 
             var configuration = new InMemoryCNullConfiguration();
-            var mediator = new CoreComponentsMediator();
-            var errorHandler = new ErrorHandler.ErrorHandler(new Mock<ILogger<ErrorHandler.ErrorHandler>>().Object, configuration, mediator);
+            var stateManager = new StateManager();
+            var errorHandler = new ErrorHandler.ErrorHandler(new Mock<ILogger<ErrorHandler.ErrorHandler>>().Object, 
+                configuration, stateManager);
 
-            var rawSource = new RawCodeSource(errorHandler, mediator);
+            var rawSource = new RawCodeSource(errorHandler, stateManager);
             var sourceProxy = new NewLineUnifierCodeSourceProxy(rawSource);
 
             var lexer = new Lexer.Lexer(sourceProxy, errorHandler, configuration);
 
-            mediator.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(testBuffer)), "sample path");
+            stateManager.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(testBuffer)), "sample path");
 
             // Act
 
