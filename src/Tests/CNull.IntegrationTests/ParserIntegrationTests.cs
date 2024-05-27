@@ -1,4 +1,5 @@
-﻿using CNull.Common;
+﻿using System.Text;
+using CNull.Common;
 using CNull.Common.Configuration;
 using CNull.Common.State;
 using CNull.Lexer;
@@ -57,7 +58,7 @@ namespace CNull.IntegrationTests
 
             var parser = new Parser.Parser(commentsFilterProxy, errorHandler, stateManager, new Mock<ILogger<Parser.Parser>>().Object);
 
-            stateManager.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(input)), "sample path");
+            stateManager.NotifyInputRequested(new Lazy<Stream>(() => new MemoryStream(Encoding.UTF8.GetBytes(input))));
 
             var expectedImports = new[]
             {
@@ -136,7 +137,7 @@ namespace CNull.IntegrationTests
                     new Position(22, 1))
             };
 
-            var expectedProgram = new Program("SamplePath", expectedImports, expectedFunctions);
+            var expectedProgram = new Program(StateManager.DefaultModuleName, expectedImports, expectedFunctions);
 
             // Act
 
@@ -194,7 +195,7 @@ namespace CNull.IntegrationTests
 
             var parser = new Parser.Parser(commentsFilterProxy, errorHandler, stateManager, new Mock<ILogger<Parser.Parser>>().Object);
 
-            stateManager.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(input)), "sample path");
+            stateManager.NotifyInputRequested(new Lazy<Stream>(() => new MemoryStream(Encoding.UTF8.GetBytes(input))));
 
             var expectedImports = new[]
             {
@@ -273,7 +274,7 @@ namespace CNull.IntegrationTests
                     new Position(22, 1))
             };
 
-            var expectedProgram = new Program("SamplePath", expectedImports, expectedFunctions);
+            var expectedProgram = new Program(StateManager.DefaultModuleName, expectedImports, expectedFunctions);
 
             // Act
 

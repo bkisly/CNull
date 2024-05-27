@@ -3,54 +3,63 @@ using System.Text.RegularExpressions;
 
 namespace CNull.Common.State
 {
-    /// <summary>
-    /// <inheritdoc cref="IStateManager"/>
-    /// </summary>
     public class StateManager : IStateManager
     {
-        private string _currentSourcePath = "<unknown>";
+        public const string DefaultModuleName = "Program";
+        public const string DefaultSourcePath = $"<module {DefaultModuleName}>";
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public string CurrentSourcePath
-        {
-            get => _currentSourcePath;
-            private set
-            {
-                _currentSourcePath = value;
-                CurrentModuleName = GetModuleName(value);
-            }
-        }
+        private string? _currentWorkingDirectory;
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public string CurrentModuleName { get; private set; } = "Program";
+        public string CurrentSourcePath { get; private set; } = DefaultSourcePath;
+        public string CurrentModuleName => GetModuleName(CurrentSourcePath);
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public event EventHandler<InputRequestedEventArgs>? InputRequested;
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="reader"><inheritdoc/></param>
-        /// <param name="path"><inheritdoc/></param>
-        public void NotifyInputRequested(Lazy<TextReader> reader, string path)
+        public void NotifyInputRequested(string path)
         {
             CurrentSourcePath = Path.GetFullPath(path);
-            InputRequested?.Invoke(this, new InputRequestedEventArgs(reader, path));
+            _currentWorkingDirectory = Path.GetDirectoryName(CurrentSourcePath);
+            OnInputRequested(new Lazy<Stream>(() => new FileStream(path, FileMode.Open)), path);
+        }
+
+        public void NotifyInputRequested(Lazy<Stream> stream)
+        {
+            CurrentSourcePath = DefaultSourcePath;
+            _currentWorkingDirectory = null;
+            OnInputRequested(stream);
+        }
+
+        public bool TryOpenModule(string moduleName)
+        {
+            if (_currentWorkingDirectory == null)
+                return false;
+
+            var path = Path.Combine(_currentWorkingDirectory, $"{moduleName}.cnull");
+
+            try
+            {
+                NotifyInputRequested(path);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private static string GetModuleName(string sourcePath)
         {
+            if (sourcePath == DefaultSourcePath)
+                return DefaultModuleName;
+
             var fileName = Path.GetFileNameWithoutExtension(sourcePath);
             var cleanedString = Regex.Replace(fileName, "[^a-zA-Z0-9]", " ");
             var words = cleanedString.Split(" ", StringSplitOptions.RemoveEmptyEntries);
             var newWords = words.Select(w => char.ToUpper(w[0]) + w[1..].ToLower());
             return string.Join("", newWords);
         }
+
+        private void OnInputRequested(Lazy<Stream> stream, string? path = null) 
+            => InputRequested?.Invoke(this, new InputRequestedEventArgs(stream, path));
     }
 }

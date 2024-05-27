@@ -1,8 +1,8 @@
 ﻿namespace CNull.Common.Events
 {
-    public class InputRequestedEventArgs(Lazy<TextReader> reader, string path) : EventArgs
+    public class InputRequestedEventArgs(Lazy<Stream> stream, string? sourcePath = null) : EventArgs
     {
-        public Lazy<TextReader> Reader => reader;
-        public string Path => path;
+        public Lazy<Stream> Stream => stream;
+        public string? SourcePath => sourcePath;
     }
 }

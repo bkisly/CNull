@@ -71,7 +71,17 @@ namespace CNull.Interpreter
         /// <param name="path">Path to read the program from.</param>
         public async Task ExecuteFromFileAsync(string path) => await BeginExecutionAsync(() =>
         {
-            _stateManager.NotifyInputRequested(new Lazy<TextReader>(() => new StreamReader(path)), path);
+            _stateManager.NotifyInputRequested(path);
+            _interpreter.Execute(_inputCallback, _outputCallback);
+        });
+
+        /// <summary>
+        /// Executes the program from the given stream. This method does not support multi-moduled programs.
+        /// </summary>
+        /// <param name="stream">Stream to read the program from.</param>
+        public async Task ExecuteFromStreamAsync(Lazy<Stream> stream) => await BeginExecutionAsync(() =>
+        {
+            _stateManager.NotifyInputRequested(stream);
             _interpreter.Execute(_inputCallback, _outputCallback);
         });
 

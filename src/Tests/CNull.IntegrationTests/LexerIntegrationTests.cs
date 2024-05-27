@@ -1,4 +1,5 @@
-﻿using CNull.Common;
+﻿using System.Text;
+using CNull.Common;
 using CNull.Common.Configuration;
 using CNull.Common.State;
 using CNull.Lexer;
@@ -66,7 +67,8 @@ namespace CNull.IntegrationTests
 
             var lexer = new Lexer.Lexer(sourceProxy, errorHandler, configuration);
 
-            stateManager.NotifyInputRequested(new Lazy<TextReader>(() => new StringReader(testBuffer)), "sample path");
+            stateManager.NotifyInputRequested(new Lazy<Stream>(() =>
+                new MemoryStream(Encoding.UTF8.GetBytes(testBuffer))));
 
             // Act
 

@@ -5,7 +5,7 @@
         private readonly Dictionary<T, List<T>> _graph = [];
         private HashSet<T> _visited = [];
         private HashSet<T> _onPath = [];
-        private List<T> _sortedOrder = [];
+        private readonly List<T> _sortedOrder = [];
 
         public void AddDependency(T obj, T dependency)
         {

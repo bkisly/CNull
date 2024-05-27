@@ -23,10 +23,22 @@ namespace CNull.Common.State
         event EventHandler<InputRequestedEventArgs> InputRequested;
 
         /// <summary>
-        /// Raises FileInputRequested event.
+        /// Notifies core components to read from a new file source.
         /// </summary>
-        /// <param name="reader">Lazy initializer of the reader from which code will be read.</param>
-        /// <param name="path">Formatted path to the source.</param>
-        void NotifyInputRequested(Lazy<TextReader> reader, string path);
+        /// <param name="path">Path to the file to be processed.</param>
+        void NotifyInputRequested(string path);
+
+        /// <summary>
+        /// Notifies core components to read from the specified stream. This method does not support multi-moduled programs.
+        /// </summary>
+        /// <param name="stream">Stream to read from.</param>
+        void NotifyInputRequested(Lazy<Stream> stream);
+
+        /// <summary>
+        /// Tries to open a program, which is under specified module name.
+        /// </summary>
+        /// <param name="moduleName">Module to enter.</param>
+        /// <returns><see langword="true"/> if successfully opened, <see langword="false"/> otherwise.</returns>
+        bool TryOpenModule(string moduleName);
     }
 }

@@ -16,16 +16,16 @@ namespace CNull.Interpreter
 
         private DependencyTree<string> _dependencyTree = new();
         private Queue<ImportDirective> _modulesToVisit = [];
-
         private Dictionary<string, Program> _parsedProgramsCache = [];
-        private Dictionary<string, FunctionDefinition> _functionDefinitions = [];
+
+        private FunctionsRegistry _functionsRegistry = new(errorHandler);
 
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
         {
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;
             _dependencyTree = new DependencyTree<string>();
-            _functionDefinitions = [];
+            _functionsRegistry = new FunctionsRegistry(errorHandler);
             _modulesToVisit = [];
             _parsedProgramsCache = [];
 
@@ -37,9 +37,9 @@ namespace CNull.Interpreter
             program.Accept(this);
 
             foreach (var functionDefinition in program.FunctionDefinitions)
-                RegisterFunction(functionDefinition);
+                _functionsRegistry.Register(functionDefinition, program.ModuleName);
 
-            //_functionDefinitions["Main"].Accept(this);
+            // _functionsRegistry["Main"].Accept(this);
         }
 
         public void Visit(Program program)
@@ -52,21 +52,21 @@ namespace CNull.Interpreter
             while (_modulesToVisit.Count != 0)
             {
                 var module = _modulesToVisit.Dequeue();
-                stateManager.NotifyInputRequested(
-                    new Lazy<TextReader>(() => new StreamReader($"{module.ModuleName}.cnull")),
-                    $"{module.ModuleName}.cnull");
+                if (!stateManager.TryOpenModule(module.ModuleName))
+                    throw errorHandler.RaiseFatalCompilationError(new ModuleNotFoundError(module.ModuleName, module.Position));
 
                 if (!_parsedProgramsCache.TryGetValue(module.ModuleName, out var importedProgram))
                     importedProgram = ParseAndCacheProgram();
 
                 if (importedProgram == null)
-                    throw new NotImplementedException();
+                    throw errorHandler.RaiseFatalCompilationError(new ModuleCompilationError(module.ModuleName, module.Position));
 
                 importedProgram.Accept(this);
-                var desiredFunction = importedProgram.FunctionDefinitions.SingleOrDefault(f => f.Name == module.FunctionName) 
-                                      ?? throw new NotImplementedException();
+                var desiredFunction = importedProgram.FunctionDefinitions.SingleOrDefault(f => f.Name == module.FunctionName)
+                                      ?? throw errorHandler.RaiseFatalCompilationError(
+                                          new FunctionNotFoundError(module.FunctionName, module.ModuleName, module.Position));
 
-                RegisterFunction(desiredFunction);
+                _functionsRegistry.Register(desiredFunction, _currentProgram.ModuleName);
             }
         }
 
@@ -77,7 +77,7 @@ namespace CNull.Interpreter
             if (!_dependencyTree.Build())
                 throw errorHandler.RaiseFatalCompilationError(new CircularDependencyError(directive.Position));
 
-            if(!_modulesToVisit.Contains(directive))
+            if (!_modulesToVisit.Contains(directive))
                 _modulesToVisit.Enqueue(directive);
         }
 
@@ -265,18 +265,6 @@ namespace CNull.Interpreter
 
             _parsedProgramsCache.TryAdd(program.ModuleName, program);
             return program;
-        }
-
-        private void RegisterFunction(FunctionDefinition functionDefinition)
-        {
-            try
-            {
-                _functionDefinitions.Add(functionDefinition.Name, functionDefinition);
-            }
-            catch (ArgumentException)
-            {
-                throw errorHandler.RaiseFatalCompilationError(new FunctionRedefinitionError(functionDefinition.Name, functionDefinition.Position));
-            }
         }
     }
 }

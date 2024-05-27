@@ -5,10 +5,18 @@ namespace CNull.Source.Errors
     /// <summary>
     /// Represents an error which occurrs when the source input could not be found or accessed.
     /// </summary>
-    /// <param name="path">Path of the requested source.</param>
-    public class InputAccessError(string path) : ISourceError
+    public record InputAccessError : ISourceError
     {
-        public string Message => $"Given file could not be found or accessed. Requested path: {SourcePath}";
-        public string SourcePath => path;
+        public string Message { get; }
+
+        public InputAccessError(IOException exception)
+        {
+            Message = $"Given stream could not be opened or accessed. Inner error message: {exception.Message}";
+        }
+
+        public InputAccessError(string path)
+        {
+            Message = $"Given file could not be opened or accessed. Requested path: {Path.GetFullPath(path)}";
+        }
     }
 }

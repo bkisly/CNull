@@ -1,3 +1,4 @@
+using System.Text;
 using CNull.Common;
 using CNull.Common.Events;
 using CNull.Source.Errors;
@@ -101,14 +102,13 @@ namespace CNull.Source.Tests
             fixture.Setup();
 
             const string testPath = "Sample path";
-            var codeInput = new RawCodeSource(
-                fixture.ErrorHandlerMock.Object, 
+            var codeInput = new RawCodeSource(fixture.ErrorHandlerMock.Object, 
                 fixture.StateManagerMock.Object);
 
             // Act
 
             fixture.StateManagerMock.Raise(m => m.InputRequested += null,
-                new InputRequestedEventArgs(new Lazy<TextReader>(() => new StringReader("ABCDE")), testPath));
+                new InputRequestedEventArgs(new Lazy<Stream>(() => new MemoryStream("ABCDE"u8.ToArray())), testPath));
 
             // Assert
 
@@ -122,7 +122,7 @@ namespace CNull.Source.Tests
 
             fixture.Setup();
 
-            var failingReader = new Lazy<TextReader>(() => throw new IOException());
+            var failingStream = new Lazy<Stream>(() => throw new IOException());
             const string testPath = "Sample path";
 
             var codeInput = new RawCodeSource(fixture.ErrorHandlerMock.Object, fixture.StateManagerMock.Object);
@@ -130,13 +130,13 @@ namespace CNull.Source.Tests
             // Act
 
             fixture.StateManagerMock.Raise(m => m.InputRequested += null,
-                new InputRequestedEventArgs(failingReader, testPath));
+                new InputRequestedEventArgs(failingStream, testPath));
 
             // Assert
 
             Assert.Null(codeInput.CurrentCharacter);
             fixture.ErrorHandlerMock.Verify(e => e.RaiseSourceError(
-                It.Is<InputAccessError>(error => error.SourcePath == new InputAccessError(testPath).SourcePath)), Times.Once);
+                It.Is<InputAccessError>(error => error == new InputAccessError(testPath))), Times.Once);
         }
 
         [Theory, ClassData(typeof(PositionCounterData))]

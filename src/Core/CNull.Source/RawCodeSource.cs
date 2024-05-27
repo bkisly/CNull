@@ -69,13 +69,16 @@ namespace CNull.Source
         {
             try
             {
-                _reader = e.Reader.Value;
+                _reader?.Close();
+                _reader = new StreamReader(e.Stream.Value);
                 MoveToNext();
                 OnSourceInitialized();
             }
-            catch (IOException)
+            catch (IOException ex)
             {
-                _errorHandler.RaiseSourceError(new InputAccessError(e.Path));
+                _errorHandler.RaiseSourceError(e.SourcePath != null
+                    ? new InputAccessError(e.SourcePath)
+                    : new InputAccessError(ex));
             }
         }
 
