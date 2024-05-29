@@ -1,4 +1,5 @@
 ﻿using CNull.ErrorHandler;
+using CNull.Interpreter.Errors;
 using CNull.Interpreter.Symbols;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
@@ -11,6 +12,7 @@ namespace CNull.Interpreter
         private StandardOutput? _outputCallback;
 
         private FunctionsRegistry _functionsRegistry = new(errorHandler);
+        private string _rootModule = null!;
 
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
         {
@@ -20,8 +22,12 @@ namespace CNull.Interpreter
             if (functionsRegistryBuilder.Build() is not { } functionsRegistry)
                 return;
 
+            _rootModule = functionsRegistryBuilder.RootModule;
             _functionsRegistry = functionsRegistry;
-            _functionsRegistry[functionsRegistryBuilder.RootModule, "Main"].FunctionDefinition.Accept(this);
+
+            var mainFunction = _functionsRegistry.GetEntryPoint(_rootModule) 
+                               ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(_rootModule));
+            mainFunction.Accept(this);
         }
 
         public void Visit(Program program)

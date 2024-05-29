@@ -45,9 +45,10 @@ namespace CNull.Interpreter.Symbols
             foreach (var functionDefinition in program.FunctionDefinitions)
                 _functionsRegistry.Register(moduleName, functionDefinition);
 
-            while (_importsToProcess[moduleName].Count != 0)
+            var moduleImports = _importsToProcess[moduleName];
+            while (moduleImports.Count != 0)
             {
-                var (requestedModule, requestedFunctionName, importPosition) = _importsToProcess[moduleName].Pop();
+                var (requestedModule, requestedFunctionName, importPosition) = moduleImports.Pop();
                 if (!_parsedProgramsCache.TryGetValue(requestedModule, out var importedProgram))
                 {
                     if (!stateManager.TryOpenModule(requestedModule))

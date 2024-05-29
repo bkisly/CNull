@@ -14,23 +14,23 @@ namespace CNull.Interpreter.Symbols
 
         public void Register(string moduleName, FunctionDefinition functionDefinition, string? externalModuleName = null)
         {
-            if (!TryRegister(moduleName, functionDefinition, externalModuleName))
-                throw errorHandler.RaiseFatalCompilationError(
-                    new FunctionRedefinitionError(functionDefinition.Name, functionDefinition.Position));
-        }
-
-        public bool TryRegister(string moduleName, FunctionDefinition functionDefinition, string? externalModuleName = null)
-        {
             try
             {
                 _functionDefinitions.Add((moduleName, functionDefinition.Name),
                     new FunctionsRegistryEntry(functionDefinition, externalModuleName));
-                return true;
             }
             catch (ArgumentException)
             {
-                return false;
+                throw errorHandler.RaiseFatalCompilationError(
+                    new FunctionRedefinitionError(functionDefinition.Name, functionDefinition.Position));
             }
+        }
+
+        public FunctionDefinition? GetEntryPoint(string rootModule)
+        {
+            return _functionDefinitions.TryGetValue((rootModule, "Main"), out var functionDefinition)
+                ? functionDefinition.FunctionDefinition
+                : null;
         }
 
         public bool ContainsModule(string moduleName) => _functionDefinitions.Keys.Any(s => s.ModuleName == moduleName);

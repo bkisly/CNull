@@ -37,7 +37,8 @@ namespace CNull.ErrorHandler
 
         public FatalErrorException RaiseRuntimeError(IRuntimeError error)
         {
-            RaiseError(error, $"C? unhandled exception: {error.GetType().Name}{Environment.NewLine}");
+            var lineNumberMessage = error.LineNumber > 0 ? $" (line number: {error.LineNumber})" : string.Empty;
+            RaiseException(error, $"C? unhandled exception{lineNumberMessage}: {error.GetType().Name}{Environment.NewLine}");
             return FatalError();
         }
 
@@ -50,6 +51,16 @@ namespace CNull.ErrorHandler
             ErrorOccurred?.Invoke(this,
                 new ErrorOccurredEventArgs(
                     $"{message}Source: {source}{Environment.NewLine}{error.Message}{Environment.NewLine}"));
+        }
+
+        private void RaiseException(IRuntimeError error, string message)
+        {
+            _errors.Enqueue(error);
+
+            logger.LogError($"Error occurred ({error.GetType().Name}, module: {error.ModuleName}): {error.Message}");
+            ErrorOccurred?.Invoke(this,
+                new ErrorOccurredEventArgs(
+                    $"{message}Module: {error.ModuleName}{Environment.NewLine}{error.Message}{Environment.NewLine}"));
         }
 
         private FatalErrorException FatalError()
