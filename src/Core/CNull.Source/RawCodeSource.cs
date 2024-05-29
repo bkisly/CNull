@@ -71,6 +71,7 @@ namespace CNull.Source
             {
                 _reader?.Close();
                 _reader = new StreamReader(e.Stream.Value);
+                _position = new Position();
                 MoveToNext();
                 OnSourceInitialized();
             }

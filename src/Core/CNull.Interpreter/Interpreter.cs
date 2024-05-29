@@ -1,22 +1,14 @@
-﻿using CNull.Common.State;
-using CNull.ErrorHandler;
-using CNull.Interpreter.Errors;
-using CNull.Parser;
+﻿using CNull.ErrorHandler;
+using CNull.Interpreter.Symbols;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
 
 namespace CNull.Interpreter
 {
-    public class Interpreter(IParser parser, IErrorHandler errorHandler, IStateManager stateManager) : IInterpreter, IAstVisitor
+    public class Interpreter(IFunctionsRegistryBuilder functionsRegistryBuilder, IErrorHandler errorHandler) : IInterpreter, IAstVisitor
     {
         private StandardInput? _inputCallback;
         private StandardOutput? _outputCallback;
-
-        private Program _currentProgram = null!;
-
-        private DependencyTree<string> _dependencyTree = new();
-        private Queue<ImportDirective> _modulesToVisit = [];
-        private Dictionary<string, Program> _parsedProgramsCache = [];
 
         private FunctionsRegistry _functionsRegistry = new(errorHandler);
 
@@ -24,61 +16,22 @@ namespace CNull.Interpreter
         {
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;
-            _dependencyTree = new DependencyTree<string>();
-            _functionsRegistry = new FunctionsRegistry(errorHandler);
-            _modulesToVisit = [];
-            _parsedProgramsCache = [];
 
-            var program = ParseAndCacheProgram();
-            if (program == null || errorHandler.Errors.Any())
+            if (functionsRegistryBuilder.Build() is not { } functionsRegistry)
                 return;
 
-            //program.Accept(new AstStringifierVisitor());
-            program.Accept(this);
-
-            foreach (var functionDefinition in program.FunctionDefinitions)
-                _functionsRegistry.Register(functionDefinition, program.ModuleName);
-
-            // _functionsRegistry["Main"].Accept(this);
+            _functionsRegistry = functionsRegistry;
+            _functionsRegistry[functionsRegistryBuilder.RootModule, "Main"].FunctionDefinition.Accept(this);
         }
 
         public void Visit(Program program)
         {
-            _currentProgram = program;
-
-            foreach (var importDirective in program.ImportDirectives)
-                importDirective.Accept(this);
-
-            while (_modulesToVisit.Count != 0)
-            {
-                var module = _modulesToVisit.Dequeue();
-                if (!stateManager.TryOpenModule(module.ModuleName))
-                    throw errorHandler.RaiseFatalCompilationError(new ModuleNotFoundError(module.ModuleName, module.Position));
-
-                if (!_parsedProgramsCache.TryGetValue(module.ModuleName, out var importedProgram))
-                    importedProgram = ParseAndCacheProgram();
-
-                if (importedProgram == null)
-                    throw errorHandler.RaiseFatalCompilationError(new ModuleCompilationError(module.ModuleName, module.Position));
-
-                importedProgram.Accept(this);
-                var desiredFunction = importedProgram.FunctionDefinitions.SingleOrDefault(f => f.Name == module.FunctionName)
-                                      ?? throw errorHandler.RaiseFatalCompilationError(
-                                          new FunctionNotFoundError(module.FunctionName, module.ModuleName, module.Position));
-
-                _functionsRegistry.Register(desiredFunction, _currentProgram.ModuleName);
-            }
+            throw new NotImplementedException();
         }
 
         public void Visit(ImportDirective directive)
         {
-            _dependencyTree.AddDependency(_currentProgram.ModuleName, directive.ModuleName);
-
-            if (!_dependencyTree.Build())
-                throw errorHandler.RaiseFatalCompilationError(new CircularDependencyError(directive.Position));
-
-            if (!_modulesToVisit.Contains(directive))
-                _modulesToVisit.Enqueue(directive);
+            throw new NotImplementedException();
         }
 
         public void Visit(FunctionDefinition functionDefinition)
@@ -254,17 +207,6 @@ namespace CNull.Interpreter
         public void Visit(CallExpression callExpression)
         {
             throw new NotImplementedException();
-        }
-
-        private Program? ParseAndCacheProgram()
-        {
-            var program = parser.Parse();
-
-            if (program == null)
-                return program;
-
-            _parsedProgramsCache.TryAdd(program.ModuleName, program);
-            return program;
         }
     }
 }

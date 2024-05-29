@@ -1,4 +1,4 @@
-﻿namespace CNull.Interpreter
+﻿namespace CNull.Interpreter.Symbols
 {
     public class DependencyTree<T> where T : notnull
     {
@@ -12,7 +12,7 @@
             if (!_graph.ContainsKey(obj))
                 _graph.Add(obj, []);
 
-            if(!_graph.ContainsKey(dependency))
+            if (!_graph.ContainsKey(dependency))
                 _graph.Add(dependency, []);
 
             _graph[obj].Add(dependency);
@@ -40,7 +40,7 @@
                 if (_onPath.Contains(neighbor))
                     return false;
 
-                if (_visited.Contains(neighbor)) 
+                if (_visited.Contains(neighbor))
                     continue;
 
                 if (!DepthFirstSearch(neighbor))
