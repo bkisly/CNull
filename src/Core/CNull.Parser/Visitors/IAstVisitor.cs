@@ -10,6 +10,7 @@ namespace CNull.Parser.Visitors
         void Visit(Program program);
         void Visit(ImportDirective directive);
         void Visit(FunctionDefinition functionDefinition);
+        void Visit(StandardLibraryFunction standardLibraryFunction);
         void Visit(Parameter parameter);
 
         void Visit(ReturnType returnType);

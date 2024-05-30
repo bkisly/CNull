@@ -34,6 +34,16 @@ namespace CNull.Parser.Productions
     }
 
     /// <summary>
+    /// Represents a general type of function.
+    /// </summary>
+    public interface IFunction : IAstVisitable
+    {
+        ReturnType ReturnType { get; }
+        string Name { get; }
+        IEnumerable<Parameter> Parameters { get; }
+    }
+
+    /// <summary>
     /// Syntactic production which represents a definition of the function.
     /// </summary>
     /// <param name="ReturnType">The return type of the function.</param>
@@ -41,7 +51,12 @@ namespace CNull.Parser.Productions
     /// <param name="Parameters">Parameters list.</param>
     /// <param name="FunctionBody">Block statement, which is the body of the function.</param>
     public record FunctionDefinition(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters,
-        BlockStatement FunctionBody, Position Position) : ISyntacticProduction
+        BlockStatement FunctionBody, Position Position) : IFunction, ISyntacticProduction
+    {
+        public void Accept(IAstVisitor visitor) => visitor.Visit(this);
+    }
+
+    public record StandardLibraryFunction(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters) : IFunction
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }

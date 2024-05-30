@@ -55,6 +55,9 @@ namespace CNull.Parser.Visitors
             _indent--;
         }
 
+        public void Visit(StandardLibraryFunction standardLibraryFunction)
+        { }
+
         public void Visit(Parameter parameter)
         {
             AppendLine($"Parameter at {parameter.Position}");

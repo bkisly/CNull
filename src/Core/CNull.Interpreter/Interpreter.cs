@@ -45,6 +45,11 @@ namespace CNull.Interpreter
             throw new NotImplementedException();
         }
 
+        public void Visit(StandardLibraryFunction standardLibraryFunction)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Visit(Parameter parameter)
         {
             throw new NotImplementedException();
