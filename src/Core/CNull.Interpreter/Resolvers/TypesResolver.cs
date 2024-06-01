@@ -21,13 +21,18 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        public Type ResolveType(IDeclarableType type)
+        public Type ResolveDeclarableType(IDeclarableType type)
         {
             return type.Type switch
             {
                 Types.Dictionary => ResolveDictionaryType((DictionaryType)type),
                 _ => ResolvePrimitiveType(type)
             };
+        }
+
+        public Type? ResolveReturnType(ReturnType type)
+        {
+            return type is IDeclarableType declarableType ? ResolveDeclarableType(declarableType) : null;
         }
 
         private Type ResolveDictionaryType(DictionaryType type)

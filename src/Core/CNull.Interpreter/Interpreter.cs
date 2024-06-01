@@ -82,6 +82,10 @@ namespace CNull.Interpreter
                 variableDeclaration.InitializationExpression.Accept(this);
                 initializationValue = _environment.ConsumeLastResult();
             }
+            else if (!variableDeclaration.Type.IsPrimitive)
+            {
+                initializationValue = Activator.CreateInstance(_typesResolver.ResolveDeclarableType(variableDeclaration.Type));
+            }
 
             var variable = VariableFactory(variableDeclaration.Type, variableDeclaration.Name, initializationValue);
             _environment.CurrentContext.DeclareVariable(variable);
@@ -230,20 +234,21 @@ namespace CNull.Interpreter
         private void PerformCall(IFunction function, params object?[] args)
         {
             if (function.Parameters.Count() != args.Length)
-                return;
+                throw new NotImplementedException();
 
+            var returnType = _typesResolver.ResolveReturnType(function.ReturnType);
             var localVariables = new List<IVariable>();
             foreach (var (parameter, argument) in function.Parameters.Zip(args))
                 localVariables.Add(VariableFactory(parameter.Type, parameter.Name, argument));
 
-            _environment.EnterCallContext(localVariables);
+            _environment.EnterCallContext(returnType, localVariables);
             function.Accept(this);
             _environment.ExitCallContext();
         }
 
         private IVariable VariableFactory(IDeclarableType type, string name, object? initializationValue)
         {
-            var leftType = _typesResolver.ResolveType(type);
+            var leftType = _typesResolver.ResolveDeclarableType(type);
             var resolvedValue = _typesResolver.ResolveAssignment(Activator.CreateInstance(leftType), initializationValue);
 
             if (!type.IsPrimitive)
