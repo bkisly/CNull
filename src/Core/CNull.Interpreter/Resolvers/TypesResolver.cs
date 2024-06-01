@@ -1,25 +1,27 @@
-﻿using CNull.Parser;
+﻿using CNull.ErrorHandler;
+using CNull.Parser;
 using CNull.Parser.Productions;
 
 namespace CNull.Interpreter.Resolvers
 {
-    public static class TypesResolver
+    public class TypesResolver(IErrorHandler errorHandler)
     {
-        public static object? ResolveAssignment(object? left, object? right)
+        public object? ResolveAssignment(object? left, object? right)
         {
             if (left?.GetType() == right?.GetType())
                 return right;
 
             return (left, right) switch
             {
-                (string or null, _) => right?.ToString(),
-                (int or null, float or null) => (int?)right,
-                (float or null, int or null) => right,
+                (string, _) => right?.ToString(),
+                (int, float or null) => (int?)right,
+                (float, int or null) => right,
+                (not null, null) => null,
                 _ => throw new NotImplementedException()
             };
         }
 
-        public static object? ResolveType(IDeclarableType type)
+        public Type ResolveType(IDeclarableType type)
         {
             return type.Type switch
             {
@@ -28,30 +30,29 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        private static object? ResolveDictionaryType(DictionaryType type)
+        private Type ResolveDictionaryType(DictionaryType type)
         {
             if (!type.KeyType.IsPrimitive || !type.ValueType.IsPrimitive)
-                return null!;
+                throw new NotImplementedException();
 
             var keyType = ResolvePrimitiveType(type.KeyType);
             var valueType = ResolvePrimitiveType(type.ValueType);
 
-            var dictionaryType = typeof(Dictionary<,>).MakeGenericType(keyType.GetType(), valueType.GetType());
-            return Activator.CreateInstance(dictionaryType);
+            return typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
         }
 
-        private static object ResolvePrimitiveType(IDeclarableType type)
+        private Type ResolvePrimitiveType(IDeclarableType type)
         {
             if (!type.IsPrimitive)
                 throw new NotImplementedException();
 
             return type.Type switch
             {
-                Types.Boolean => default(bool),
-                Types.Char => default(char),
-                Types.Float => default(float),
-                Types.Integer => default(int),
-                Types.String => string.Empty,
+                Types.Boolean => typeof(bool),
+                Types.Char => typeof(char),
+                Types.Float => typeof(float),
+                Types.Integer => typeof(int),
+                Types.String => typeof(string),
                 _ => throw new NotImplementedException()
             };
         }

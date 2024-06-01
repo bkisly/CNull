@@ -1,6 +1,7 @@
 ﻿using CNull.ErrorHandler;
 using CNull.Interpreter.Context;
 using CNull.Interpreter.Errors;
+using CNull.Interpreter.Extensions;
 using CNull.Interpreter.Resolvers;
 using CNull.Interpreter.Symbols;
 using CNull.Parser;
@@ -17,12 +18,14 @@ namespace CNull.Interpreter
         private FunctionsRegistry _functionsRegistry = new(errorHandler);
         private string _rootModule = null!;
 
+        private TypesResolver _typesResolver = null!;
         private IExecutionEnvironment _environment = null!;
 
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
         {
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;
+            _typesResolver = new TypesResolver(errorHandler);
             _environment = new InterpreterExecutionEnvironment();
 
             if (functionsRegistryBuilder.Build() is not { } functionsRegistry)
@@ -34,7 +37,7 @@ namespace CNull.Interpreter
             var mainFunction = _functionsRegistry.GetEntryPoint(_rootModule) 
                                ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(_rootModule));
 
-            PerformCall(mainFunction, new Dictionary<int, string> { [0] = "first", [1] = "second" });
+            PerformCall(mainFunction, (Dictionary<int, string>?)null);
         }
 
         public void Visit(Program program)
@@ -225,7 +228,7 @@ namespace CNull.Interpreter
 
         private void PerformCall(IFunction function, params object?[] args)
         {
-            if(function.Parameters.Count() != args.Length)
+            if (function.Parameters.Count() != args.Length)
                 return;
 
             var localVariables = new List<IVariable>();
@@ -239,12 +242,13 @@ namespace CNull.Interpreter
 
         private IVariable VariableFactory(IDeclarableType type, string name, object? initializationValue)
         {
-            var resolvedValue = TypesResolver.ResolveAssignment(TypesResolver.ResolveType(type), initializationValue);
+            var leftType = _typesResolver.ResolveType(type);
+            var resolvedValue = _typesResolver.ResolveAssignment(Activator.CreateInstance(leftType), initializationValue);
 
             if (!type.IsPrimitive)
-                return new ReferenceTypeVariable(name, resolvedValue);
+                return new ReferenceTypeVariable(leftType.MakeNullableType(), name, resolvedValue);
 
-            return new ValueTypeVariable(name, resolvedValue);
+            return new ValueTypeVariable(leftType.MakeNullableType(), name, resolvedValue);
         }
     }
 }
