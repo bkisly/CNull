@@ -8,8 +8,9 @@ namespace CNull.Interpreter.Errors
         public string Message => "Circular dependency detected.";
     }
 
-    public record FunctionRedefinitionError(string FunctionName, Position Position) : ICompilationError
+    public record FunctionRedefinitionError(string FunctionName) : ICompilationError
     {
+        public Position Position => Position.FirstCharacter;
         public string Message => $"Function with name: {FunctionName} has already been defined.";
     }
 

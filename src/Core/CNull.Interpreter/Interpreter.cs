@@ -1,6 +1,9 @@
 ﻿using CNull.ErrorHandler;
+using CNull.Interpreter.Context;
 using CNull.Interpreter.Errors;
+using CNull.Interpreter.Resolvers;
 using CNull.Interpreter.Symbols;
+using CNull.Parser;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
 
@@ -14,10 +17,13 @@ namespace CNull.Interpreter
         private FunctionsRegistry _functionsRegistry = new(errorHandler);
         private string _rootModule = null!;
 
+        private IExecutionEnvironment _environment = null!;
+
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
         {
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;
+            _environment = new InterpreterExecutionEnvironment();
 
             if (functionsRegistryBuilder.Build() is not { } functionsRegistry)
                 return;
@@ -27,18 +33,15 @@ namespace CNull.Interpreter
 
             var mainFunction = _functionsRegistry.GetEntryPoint(_rootModule) 
                                ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(_rootModule));
-            mainFunction.Accept(this);
+
+            PerformCall(mainFunction, new Dictionary<int, string> { [0] = "first", [1] = "second" });
         }
 
         public void Visit(Program program)
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
         public void Visit(ImportDirective directive)
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
         public void Visit(FunctionDefinition functionDefinition)
         {
@@ -218,6 +221,30 @@ namespace CNull.Interpreter
         public void Visit(CallExpression callExpression)
         {
             throw new NotImplementedException();
+        }
+
+        private void PerformCall(IFunction function, params object?[] args)
+        {
+            if(function.Parameters.Count() != args.Length)
+                return;
+
+            var localVariables = new List<IVariable>();
+            foreach (var (parameter, argument) in function.Parameters.Zip(args))
+                localVariables.Add(VariableFactory(parameter.Type, parameter.Name, argument));
+
+            _environment.EnterCallContext(localVariables);
+            function.Accept(this);
+            _environment.ExitCallContext();
+        }
+
+        private IVariable VariableFactory(IDeclarableType type, string name, object? initializationValue)
+        {
+            var resolvedValue = TypesResolver.ResolveAssignment(TypesResolver.ResolveType(type), initializationValue);
+
+            if (!type.IsPrimitive)
+                return new ReferenceTypeVariable(name, resolvedValue);
+
+            return new ValueTypeVariable(name, resolvedValue);
         }
     }
 }

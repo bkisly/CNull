@@ -4,7 +4,7 @@ using CNull.Parser.Productions;
 
 namespace CNull.Interpreter.Symbols
 {
-    public record FunctionsRegistryEntry(FunctionDefinition FunctionDefinition, string? ExternalModuleName);
+    public record FunctionsRegistryEntry(IFunction FunctionDefinition, string? ExternalModuleName);
 
     public class FunctionsRegistry(IErrorHandler errorHandler)
     {
@@ -12,7 +12,7 @@ namespace CNull.Interpreter.Symbols
 
         public FunctionsRegistryEntry this[string moduleName, string functionName] => _functionDefinitions[(moduleName, functionName)];
 
-        public void Register(string moduleName, FunctionDefinition functionDefinition, string? externalModuleName = null)
+        public void Register(string moduleName, IFunction functionDefinition, string? externalModuleName = null)
         {
             try
             {
@@ -21,12 +21,11 @@ namespace CNull.Interpreter.Symbols
             }
             catch (ArgumentException)
             {
-                throw errorHandler.RaiseFatalCompilationError(
-                    new FunctionRedefinitionError(functionDefinition.Name, functionDefinition.Position));
+                throw errorHandler.RaiseFatalCompilationError(new FunctionRedefinitionError(functionDefinition.Name));
             }
         }
 
-        public FunctionDefinition? GetEntryPoint(string rootModule)
+        public IFunction? GetEntryPoint(string rootModule)
         {
             return _functionDefinitions.TryGetValue((rootModule, "Main"), out var functionDefinition)
                 ? functionDefinition.FunctionDefinition
