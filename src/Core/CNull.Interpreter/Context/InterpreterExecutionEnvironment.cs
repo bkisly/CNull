@@ -5,23 +5,25 @@ namespace CNull.Interpreter.Context
     public class InterpreterExecutionEnvironment : IExecutionEnvironment
     {
         private readonly Stack<CallContext> _contextsStack = [];
+        private object? _lastResult;
 
         public CallContext CurrentContext => _contextsStack.Peek();
 
-        public IVariable? GetVariable(string name)
+        public object? ConsumeLastResult()
         {
-            foreach (var scope in CurrentContext.Scopes)
-            {
-                if (scope.TryGetValue(name, out var variable))
-                    return variable;
-            }
-
-            return null;
+            var result = _lastResult;
+            _lastResult = null;
+            return result;
         }
 
-        public void EnterCallContext(IEnumerable<IVariable> localVariables)
+        public void SaveResult(object? result)
         {
-            _contextsStack.Push(new CallContext(localVariables));
+            _lastResult = result;
+        }
+
+        public void EnterCallContext(Type? returnType, IEnumerable<IVariable> localVariables)
+        {
+            _contextsStack.Push(new CallContext(returnType, localVariables));
         }
 
         public void ExitCallContext()

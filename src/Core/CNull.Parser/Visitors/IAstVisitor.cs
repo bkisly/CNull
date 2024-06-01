@@ -17,7 +17,7 @@ namespace CNull.Parser.Visitors
         void Visit(PrimitiveType primitiveType);
         void Visit(DictionaryType dictionaryType);
 
-        void Visit(BlockStatement statement);
+        void Visit(BlockStatement blockStatement);
         void Visit(VariableDeclaration variableDeclaration);
         void Visit(ExpressionStatement expressionStatement);
         void Visit(IfStatement ifStatement);

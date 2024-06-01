@@ -4,7 +4,6 @@ using CNull.Interpreter.Errors;
 using CNull.Interpreter.Extensions;
 using CNull.Interpreter.Resolvers;
 using CNull.Interpreter.Symbols;
-using CNull.Parser;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
 
@@ -19,7 +18,7 @@ namespace CNull.Interpreter
         private string _rootModule = null!;
 
         private TypesResolver _typesResolver = null!;
-        private IExecutionEnvironment _environment = null!;
+        private InterpreterExecutionEnvironment _environment = null!;
 
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
         {
@@ -48,42 +47,44 @@ namespace CNull.Interpreter
 
         public void Visit(FunctionDefinition functionDefinition)
         {
-            throw new NotImplementedException();
+            functionDefinition.FunctionBody.Accept(this);
         }
 
         public void Visit(StandardLibraryFunction standardLibraryFunction)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Create a registry for stdlib functions.");
         }
 
         public void Visit(Parameter parameter)
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
         public void Visit(ReturnType returnType)
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
         public void Visit(PrimitiveType primitiveType)
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
         public void Visit(DictionaryType dictionaryType)
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
-        public void Visit(BlockStatement statement)
+        public void Visit(BlockStatement blockStatement)
         {
-            throw new NotImplementedException();
+            foreach (var statement in blockStatement.StatementsList)
+                statement.Accept(this);
         }
 
         public void Visit(VariableDeclaration variableDeclaration)
         {
-            throw new NotImplementedException();
+            object? initializationValue = null;
+
+            if (variableDeclaration.InitializationExpression != null)
+            {
+                variableDeclaration.InitializationExpression.Accept(this);
+                initializationValue = _environment.ConsumeLastResult();
+            }
+
+            var variable = VariableFactory(variableDeclaration.Type, variableDeclaration.Name, initializationValue);
+            _environment.CurrentContext.DeclareVariable(variable);
         }
 
         public void Visit(ExpressionStatement expressionStatement)

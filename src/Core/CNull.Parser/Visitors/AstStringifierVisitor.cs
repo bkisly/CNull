@@ -90,9 +90,9 @@ namespace CNull.Parser.Visitors
             _indent--;
         }
 
-        public void Visit(BlockStatement statement)
+        public void Visit(BlockStatement blockStatement)
         {
-            AppendLineWithInner($"Block statement at {statement.Position}", statement.StatementsList);
+            AppendLineWithInner($"Block statement at {blockStatement.Position}", blockStatement.StatementsList);
         }
 
         public void Visit(VariableDeclaration variableDeclaration)
