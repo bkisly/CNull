@@ -14,8 +14,8 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (string, _) => right?.ToString(),
-                (int, float or null) => (int?)right,
-                (float, int or null) => right,
+                (int, float rightFloat) => rightFloat,
+                (float, int) => right,
                 (not null, null) => null,
                 _ => throw new NotImplementedException("Cannot assign left to right...")
             };

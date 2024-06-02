@@ -50,6 +50,9 @@ namespace CNull.Interpreter
         public void Visit(FunctionDefinition functionDefinition)
         {
             functionDefinition.FunctionBody.Accept(this);
+
+            if (_environment.CurrentContext is { IsReturning: false, ExpectedReturnType: not null })
+                throw new NotImplementedException("Missing return statement in non-void function");
         }
 
         public void Visit(StandardLibraryFunction standardLibraryFunction)
@@ -72,7 +75,12 @@ namespace CNull.Interpreter
         public void Visit(BlockStatement blockStatement)
         {
             foreach (var statement in blockStatement.StatementsList)
+            {
+                if (_environment.CurrentContext.IsJumping)
+                    break;
+
                 statement.Accept(this);
+            }
         }
 
         public void Visit(VariableDeclaration variableDeclaration)
@@ -149,7 +157,14 @@ namespace CNull.Interpreter
                 _environment.CurrentContext.EnterLoopScope();
                 whileStatement.Body.Accept(this);
                 _environment.CurrentContext.ExitLoopScope();
+
+                if (_environment.CurrentContext.IsBreaking)
+                    break;
+
+                _environment.CurrentContext.IsContinuing = false;
             }
+
+            _environment.CurrentContext.IsBreaking = false;
         }
 
         private bool VisitBooleanExpression(IExpression expression)

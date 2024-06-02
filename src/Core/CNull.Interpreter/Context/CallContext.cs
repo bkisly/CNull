@@ -8,6 +8,8 @@ namespace CNull.Interpreter.Context
         public bool IsContinuing { get; set; }
         public bool IsBreaking { get; set; }
 
+        public bool IsJumping => IsReturning || IsContinuing || IsBreaking;
+
         public Type? ExpectedReturnType { get; private set; }
         public int LoopCounter { get; private set; }
 
