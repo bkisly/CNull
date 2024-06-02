@@ -332,7 +332,8 @@ namespace CNull.Interpreter
         public void Visit(NegationExpression negationExpression)
         {
             var value = VisitExpression(negationExpression.Expression);
-            _environment.SaveResult(new ValueTypeContainer(value.Value?.GetType().MakeNullableType(),
+            _environment.SaveResult(new ValueTypeContainer(
+                value.Value?.GetType().MakeNullableType() ?? typeof(object).MakeNullableType(),
                 _typesResolver.ResolveNegation(value.Value)));
         }
 

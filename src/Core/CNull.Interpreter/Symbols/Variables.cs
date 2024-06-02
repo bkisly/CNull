@@ -8,16 +8,16 @@
 
     public interface IValueContainer
     {
-        Type? Type { get; }
+        Type Type { get; }
         object? Value { get; set; }
     }
 
-    public record struct ValueTypeContainer(Type? Type, object? Value) : IValueContainer
+    public record struct ValueTypeContainer(Type Type, object? Value) : IValueContainer
     {
-        public Type? Type { get; } = Type;
+        public Type Type { get; } = Type;
     }
 
-    public record ReferenceTypeContainer(Type? Type, object? Value) : IValueContainer
+    public record ReferenceTypeContainer(Type Type, object? Value) : IValueContainer
     {
         public object? Value { get; set; } = Value;
     }
