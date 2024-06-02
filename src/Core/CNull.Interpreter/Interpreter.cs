@@ -113,7 +113,7 @@ namespace CNull.Interpreter
                 var leftVariable = _environment.CurrentContext.TryGetVariable(leftIdentifier.Identifier) 
                                    ?? throw new NotImplementedException("Undefined variable");
 
-                var rightValue = ProcessExpression(expressionStatement.AssignmentValue);
+                var rightValue = VisitExpression(expressionStatement.AssignmentValue);
                 var assignmentValue = _typesResolver.ResolveAssignment(leftVariable.ValueContainer.Value, rightValue.Value);
                 leftVariable.ValueContainer.Value = assignmentValue;
             }
@@ -121,7 +121,7 @@ namespace CNull.Interpreter
 
         public void Visit(IfStatement ifStatement)
         {
-            if (ProcessBooleanExpression(ifStatement.BooleanExpression))
+            if (VisitBooleanExpression(ifStatement.BooleanExpression))
             {
                 ProcessScope(ifStatement.Body);
             }
@@ -144,7 +144,7 @@ namespace CNull.Interpreter
 
         public void Visit(WhileStatement whileStatement)
         {
-            while (ProcessBooleanExpression(whileStatement.BooleanExpression))
+            while (VisitBooleanExpression(whileStatement.BooleanExpression))
             {
                 _environment.CurrentContext.EnterLoopScope();
                 whileStatement.Body.Accept(this);
@@ -152,13 +152,13 @@ namespace CNull.Interpreter
             }
         }
 
-        private bool ProcessBooleanExpression(IExpression expression)
+        private bool VisitBooleanExpression(IExpression expression)
         {
-            var result = ProcessExpression(expression);
+            var result = VisitExpression(expression);
             return _typesResolver.EnsureBoolean(result.Value);
         }
 
-        private IValueContainer ProcessExpression(IExpression expression)
+        private IValueContainer VisitExpression(IExpression expression)
         {
             expression.Accept(this);
             return _environment.ConsumeLastResult();
@@ -220,15 +220,15 @@ namespace CNull.Interpreter
 
         public void Visit(OrExpression orExpression)
         {
-            var leftValue = ProcessBooleanExpression(orExpression.LeftFactor);
-            var result = leftValue || ProcessBooleanExpression(orExpression.RightFactor);
+            var leftValue = VisitBooleanExpression(orExpression.LeftFactor);
+            var result = leftValue || VisitBooleanExpression(orExpression.RightFactor);
             _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
         }
 
         public void Visit(AndExpression andExpression)
         {
-            var leftValue = ProcessBooleanExpression(andExpression.LeftFactor);
-            var result = leftValue && ProcessBooleanExpression(andExpression.RightFactor);
+            var leftValue = VisitBooleanExpression(andExpression.LeftFactor);
+            var result = leftValue && VisitBooleanExpression(andExpression.RightFactor);
             _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
         }
 
@@ -256,11 +256,21 @@ namespace CNull.Interpreter
 
         private void VisitRelationalExpression(IBinaryExpression binaryExpression, Func<object?, object?, bool> resolver)
         {
-            var leftValue = ProcessExpression(binaryExpression.LeftFactor);
-            var rightValue = ProcessExpression(binaryExpression.RightFactor);
+            var leftValue = VisitExpression(binaryExpression.LeftFactor);
+            var rightValue = VisitExpression(binaryExpression.RightFactor);
 
             var result = resolver.Invoke(leftValue.Value, rightValue.Value);
             _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
+        }
+
+        private void VisitArithmeticalExpression(IBinaryExpression binaryExpression,
+            Func<object?, object?, object> resolver)
+        {
+            var leftValue = VisitExpression(binaryExpression.LeftFactor);
+            var rightValue = VisitExpression(binaryExpression.RightFactor);
+
+            var result = resolver.Invoke(leftValue.Value, rightValue.Value);
+            _environment.SaveResult(new ValueTypeContainer(result.GetType().MakeNullableType(), result));
         }
 
         public void Visit(EqualExpression equalExpression)
@@ -275,43 +285,45 @@ namespace CNull.Interpreter
 
         public void Visit(AdditionExpression additionExpression)
         {
-            throw new NotImplementedException();
+            VisitArithmeticalExpression(additionExpression, _typesResolver.ResolveAddition);
         }
 
         public void Visit(SubtractionExpression subtractionExpression)
         {
-            throw new NotImplementedException();
+            VisitArithmeticalExpression(subtractionExpression, _typesResolver.ResolveSubtraction);
         }
 
         public void Visit(MultiplicationExpression multiplicationExpression)
         {
-            throw new NotImplementedException();
+            VisitArithmeticalExpression(multiplicationExpression, _typesResolver.ResolveMultiplication);
         }
 
         public void Visit(DivisionExpression divideExpression)
         {
-            throw new NotImplementedException();
+            VisitArithmeticalExpression(divideExpression, _typesResolver.ResolveDivision);
         }
 
         public void Visit(ModuloExpression moduloExpression)
         {
-            throw new NotImplementedException();
+            VisitArithmeticalExpression(moduloExpression, _typesResolver.ResolveModulo);
         }
 
         public void Visit(BooleanNegationExpression booleanNegationExpression)
         {
-            var value = ProcessBooleanExpression(booleanNegationExpression.Expression);
+            var value = VisitBooleanExpression(booleanNegationExpression.Expression);
             _environment.SaveResult(new ValueTypeContainer(typeof(bool?), !value));
         }
 
         public void Visit(NegationExpression negationExpression)
         {
-            throw new NotImplementedException();
+            var value = VisitExpression(negationExpression.Expression);
+            _environment.SaveResult(new ValueTypeContainer(value.Value?.GetType().MakeNullableType(),
+                _typesResolver.ResolveNegation(value.Value)));
         }
 
         public void Visit(NullCheckExpression nullCheckExpression)
         {
-            var value = ProcessExpression(nullCheckExpression.Expression);
+            var value = VisitExpression(nullCheckExpression.Expression);
             _environment.SaveResult(new ValueTypeContainer(typeof(bool?), value.Value == null));
         }
 
@@ -346,7 +358,7 @@ namespace CNull.Interpreter
 
             _environment.EnterCallContext(returnType, localVariables);
             function.Accept(this);
-            _environment.ExitCallContext();
+             _environment.ExitCallContext();
         }
 
         private IValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)
