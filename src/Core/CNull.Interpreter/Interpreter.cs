@@ -36,7 +36,9 @@ namespace CNull.Interpreter
             var mainFunction = _functionsRegistry.GetEntryPoint(_rootModule) 
                                ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(_rootModule));
 
-            PerformCall(mainFunction, (Dictionary<int, string>?)null);
+            var dictContainer = new ReferenceTypeContainer(typeof(Dictionary<int, string>),
+                new Dictionary<int, string> { [0] = "first", [1] = "second" });
+            PerformCall(mainFunction, dictContainer);
         }
 
         public void Visit(Program program)
@@ -75,25 +77,47 @@ namespace CNull.Interpreter
 
         public void Visit(VariableDeclaration variableDeclaration)
         {
-            object? initializationValue = null;
+            IValueContainer initializationValueContainer;
 
             if (variableDeclaration.InitializationExpression != null)
             {
                 variableDeclaration.InitializationExpression.Accept(this);
-                initializationValue = _environment.ConsumeLastResult();
+                initializationValueContainer = _environment.ConsumeLastResult();
             }
             else if (!variableDeclaration.Type.IsPrimitive)
             {
-                initializationValue = Activator.CreateInstance(_typesResolver.ResolveDeclarableType(variableDeclaration.Type));
+                var type = _typesResolver.ResolveDeclarableType(variableDeclaration.Type);
+                initializationValueContainer = ValueContainerFactory(variableDeclaration.Type, Activator.CreateInstance(type));
+            }
+            else
+            {
+                initializationValueContainer = ValueContainerFactory(variableDeclaration.Type, null);
             }
 
-            var variable = VariableFactory(variableDeclaration.Type, variableDeclaration.Name, initializationValue);
+            var variable = new Variable(variableDeclaration.Name, initializationValueContainer);
             _environment.CurrentContext.DeclareVariable(variable);
         }
 
         public void Visit(ExpressionStatement expressionStatement)
         {
-            throw new NotImplementedException();
+            if (expressionStatement is { Expression: not IdentifierExpression, AssignmentValue: not null })
+                throw new NotImplementedException("Cannot assign to something different than identifier.");
+
+            if (expressionStatement.AssignmentValue == null)
+            {
+                expressionStatement.Expression.Accept(this);
+            }
+            else
+            {
+                var leftIdentifier = (IdentifierExpression)expressionStatement.Expression;
+                var leftVariable = _environment.CurrentContext.TryGetVariable(leftIdentifier.Identifier) 
+                                   ?? throw new NotImplementedException("Undefined variable");
+
+                expressionStatement.AssignmentValue.Accept(this);
+                var rightValue = _environment.ConsumeLastResult();
+                var assignmentValue = _typesResolver.ResolveAssignment(leftVariable.ValueContainer.Value, rightValue.Value);
+                leftVariable.ValueContainer.Value = assignmentValue;
+            }
         }
 
         public void Visit(IfStatement ifStatement)
@@ -231,30 +255,31 @@ namespace CNull.Interpreter
             throw new NotImplementedException();
         }
 
-        private void PerformCall(IFunction function, params object?[] args)
+        // call dostaje liste zmiennych, nie tworzy ich sam (powinny być tworzone przed callem)
+        // wszystkie referencje można przechowywać w środowisku i przypisywać im hash cody jako klucz
+        // albo kopiować explicite przy typach kopiowalnych podczas calla i returna...
+        private void PerformCall(IFunction function, params IValueContainer[] args)
         {
             if (function.Parameters.Count() != args.Length)
                 throw new NotImplementedException();
 
             var returnType = _typesResolver.ResolveReturnType(function.ReturnType);
-            var localVariables = new List<IVariable>();
+            var localVariables = new List<Variable>();
             foreach (var (parameter, argument) in function.Parameters.Zip(args))
-                localVariables.Add(VariableFactory(parameter.Type, parameter.Name, argument));
+                localVariables.Add(new Variable(parameter.Name, argument));
 
             _environment.EnterCallContext(returnType, localVariables);
             function.Accept(this);
             _environment.ExitCallContext();
         }
 
-        private IVariable VariableFactory(IDeclarableType type, string name, object? initializationValue)
+        private IValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)
         {
             var leftType = _typesResolver.ResolveDeclarableType(type);
             var resolvedValue = _typesResolver.ResolveAssignment(Activator.CreateInstance(leftType), initializationValue);
-
-            if (!type.IsPrimitive)
-                return new ReferenceTypeVariable(leftType.MakeNullableType(), name, resolvedValue);
-
-            return new ValueTypeVariable(leftType.MakeNullableType(), name, resolvedValue);
+            return leftType.IsPrimitive
+                ? new ValueTypeContainer(leftType.MakeNullableType(), resolvedValue)
+                : new ReferenceTypeContainer(leftType.MakeNullableType(), resolvedValue);
         }
     }
 }

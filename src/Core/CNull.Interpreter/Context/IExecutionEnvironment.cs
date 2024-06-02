@@ -5,9 +5,9 @@ namespace CNull.Interpreter.Context
     public interface IExecutionEnvironment
     {
         CallContext CurrentContext { get; }
-        object? ConsumeLastResult();
-        void SaveResult(object? result);
-        void EnterCallContext(Type? returnType, IEnumerable<IVariable> localVariables);
+        IValueContainer? ConsumeLastResult();
+        void SaveResult(IValueContainer? result);
+        void EnterCallContext(Type? returnType, IEnumerable<Variable> localVariables);
         void ExitCallContext();
     }
 }

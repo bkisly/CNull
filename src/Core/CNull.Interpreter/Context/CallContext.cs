@@ -10,7 +10,7 @@ namespace CNull.Interpreter.Context
 
         private readonly Stack<Scope> _scopes = [];
 
-        public CallContext(Type? returnType, IEnumerable<IVariable> localVariables)
+        public CallContext(Type? returnType, IEnumerable<Variable> localVariables)
         {
             ExpectedReturnType = returnType;
             EnterScope();
@@ -19,7 +19,7 @@ namespace CNull.Interpreter.Context
                 currentScope.DeclareVariable(localVariable.Name, localVariable);
         }
 
-        public IVariable? GetVariable(string name)
+        public Variable? TryGetVariable(string name)
         {
             foreach (var scope in _scopes)
             {
@@ -30,7 +30,7 @@ namespace CNull.Interpreter.Context
             return null;
         }
 
-        public void DeclareVariable(IVariable variable)
+        public void DeclareVariable(Variable variable)
         {
             _scopes.Peek().DeclareVariable(variable.Name, variable);
         }

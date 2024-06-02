@@ -1,19 +1,23 @@
 ﻿namespace CNull.Interpreter.Symbols
 {
-    public interface IVariable
+    public class Variable(string name, IValueContainer valueContainer)
     {
-        Type Type { get; }
-        string Name { get; }
+        public string Name { get; } = name;
+        public IValueContainer ValueContainer { get; } = valueContainer;
+    }
+
+    public interface IValueContainer
+    {
+        Type? Type { get; }
         object? Value { get; set; }
     }
 
-    public record struct ValueTypeVariable(Type Type, string Name, object? Value) : IVariable
+    public record struct ValueTypeContainer(Type? Type, object? Value) : IValueContainer
     {
-        public Type Type { get; } = Type;
-        public string Name { get; } = Name;
+        public Type? Type { get; } = Type;
     }
 
-    public record ReferenceTypeVariable(Type Type, string Name, object? Value) : IVariable
+    public record ReferenceTypeContainer(Type? Type, object? Value) : IValueContainer
     {
         public object? Value { get; set; } = Value;
     }
