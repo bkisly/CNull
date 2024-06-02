@@ -109,7 +109,7 @@ namespace CNull.Parser.Productions
     /// Syntactic production which represents return statement inside a function.
     /// </summary>
     /// <param name="ReturnExpression">Expression to return from the function.</param>
-    public record ReturnStatement(IExpression ReturnExpression, Position Position) : IBasicStatement
+    public record ReturnStatement(IExpression? ReturnExpression, Position Position) : IBasicStatement
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }

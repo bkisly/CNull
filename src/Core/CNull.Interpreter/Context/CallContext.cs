@@ -5,6 +5,9 @@ namespace CNull.Interpreter.Context
     public class CallContext
     {
         public bool IsReturning { get; set; }
+        public bool IsContinuing { get; set; }
+        public bool IsBreaking { get; set; }
+
         public Type? ExpectedReturnType { get; private set; }
         public int LoopCounter { get; private set; }
 
@@ -44,6 +47,17 @@ namespace CNull.Interpreter.Context
         {
             _scopes.Push(new Scope());
             LoopCounter++;
+        }
+
+        public void ExitLoopScope()
+        {
+            _scopes.Pop();
+            LoopCounter--;
+        }
+
+        public void ExitScope()
+        {
+            _scopes.Pop();
         }
     }
 }

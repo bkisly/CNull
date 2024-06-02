@@ -578,7 +578,7 @@ namespace CNull.Parser
             var position = _currentToken.Position;
             ConsumeToken();
 
-            var expression = ParseExpression() ?? throw ParserError(new InvalidExpressionError(_currentToken.Position));
+            var expression = ParseExpression();
             ValidateCurrentToken(TokenType.SemicolonOperator);
             return new ReturnStatement(expression, position);
         });

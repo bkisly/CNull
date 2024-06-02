@@ -113,8 +113,7 @@ namespace CNull.Interpreter
                 var leftVariable = _environment.CurrentContext.TryGetVariable(leftIdentifier.Identifier) 
                                    ?? throw new NotImplementedException("Undefined variable");
 
-                expressionStatement.AssignmentValue.Accept(this);
-                var rightValue = _environment.ConsumeLastResult();
+                var rightValue = ProcessExpression(expressionStatement.AssignmentValue);
                 var assignmentValue = _typesResolver.ResolveAssignment(leftVariable.ValueContainer.Value, rightValue.Value);
                 leftVariable.ValueContainer.Value = assignmentValue;
             }
@@ -122,14 +121,49 @@ namespace CNull.Interpreter
 
         public void Visit(IfStatement ifStatement)
         {
-            throw new NotImplementedException();
+            if (ProcessBooleanExpression(ifStatement.BooleanExpression))
+            {
+                ProcessScope(ifStatement.Body);
+            }
+            else
+            {
+                ifStatement.ElseIfStatement?.Accept(this);
+                if (ifStatement.ElseBlock != null)
+                {
+                    ProcessScope(ifStatement.ElseBlock);
+                }
+            }
+        }
+
+        private void ProcessScope(BlockStatement body)
+        {
+            _environment.CurrentContext.EnterScope();
+            body.Accept(this);
+            _environment.CurrentContext.ExitScope();
         }
 
         public void Visit(WhileStatement whileStatement)
         {
-            throw new NotImplementedException();
+            while (ProcessBooleanExpression(whileStatement.BooleanExpression))
+            {
+                _environment.CurrentContext.EnterLoopScope();
+                whileStatement.Body.Accept(this);
+                _environment.CurrentContext.ExitLoopScope();
+            }
         }
 
+        private bool ProcessBooleanExpression(IExpression expression)
+        {
+            var result = ProcessExpression(expression);
+            return _typesResolver.EnsureBoolean(result.Value);
+        }
+
+        private IValueContainer ProcessExpression(IExpression expression)
+        {
+            expression.Accept(this);
+            return _environment.ConsumeLastResult();
+        }
+          
         public void Visit(TryStatement tryCatchStatement)
         {
             throw new NotImplementedException();
@@ -142,12 +176,18 @@ namespace CNull.Interpreter
 
         public void Visit(ContinueStatement continueStatement)
         {
-            throw new NotImplementedException();
+            if (_environment.CurrentContext.LoopCounter <= 0)
+                throw new NotImplementedException("Invalid continue");
+
+            _environment.CurrentContext.IsContinuing = true;
         }
 
         public void Visit(BreakStatement breakStatement)
         {
-            throw new NotImplementedException();
+            if (_environment.CurrentContext.LoopCounter <= 0)
+                throw new NotImplementedException("Invalid break");
+
+            _environment.CurrentContext.IsBreaking = true;
         }
 
         public void Visit(ThrowStatement throwStatement)
@@ -157,47 +197,80 @@ namespace CNull.Interpreter
 
         public void Visit(ReturnStatement returnStatement)
         {
-            throw new NotImplementedException();
+            if (_environment.CurrentContext.ExpectedReturnType == null && returnStatement.ReturnExpression != null)
+                throw new NotImplementedException("Tried to return a value from void function");
+
+
+            if (_environment.CurrentContext.ExpectedReturnType != null)
+            {
+                if (returnStatement.ReturnExpression == null)
+                    throw new NotImplementedException("Expected an expression");
+
+                returnStatement.ReturnExpression.Accept(this);
+                var returnValue = _environment.ConsumeLastResult();
+
+                if (_environment.CurrentContext.ExpectedReturnType != returnValue.Type)
+                    throw new NotImplementedException("Expression return type does not match expected return type.");
+
+                _environment.SaveResult(returnValue);
+            }
+
+            _environment.CurrentContext.IsReturning = true;
         }
 
         public void Visit(OrExpression orExpression)
         {
-            throw new NotImplementedException();
+            var leftValue = ProcessBooleanExpression(orExpression.LeftFactor);
+            var result = leftValue || ProcessBooleanExpression(orExpression.RightFactor);
+            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
         }
 
         public void Visit(AndExpression andExpression)
         {
-            throw new NotImplementedException();
+            var leftValue = ProcessBooleanExpression(andExpression.LeftFactor);
+            var result = leftValue && ProcessBooleanExpression(andExpression.RightFactor);
+            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
         }
 
         public void Visit(GreaterThanExpression greaterThanExpression)
         {
-            throw new NotImplementedException();
+            VisitRelationalExpression(greaterThanExpression, _typesResolver.ResolveGreaterThan);
         }
 
         public void Visit(LessThanExpression lessThanExpression)
         {
-            throw new NotImplementedException();
+            VisitRelationalExpression(lessThanExpression,
+                (l, r) => !_typesResolver.ResolveGreaterThan(l, r) && !_typesResolver.ResolveEqualTo(l, r));
         }
 
         public void Visit(GreaterThanOrEqualExpression greaterThanOrEqualExpression)
         {
-            throw new NotImplementedException();
+            VisitRelationalExpression(greaterThanOrEqualExpression,
+                (l, r) => _typesResolver.ResolveGreaterThan(l, r) || _typesResolver.ResolveEqualTo(l, r));
         }
 
         public void Visit(LessThanOrEqualExpression lessThanOrEqualExpression)
         {
-            throw new NotImplementedException();
+            VisitRelationalExpression(lessThanOrEqualExpression, (l, r) => !_typesResolver.ResolveGreaterThan(l, r));
+        }
+
+        private void VisitRelationalExpression(IBinaryExpression binaryExpression, Func<object?, object?, bool> resolver)
+        {
+            var leftValue = ProcessExpression(binaryExpression.LeftFactor);
+            var rightValue = ProcessExpression(binaryExpression.RightFactor);
+
+            var result = resolver.Invoke(leftValue.Value, rightValue.Value);
+            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
         }
 
         public void Visit(EqualExpression equalExpression)
         {
-            throw new NotImplementedException();
+            VisitRelationalExpression(equalExpression, _typesResolver.ResolveEqualTo);
         }
 
         public void Visit(NotEqualExpression notEqualExpression)
         {
-            throw new NotImplementedException();
+            VisitRelationalExpression(notEqualExpression, (l, r) => !_typesResolver.ResolveEqualTo(l, r));
         }
 
         public void Visit(AdditionExpression additionExpression)
@@ -227,7 +300,8 @@ namespace CNull.Interpreter
 
         public void Visit(BooleanNegationExpression booleanNegationExpression)
         {
-            throw new NotImplementedException();
+            var value = ProcessBooleanExpression(booleanNegationExpression.Expression);
+            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), !value));
         }
 
         public void Visit(NegationExpression negationExpression)
@@ -237,17 +311,22 @@ namespace CNull.Interpreter
 
         public void Visit(NullCheckExpression nullCheckExpression)
         {
-            throw new NotImplementedException();
+            var value = ProcessExpression(nullCheckExpression.Expression);
+            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), value.Value == null));
         }
 
         public void Visit<T>(LiteralExpression<T> literalExpression)
         {
-            throw new NotImplementedException();
+            var type = literalExpression.Value?.GetType() ?? typeof(object).MakeNullableType();
+            _environment.SaveResult(new ValueTypeContainer(type, literalExpression.Value));
         }
 
         public void Visit(IdentifierExpression identifierExpression)
         {
-            throw new NotImplementedException();
+            var variable = _environment.CurrentContext.TryGetVariable(identifierExpression.Identifier) 
+                           ?? throw new NotImplementedException("Undefined variable...");
+
+            _environment.SaveResult(variable.ValueContainer);
         }
 
         public void Visit(CallExpression callExpression)
@@ -255,13 +334,10 @@ namespace CNull.Interpreter
             throw new NotImplementedException();
         }
 
-        // call dostaje liste zmiennych, nie tworzy ich sam (powinny być tworzone przed callem)
-        // wszystkie referencje można przechowywać w środowisku i przypisywać im hash cody jako klucz
-        // albo kopiować explicite przy typach kopiowalnych podczas calla i returna...
         private void PerformCall(IFunction function, params IValueContainer[] args)
         {
             if (function.Parameters.Count() != args.Length)
-                throw new NotImplementedException();
+                throw new NotImplementedException("Not matching amount of args...");
 
             var returnType = _typesResolver.ResolveReturnType(function.ReturnType);
             var localVariables = new List<Variable>();
