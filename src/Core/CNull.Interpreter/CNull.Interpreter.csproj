@@ -20,8 +20,4 @@
     <ProjectReference Include="..\CNull.Parser\CNull.Parser.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="StandardLibrary\" />
-  </ItemGroup>
-
 </Project>

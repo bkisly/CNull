@@ -39,6 +39,9 @@ namespace CNull.Interpreter
             var dictContainer = new ValueContainer(typeof(Dictionary<int, string>),
                 new Dictionary<int, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
             PerformCall(mainFunction, [dictContainer]);
+
+            if (_environment.ActiveException != null)
+                throw new NotImplementedException($"Unhandled exeption! {_environment.ActiveException}");
         }
 
         public void Visit(Program program)
@@ -198,8 +201,8 @@ namespace CNull.Interpreter
 
                 if (catchClause.FilterExpression == null || VisitBooleanExpression(catchClause.FilterExpression))
                 {
-                    catchClause.Body.Accept(this);
                     _environment.ActiveException = null;
+                    catchClause.Body.Accept(this);
                     _environment.CurrentContext.ExitScope();
                     break;
                 }
@@ -209,9 +212,7 @@ namespace CNull.Interpreter
         }
 
         public void Visit(CatchClause catchClause)
-        {
-            throw new NotImplementedException();
-        }
+        { }
 
         public void Visit(ContinueStatement continueStatement)
         {

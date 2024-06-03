@@ -56,12 +56,14 @@ namespace CNull.Parser.Productions
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public record StandardLibraryFunction(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters) : IFunction
+    public record StandardLibraryFunction(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters, 
+        Func<object?[], object?> Body) : IFunction
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public record EmbeddedFunction(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters, IDeclarableType ParentType) : IFunction
+    public record EmbeddedFunction(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters, 
+        IDeclarableType ParentType, Action<object?[], object?> Body) : IFunction
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
