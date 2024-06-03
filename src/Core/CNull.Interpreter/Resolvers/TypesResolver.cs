@@ -72,15 +72,21 @@ namespace CNull.Interpreter.Resolvers
                 (int leftInt, int rightInt) => leftInt + rightInt,
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) + Convert.ToSingle(right),
                 (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
+                (string leftString, string rightString) => leftString + rightString,
+                (string leftString, char rightChar) => leftString + rightChar,
+                (char leftChar, char rightChar) => leftChar + rightChar,
+                (char leftChar, string rightString) => leftChar + rightString,
                 _ => throw new NotImplementedException("Cannot add 2 values of types...")
             };
         }
 
         public object ResolveSubtraction(object? left, object? right)
         {
+            if ((left, right) is (int leftInt, int rightInt))
+                return leftInt - rightInt;
+
             return (left, right) switch
             {
-                (int leftInt, int rightInt) => leftInt - rightInt,
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) - Convert.ToSingle(right),
                 (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
                 _ => throw new NotImplementedException("Cannot subtract 2 values of types...")
@@ -89,9 +95,11 @@ namespace CNull.Interpreter.Resolvers
 
         public object ResolveMultiplication(object? left, object? right)
         {
+            if ((left, right) is (int leftInt, int rightInt))
+                return leftInt * rightInt;
+
             return (left, right) switch
             {
-                (int leftInt, int rightInt) => leftInt * rightInt,
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) * Convert.ToSingle(right),
                 (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
                 _ => throw new NotImplementedException("Cannot multiply 2 values of types...")
@@ -100,10 +108,15 @@ namespace CNull.Interpreter.Resolvers
 
         public object ResolveDivision(object? left, object? right)
         {
+            if ((left, right) is (int leftInt, int rightInt))
+            {
+                if (rightInt == 0)
+                    throw new NotImplementedException("Division by zero");
+                return leftInt / rightInt;
+            }
+
             return (left, right) switch
             {
-                (int, 0) => throw new NotImplementedException("Division by zero"),
-                (int leftInt, int rightInt) => leftInt / rightInt,
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) / Convert.ToSingle(right),
                 (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
                 _ => throw new NotImplementedException("Cannot divide 2 values of types...")
@@ -112,10 +125,15 @@ namespace CNull.Interpreter.Resolvers
 
         public object ResolveModulo(object? left, object? right)
         {
+            if ((left, right) is (int leftInt, int rightInt))
+            {
+                if (rightInt == 0)
+                    throw new NotImplementedException("Division by zero");
+                return leftInt / rightInt;
+            }
+
             return (left, right) switch
             {
-                (int, 0) => throw new NotImplementedException("Division by zero"),
-                (int leftInt, int rightInt) => leftInt % rightInt,
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) % Convert.ToSingle(right),
                 (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
                 _ => throw new NotImplementedException("Cannot calculate modulo between 2 values of types...")
@@ -124,9 +142,11 @@ namespace CNull.Interpreter.Resolvers
 
         public object ResolveNegation(object? value)
         {
+            if (value is int intValue)
+                return -intValue;
+
             return value switch
             {
-                int intValue => -intValue,
                 float floatValue => -floatValue,
                 null => throw new NotImplementedException("Used null value in non nullable context"),
                 _ => throw new NotImplementedException("Cannot negate a value of type...")

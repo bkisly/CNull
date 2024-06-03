@@ -15,7 +15,7 @@ namespace CNull.Interpreter
         private StandardOutput? _outputCallback;
 
         private FunctionsRegistry _functionsRegistry = new(errorHandler);
-        private string _rootModule = null!;
+        private string _currentModule = null!;
 
         private TypesResolver _typesResolver = null!;
         private InterpreterExecutionEnvironment _environment = null!;
@@ -30,15 +30,15 @@ namespace CNull.Interpreter
             if (functionsRegistryBuilder.Build() is not { } functionsRegistry)
                 return;
 
-            _rootModule = functionsRegistryBuilder.RootModule;
+            _currentModule = functionsRegistryBuilder.RootModule;
             _functionsRegistry = functionsRegistry;
 
-            var mainFunction = _functionsRegistry.GetEntryPoint(_rootModule) 
-                               ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(_rootModule));
+            var mainFunction = _functionsRegistry.GetEntryPoint(_currentModule) 
+                               ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(_currentModule));
 
-            var dictContainer = new ReferenceTypeContainer(typeof(Dictionary<int, string>),
-                new Dictionary<int, string> { [0] = "first", [1] = "second" });
-            PerformCall(mainFunction, dictContainer);
+            var dictContainer = new ValueContainer(typeof(Dictionary<int, string>),
+                new Dictionary<int, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
+            PerformCall(mainFunction, [dictContainer]);
         }
 
         public void Visit(Program program)
@@ -85,7 +85,7 @@ namespace CNull.Interpreter
 
         public void Visit(VariableDeclaration variableDeclaration)
         {
-            IValueContainer initializationValueContainer;
+            ValueContainer initializationValueContainer;
 
             if (variableDeclaration.InitializationExpression != null)
             {
@@ -173,7 +173,7 @@ namespace CNull.Interpreter
             return _typesResolver.EnsureBoolean(result.Value);
         }
 
-        private IValueContainer VisitExpression(IExpression expression)
+        private ValueContainer VisitExpression(IExpression expression)
         {
             expression.Accept(this);
             return _environment.ConsumeLastResult();
@@ -237,14 +237,14 @@ namespace CNull.Interpreter
         {
             var leftValue = VisitBooleanExpression(orExpression.LeftFactor);
             var result = leftValue || VisitBooleanExpression(orExpression.RightFactor);
-            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
+            _environment.SaveResult(new ValueContainer(typeof(bool?), result));
         }
 
         public void Visit(AndExpression andExpression)
         {
             var leftValue = VisitBooleanExpression(andExpression.LeftFactor);
             var result = leftValue && VisitBooleanExpression(andExpression.RightFactor);
-            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
+            _environment.SaveResult(new ValueContainer(typeof(bool?), result));
         }
 
         public void Visit(GreaterThanExpression greaterThanExpression)
@@ -275,7 +275,7 @@ namespace CNull.Interpreter
             var rightValue = VisitExpression(binaryExpression.RightFactor);
 
             var result = resolver.Invoke(leftValue.Value, rightValue.Value);
-            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), result));
+            _environment.SaveResult(new ValueContainer(typeof(bool?), result));
         }
 
         private void VisitArithmeticalExpression(IBinaryExpression binaryExpression,
@@ -285,7 +285,7 @@ namespace CNull.Interpreter
             var rightValue = VisitExpression(binaryExpression.RightFactor);
 
             var result = resolver.Invoke(leftValue.Value, rightValue.Value);
-            _environment.SaveResult(new ValueTypeContainer(result.GetType().MakeNullableType(), result));
+            _environment.SaveResult(new ValueContainer(result.GetType().MakeNullableType(), result));
         }
 
         public void Visit(EqualExpression equalExpression)
@@ -326,13 +326,13 @@ namespace CNull.Interpreter
         public void Visit(BooleanNegationExpression booleanNegationExpression)
         {
             var value = VisitBooleanExpression(booleanNegationExpression.Expression);
-            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), !value));
+            _environment.SaveResult(new ValueContainer(typeof(bool?), !value));
         }
 
         public void Visit(NegationExpression negationExpression)
         {
             var value = VisitExpression(negationExpression.Expression);
-            _environment.SaveResult(new ValueTypeContainer(
+            _environment.SaveResult(new ValueContainer(
                 value.Value?.GetType().MakeNullableType() ?? typeof(object).MakeNullableType(),
                 _typesResolver.ResolveNegation(value.Value)));
         }
@@ -340,13 +340,13 @@ namespace CNull.Interpreter
         public void Visit(NullCheckExpression nullCheckExpression)
         {
             var value = VisitExpression(nullCheckExpression.Expression);
-            _environment.SaveResult(new ValueTypeContainer(typeof(bool?), value.Value == null));
+            _environment.SaveResult(new ValueContainer(typeof(bool?), value.Value == null));
         }
 
         public void Visit<T>(LiteralExpression<T> literalExpression)
         {
-            var type = literalExpression.Value?.GetType() ?? typeof(object).MakeNullableType();
-            _environment.SaveResult(new ValueTypeContainer(type, literalExpression.Value));
+            var type = literalExpression.Value?.GetType().MakeNullableType() ?? typeof(object).MakeNullableType();
+            _environment.SaveResult(new ValueContainer(type, literalExpression.Value));
         }
 
         public void Visit(IdentifierExpression identifierExpression)
@@ -354,15 +354,25 @@ namespace CNull.Interpreter
             var variable = _environment.CurrentContext.TryGetVariable(identifierExpression.Identifier) 
                            ?? throw new NotImplementedException("Undefined variable...");
 
-            _environment.SaveResult(variable.ValueContainer);
+            _environment.SaveResult(variable.ValueContainer.Move());
         }
 
         public void Visit(CallExpression callExpression)
         {
-            throw new NotImplementedException();
+            if (callExpression.ParentExpression != null)
+            {
+                var parentValue = VisitExpression(callExpression.ParentExpression);
+            }
+
+            var functionsRegistryEntry = _functionsRegistry[_currentModule, callExpression.FunctionName];
+            if (functionsRegistryEntry.ExternalModuleName is { } moduleName)
+                _currentModule = moduleName;
+
+            var arguments = callExpression.Arguments.Select(VisitExpression).ToArray();
+            PerformCall(functionsRegistryEntry.FunctionDefinition, arguments);
         }
 
-        private void PerformCall(IFunction function, params IValueContainer[] args)
+        private void PerformCall(IFunction function, ValueContainer[] args)
         {
             if (function.Parameters.Count() != args.Length)
                 throw new NotImplementedException("Not matching amount of args...");
@@ -370,20 +380,18 @@ namespace CNull.Interpreter
             var returnType = _typesResolver.ResolveReturnType(function.ReturnType);
             var localVariables = new List<Variable>();
             foreach (var (parameter, argument) in function.Parameters.Zip(args))
-                localVariables.Add(new Variable(parameter.Name, argument));
+                localVariables.Add(new Variable(parameter.Name, argument.Move()));
 
-            _environment.EnterCallContext(returnType, localVariables);
+            _environment.EnterCallContext(returnType?.MakeNullableType(), localVariables);
             function.Accept(this);
              _environment.ExitCallContext();
         }
 
-        private IValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)
+        private ValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)
         {
             var leftType = _typesResolver.ResolveDeclarableType(type);
             var resolvedValue = _typesResolver.ResolveAssignment(Activator.CreateInstance(leftType), initializationValue);
-            return leftType.IsPrimitive
-                ? new ValueTypeContainer(leftType.MakeNullableType(), resolvedValue)
-                : new ReferenceTypeContainer(leftType.MakeNullableType(), resolvedValue);
+            return new ValueContainer(leftType.MakeNullableType(), resolvedValue, type.IsPrimitive);
         }
     }
 }

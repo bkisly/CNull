@@ -5,18 +5,18 @@ namespace CNull.Interpreter.Context
     public class InterpreterExecutionEnvironment : IExecutionEnvironment
     {
         private readonly Stack<CallContext> _contextsStack = [];
-        private IValueContainer? _lastResult;
+        private ValueContainer? _lastResult;
 
         public CallContext CurrentContext => _contextsStack.Peek();
 
-        public IValueContainer ConsumeLastResult()
+        public ValueContainer ConsumeLastResult()
         {
             var result = _lastResult;
             _lastResult = null;
             return result ?? throw new NullReferenceException("Tried to consume already consumed value.");
         }
 
-        public void SaveResult(IValueContainer? result)
+        public void SaveResult(ValueContainer? result)
         {
             _lastResult = result;
         }
