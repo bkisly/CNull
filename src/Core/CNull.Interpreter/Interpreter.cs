@@ -60,6 +60,11 @@ namespace CNull.Interpreter
             throw new NotImplementedException("Create a registry for stdlib functions.");
         }
 
+        public void Visit(EmbeddedFunction embeddedFunction)
+        {
+            throw new NotImplementedException("Create a registry for embedded functions.");
+        }
+
         public void Visit(Parameter parameter)
         { }
 
@@ -76,7 +81,7 @@ namespace CNull.Interpreter
         {
             foreach (var statement in blockStatement.StatementsList)
             {
-                if (_environment.CurrentContext.IsJumping)
+                if (_environment.CurrentContext.IsJumping || _environment.ActiveException != null)
                     break;
 
                 statement.Accept(this);
@@ -181,7 +186,26 @@ namespace CNull.Interpreter
           
         public void Visit(TryStatement tryCatchStatement)
         {
-            throw new NotImplementedException();
+            ProcessScope(tryCatchStatement.TryBlock);
+            if (_environment.ActiveException == null)
+                return;
+
+            foreach (var catchClause in tryCatchStatement.CatchClauses)
+            {
+                _environment.CurrentContext.EnterScope();
+                var container = new ValueContainer(typeof(string), _environment.ActiveException);
+                _environment.CurrentContext.DeclareVariable(new Variable(catchClause.Identifier, container));
+
+                if (catchClause.FilterExpression == null || VisitBooleanExpression(catchClause.FilterExpression))
+                {
+                    catchClause.Body.Accept(this);
+                    _environment.ActiveException = null;
+                    _environment.CurrentContext.ExitScope();
+                    break;
+                }
+
+                _environment.CurrentContext.ExitScope();
+            }
         }
 
         public void Visit(CatchClause catchClause)
@@ -207,7 +231,7 @@ namespace CNull.Interpreter
 
         public void Visit(ThrowStatement throwStatement)
         {
-            throw new NotImplementedException();
+            _environment.ActiveException = throwStatement.Message;
         }
 
         public void Visit(ReturnStatement returnStatement)

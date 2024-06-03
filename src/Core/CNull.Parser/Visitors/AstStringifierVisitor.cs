@@ -58,6 +58,9 @@ namespace CNull.Parser.Visitors
         public void Visit(StandardLibraryFunction standardLibraryFunction)
         { }
 
+        public void Visit(EmbeddedFunction embeddedFunction)
+        { }
+
         public void Visit(Parameter parameter)
         {
             AppendLine($"Parameter at {parameter.Position}");

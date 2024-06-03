@@ -11,6 +11,7 @@ namespace CNull.Parser.Visitors
         void Visit(ImportDirective directive);
         void Visit(FunctionDefinition functionDefinition);
         void Visit(StandardLibraryFunction standardLibraryFunction);
+        void Visit(EmbeddedFunction embeddedFunction);
         void Visit(Parameter parameter);
 
         void Visit(ReturnType returnType);

@@ -8,6 +8,7 @@ namespace CNull.Interpreter.Context
         private ValueContainer? _lastResult;
 
         public CallContext CurrentContext => _contextsStack.Peek();
+        public string? ActiveException { get; set; }
 
         public ValueContainer ConsumeLastResult()
         {
