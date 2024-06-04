@@ -1,4 +1,7 @@
 ﻿using CNull.Common;
+using CNull.Interpreter.Context;
+using CNull.Interpreter.Errors;
+using CNull.Interpreter.Extensions;
 using CNull.Parser;
 using CNull.Parser.Productions;
 
@@ -6,17 +9,24 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 {
     public class StandardLibrary
     {
+        private readonly IExecutionEnvironment _environment;
         private readonly StandardInput _standardInput;
         private readonly StandardOutput _standardOutput;
 
-        private readonly Dictionary<string, StandardLibraryFunction> _functions;
+        public Dictionary<string, StandardLibraryFunction> Functions { get; }
 
-        public StandardLibrary(StandardInput standardInput, StandardOutput standardOutput)
+        public StandardLibrary(IExecutionEnvironment environment, StandardInput standardInput, StandardOutput standardOutput)
         {
+            _environment = environment;
             _standardInput = standardInput;
             _standardOutput = standardOutput;
 
-            _functions = new Dictionary<string, StandardLibraryFunction>
+            Functions = CreateStdlibFunctions();
+        }
+
+        private Dictionary<string, StandardLibraryFunction> CreateStdlibFunctions()
+        {
+            return new Dictionary<string, StandardLibraryFunction>
             {
                 [nameof(WriteLine)] = new(
                     new ReturnType(new Position()),
@@ -28,40 +38,70 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
                     ],
                     WriteLine),
 
+                [nameof(Write)] = new(
+                    new ReturnType(new Position()),
+                    nameof(Write),
+                    [
+                        new Parameter(
+                            new PrimitiveType(PrimitiveTypes.String, new Position()), "content", new Position()
+                        )
+                    ],
+                    () => Write()),
+
                 [nameof(ReadLine)] = new(
                     new PrimitiveType(PrimitiveTypes.String, new Position()),
                     nameof(WriteLine),
                     [],
                     ReadLine),
 
-                [nameof(ConvertToInt)] = new(
+                [nameof(StringToInt)] = new(
                     new PrimitiveType(PrimitiveTypes.Integer, new Position()),
-                    nameof(ConvertToInt),
+                    nameof(StringToInt),
                     [
                         new Parameter(
                             new PrimitiveType(PrimitiveTypes.String, new Position()), "text", new Position()
                         )
                     ],
-                    ConvertToInt),
+                    StringToInt),
             };
         }
 
-        private object? WriteLine(object?[] args)
+        private void WriteLine() => Write(Environment.NewLine);
+
+        private void Write(string trailingCharacter = "")
         {
-            _standardOutput.Invoke($"{args[0]}{Environment.NewLine}");
-            return null;
+            var content = _environment.CurrentContext.GetVariable("content");
+
+            if (content.ValueContainer.Value is not { } stringValue)
+            {
+                _environment.ActiveException = RuntimeErrors.NullValueException;
+                return;
+            }
+
+            _standardOutput.Invoke($"{stringValue}{trailingCharacter}");
         }
 
-        private object? ReadLine(object?[] args)
+        private void ReadLine()
         {
-            var input = _standardInput.Invoke(string.Empty);
-            _standardOutput.Invoke(Environment.NewLine);
-            return input;
+            var input = _standardInput.Invoke();
+            _environment.SaveResult(new ValueContainer(typeof(string).MakeNullableType(), input));
+            _environment.CurrentContext.IsReturning = true;
         }
 
-        private object ConvertToInt(object?[] args)
+        private void StringToInt()
         {
-            return Convert.ToInt32(args[0]);
+            var text = _environment.CurrentContext.GetVariable("text");
+
+            if (text.ValueContainer.Value is not { } stringValue)
+            {
+                _environment.ActiveException = RuntimeErrors.NullValueException;
+                return;
+            }
+
+            var result = Convert.ToInt32(stringValue);
+
+            _environment.SaveResult(new ValueContainer(typeof(int).MakeNullableType(), result));
+            _environment.CurrentContext.IsReturning = true;
         }
     }
 }

@@ -24,6 +24,10 @@ namespace CNull.Interpreter.Context
                 currentScope.DeclareVariable(localVariable.Name, localVariable);
         }
 
+        public Variable GetVariable(string name)
+            => TryGetVariable(name)
+               ?? throw new InvalidOperationException($"No variable named {name} is declared in the current scope.");
+
         public Variable? TryGetVariable(string name)
         {
             foreach (var scope in _scopes)

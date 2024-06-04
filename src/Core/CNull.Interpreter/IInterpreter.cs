@@ -3,9 +3,8 @@
     /// <summary>
     /// Callback method delegate for the standard input.
     /// </summary>
-    /// <param name="header">Message to write before requesting input.</param>
     /// <returns>The read input.</returns>
-    public delegate string? StandardInput(string header);
+    public delegate string? StandardInput();
 
     /// <summary>
     /// Callback method delegate for the standard output.
