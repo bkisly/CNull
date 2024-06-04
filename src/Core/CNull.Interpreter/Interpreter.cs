@@ -389,15 +389,16 @@ namespace CNull.Interpreter
                 // @TODO: handle embedded functions
             }
 
-            var functionsRegistryEntry = _functionsRegistry[_currentModule, callExpression.FunctionName];
-            if (functionsRegistryEntry.ExternalModuleName is { } moduleName)
-                _currentModule = moduleName;
+            if (!_functionsRegistry.TryGetValue(_currentModule, callExpression.FunctionName,
+                    out var functionsRegistryEntry))
+                throw errorHandler.RaiseFatalCompilationError(new FunctionNotFoundError(callExpression.FunctionName,
+                    _currentModule, callExpression.Position));
 
             var arguments = callExpression.Arguments.Select(VisitExpression).ToArray();
-            PerformCall(functionsRegistryEntry.FunctionDefinition, arguments);
+            PerformCall(functionsRegistryEntry.FunctionDefinition, arguments, functionsRegistryEntry.ExternalModuleName);
         }
 
-        private void PerformCall(IFunction function, ValueContainer[] args)
+        private void PerformCall(IFunction function, ValueContainer[] args, string? requestedModule = null)
         {
             if (function.Parameters.Count() != args.Length)
                 throw new NotImplementedException("Not matching amount of args...");
@@ -407,9 +408,15 @@ namespace CNull.Interpreter
             foreach (var (parameter, argument) in function.Parameters.Zip(args))
                 localVariables.Add(new Variable(parameter.Name, argument.Move()));
 
+            var lastModule = _currentModule;
+            if (requestedModule != null)
+                _currentModule = requestedModule;
+
             _environment.EnterCallContext(returnType?.MakeNullableType(), localVariables);
             function.Accept(this);
              _environment.ExitCallContext();
+
+             _currentModule = lastModule;
         }
 
         private ValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)

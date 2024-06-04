@@ -12,6 +12,11 @@ namespace CNull.Interpreter.Symbols
 
         public FunctionsRegistryEntry this[string moduleName, string functionName] => _functionDefinitions[(moduleName, functionName)];
 
+        public bool TryGetValue(string moduleName, string functionName, out FunctionsRegistryEntry entry)
+        {
+            return _functionDefinitions.TryGetValue((moduleName, functionName), out entry!);
+        }
+
         public void Register(string moduleName, IFunction functionDefinition, string? externalModuleName = null)
         {
             try

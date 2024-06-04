@@ -201,7 +201,7 @@ namespace CNull.Parser
             ValidateCurrentToken(TokenType.DotOperator);
             var functionName = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
             ValidateCurrentToken(TokenType.SemicolonOperator);
-            return new ImportDirective(moduleName, functionOrSubmoduleName, position, functionName);
+            return new ImportDirective(moduleName, functionName, position, functionOrSubmoduleName);
         });
 
         /// <summary>
