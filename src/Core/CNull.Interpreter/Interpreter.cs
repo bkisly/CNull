@@ -35,7 +35,7 @@ namespace CNull.Interpreter
                                ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(_currentModule));
 
             var dictContainer = new ValueContainer(typeof(Dictionary<int, string>),
-                new Dictionary<int, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
+                new Dictionary<int?, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
             PerformCall(mainFunction, [dictContainer]);
 
             if (_environment.ActiveException != null)
@@ -63,7 +63,7 @@ namespace CNull.Interpreter
 
         public void Visit(EmbeddedFunction embeddedFunction)
         {
-            throw new NotImplementedException("Create a registry for embedded functions.");
+            embeddedFunction.Body.Invoke();
         }
 
         public void Visit(Parameter parameter)
@@ -248,7 +248,7 @@ namespace CNull.Interpreter
                 returnStatement.ReturnExpression.Accept(this);
                 var returnValue = _environment.ConsumeLastResult();
 
-                if (_environment.CurrentContext.ExpectedReturnType != returnValue.Type)
+                if (returnValue.Value != null && _environment.CurrentContext.ExpectedReturnType != returnValue.Type)
                     throw new NotImplementedException("Expression return type does not match expected return type.");
 
                 _environment.SaveResult(returnValue);
@@ -383,19 +383,41 @@ namespace CNull.Interpreter
 
         public void Visit(CallExpression callExpression)
         {
-            if (callExpression.ParentExpression != null)
-            {
-                var parentValue = VisitExpression(callExpression.ParentExpression);
-                // @TODO: handle embedded functions
-            }
-
-            if (!_functionsRegistry.TryGetValue(_currentModule, callExpression.FunctionName,
-                    out var functionsRegistryEntry))
-                throw errorHandler.RaiseFatalCompilationError(new FunctionNotFoundError(callExpression.FunctionName,
-                    _currentModule, callExpression.Position));
-
             var arguments = callExpression.Arguments.Select(VisitExpression).ToArray();
-            PerformCall(functionsRegistryEntry.FunctionDefinition, arguments, functionsRegistryEntry.ExternalModuleName);
+
+            switch (callExpression.ParentExpression)
+            {
+                case IdentifierExpression or LiteralExpression<string>:
+                {
+                    var parentValue = VisitExpression(callExpression.ParentExpression);
+                    var function = _standardLibrary.GetEmbeddedFunction(callExpression.FunctionName, parentValue);
+
+                    if (_environment.ActiveException != null)
+                    {
+                        _environment.SaveResult(new ValueContainer(typeof(object), null));
+                        break;
+                    }
+
+                    if (function == null)
+                        throw errorHandler.RaiseFatalCompilationError(
+                            new FunctionNotFoundError(callExpression.FunctionName, _currentModule,
+                                callExpression.Position));
+
+                    PerformCall(function, arguments);
+                    break;
+                }
+                case null:
+                {
+                    if (!_functionsRegistry.TryGetValue(_currentModule, callExpression.FunctionName, out var functionsRegistryEntry))
+                        throw errorHandler.RaiseFatalCompilationError(new FunctionNotFoundError(callExpression.FunctionName,
+                            _currentModule, callExpression.Position));
+
+                    PerformCall(functionsRegistryEntry.FunctionDefinition, arguments, functionsRegistryEntry.ExternalModuleName);
+                    break;
+                }
+                default:
+                    throw new NotImplementedException("Unsupported member access.");
+            }
         }
 
         private void PerformCall(IFunction function, ValueContainer[] args, string? requestedModule = null)

@@ -62,8 +62,7 @@ namespace CNull.Parser.Productions
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }
 
-    public record EmbeddedFunction(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters, 
-        IDeclarableType ParentType, Action Body) : IFunction
+    public record EmbeddedFunction(ReturnType ReturnType, string Name, IEnumerable<Parameter> Parameters, Action Body) : IFunction
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }

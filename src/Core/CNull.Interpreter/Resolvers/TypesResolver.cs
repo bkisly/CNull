@@ -73,9 +73,9 @@ namespace CNull.Interpreter.Resolvers
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) + Convert.ToSingle(right),
                 (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
                 (string leftString, string rightString) => leftString + rightString,
-                (string leftString, char rightChar) => leftString + rightChar,
                 (char leftChar, char rightChar) => leftChar + rightChar,
-                (char leftChar, string rightString) => leftChar + rightString,
+                (string leftString, not null) => leftString + right,
+                (not null, string rightString) => left + rightString,
                 _ => throw new NotImplementedException("Cannot add 2 values of types...")
             };
         }
@@ -185,12 +185,25 @@ namespace CNull.Interpreter.Resolvers
 
             return type.Type switch
             {
-                Types.Boolean => typeof(bool),
-                Types.Char => typeof(char),
-                Types.Float => typeof(float),
-                Types.Integer => typeof(int),
+                Types.Boolean => typeof(bool?),
+                Types.Char => typeof(char?),
+                Types.Float => typeof(float?),
+                Types.Integer => typeof(int?),
                 Types.String => typeof(string),
                 _ => throw new NotImplementedException()
+            };
+        }
+
+        public static Type? ResolvePrimitiveType(PrimitiveTypes type)
+        {
+            return type switch
+            {
+                PrimitiveTypes.Boolean => typeof(bool?),
+                PrimitiveTypes.Char => typeof(char?),
+                PrimitiveTypes.Float => typeof(float?),
+                PrimitiveTypes.Integer => typeof(int?),
+                PrimitiveTypes.String => typeof(string),
+                _ => null
             };
         }
     }
