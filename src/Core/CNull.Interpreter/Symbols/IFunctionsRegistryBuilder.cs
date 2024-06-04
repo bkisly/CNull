@@ -14,6 +14,6 @@
         /// Builds the functions registry for the specified program.
         /// </summary>
         /// <returns><see langword="null"/> if building failed, otherwise the registry.</returns>
-        FunctionsRegistry? Build();
+        FunctionsRegistry? Build(StandardLibrary.StandardLibrary standardLibrary);
     }
 }

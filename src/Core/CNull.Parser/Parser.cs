@@ -190,10 +190,18 @@ namespace CNull.Parser
             ConsumeToken();
             var moduleName = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
             ValidateCurrentToken(TokenType.DotOperator);
-            var functionName = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
+            var functionOrSubmoduleName = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
 
+            if (_currentToken.TokenType == TokenType.SemicolonOperator)
+            {
+                ConsumeToken();
+                return new ImportDirective(moduleName, functionOrSubmoduleName, position);
+            }
+
+            ValidateCurrentToken(TokenType.DotOperator);
+            var functionName = ValidateCurrentToken<string>(TokenType.Identifier, new ExpectedIdentifierError(_currentToken.Position));
             ValidateCurrentToken(TokenType.SemicolonOperator);
-            return new ImportDirective(moduleName, functionName, position);
+            return new ImportDirective(moduleName, functionOrSubmoduleName, position, functionName);
         });
 
         /// <summary>

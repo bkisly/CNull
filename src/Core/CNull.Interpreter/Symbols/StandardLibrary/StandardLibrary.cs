@@ -7,13 +7,16 @@ using CNull.Parser.Productions;
 
 namespace CNull.Interpreter.Symbols.StandardLibrary
 {
+    public record StandardLibrarySignature(string SubmoduleName, string FunctionName);
+
     public class StandardLibrary
     {
         private readonly IExecutionEnvironment _environment;
         private readonly StandardInput _standardInput;
         private readonly StandardOutput _standardOutput;
 
-        public Dictionary<string, StandardLibraryFunction> Functions { get; }
+        public const string CNullModule = "CNull";
+        public Dictionary<StandardLibrarySignature, StandardLibraryFunction> StandardLibraryFunctions { get; }
 
         public StandardLibrary(IExecutionEnvironment environment, StandardInput standardInput, StandardOutput standardOutput)
         {
@@ -21,14 +24,14 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             _standardInput = standardInput;
             _standardOutput = standardOutput;
 
-            Functions = CreateStdlibFunctions();
+            StandardLibraryFunctions = CreateStdlibFunctions();
         }
 
-        private Dictionary<string, StandardLibraryFunction> CreateStdlibFunctions()
+        private Dictionary<StandardLibrarySignature, StandardLibraryFunction> CreateStdlibFunctions()
         {
-            return new Dictionary<string, StandardLibraryFunction>
+            return new Dictionary<StandardLibrarySignature, StandardLibraryFunction>
             {
-                [nameof(WriteLine)] = new(
+                [new StandardLibrarySignature("Console", nameof(WriteLine))] = new(
                     new ReturnType(new Position()),
                     nameof(WriteLine),
                     [
@@ -38,7 +41,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
                     ],
                     WriteLine),
 
-                [nameof(Write)] = new(
+                [new StandardLibrarySignature("Console", nameof(Write))] = new(
                     new ReturnType(new Position()),
                     nameof(Write),
                     [
@@ -48,13 +51,13 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
                     ],
                     () => Write()),
 
-                [nameof(ReadLine)] = new(
+                [new StandardLibrarySignature("Console", nameof(ReadLine))] = new(
                     new PrimitiveType(PrimitiveTypes.String, new Position()),
                     nameof(WriteLine),
                     [],
                     ReadLine),
 
-                [nameof(StringToInt)] = new(
+                [new StandardLibrarySignature("Converters", nameof(StringToInt))] = new(
                     new PrimitiveType(PrimitiveTypes.Integer, new Position()),
                     nameof(StringToInt),
                     [

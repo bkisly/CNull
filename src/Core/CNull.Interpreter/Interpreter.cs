@@ -4,6 +4,7 @@ using CNull.Interpreter.Errors;
 using CNull.Interpreter.Extensions;
 using CNull.Interpreter.Resolvers;
 using CNull.Interpreter.Symbols;
+using CNull.Interpreter.Symbols.StandardLibrary;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
 
@@ -11,23 +12,20 @@ namespace CNull.Interpreter
 {
     public class Interpreter(IFunctionsRegistryBuilder functionsRegistryBuilder, IErrorHandler errorHandler) : IInterpreter, IAstVisitor
     {
-        private StandardInput? _inputCallback;
-        private StandardOutput? _outputCallback;
-
         private FunctionsRegistry _functionsRegistry = new(errorHandler);
         private string _currentModule = null!;
 
         private TypesResolver _typesResolver = null!;
         private InterpreterExecutionEnvironment _environment = null!;
+        private StandardLibrary _standardLibrary = null!;
 
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
         {
-            _inputCallback = inputCallback;
-            _outputCallback = outputCallback;
             _typesResolver = new TypesResolver(errorHandler);
             _environment = new InterpreterExecutionEnvironment();
+            _standardLibrary = new StandardLibrary(_environment, inputCallback, outputCallback);
 
-            if (functionsRegistryBuilder.Build() is not { } functionsRegistry)
+            if (functionsRegistryBuilder.Build(_standardLibrary) is not { } functionsRegistry)
                 return;
 
             _currentModule = functionsRegistryBuilder.RootModule;
@@ -60,7 +58,7 @@ namespace CNull.Interpreter
 
         public void Visit(StandardLibraryFunction standardLibraryFunction)
         {
-            throw new NotImplementedException("Create a registry for stdlib functions.");
+            standardLibraryFunction.Body.Invoke();
         }
 
         public void Visit(EmbeddedFunction embeddedFunction)
@@ -172,6 +170,7 @@ namespace CNull.Interpreter
                 _environment.CurrentContext.IsContinuing = false;
             }
 
+            _environment.CurrentContext.IsContinuing = false;
             _environment.CurrentContext.IsBreaking = false;
         }
 
@@ -387,6 +386,7 @@ namespace CNull.Interpreter
             if (callExpression.ParentExpression != null)
             {
                 var parentValue = VisitExpression(callExpression.ParentExpression);
+                // @TODO: handle embedded functions
             }
 
             var functionsRegistryEntry = _functionsRegistry[_currentModule, callExpression.FunctionName];

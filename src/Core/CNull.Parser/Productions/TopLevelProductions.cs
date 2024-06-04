@@ -28,7 +28,7 @@ namespace CNull.Parser.Productions
     /// </summary>
     /// <param name="ModuleName">Name of the module to import from.</param>
     /// <param name="FunctionName">Function to import from the module.</param>
-    public record ImportDirective(string ModuleName, string FunctionName, Position Position) : ISyntacticProduction
+    public record ImportDirective(string ModuleName, string FunctionName, Position Position, string? SubmoduleName = null) : ISyntacticProduction
     {
         public void Accept(IAstVisitor visitor) => visitor.Visit(this);
     }

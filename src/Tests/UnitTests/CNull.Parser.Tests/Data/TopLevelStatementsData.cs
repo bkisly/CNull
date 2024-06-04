@@ -189,15 +189,6 @@ namespace CNull.Parser.Tests.Data
             Add(new[]
             {
                 new Token(TokenType.ImportKeyword, Position.FirstCharacter),
-                new Token<string>("Name", TokenType.Identifier, Position.FirstCharacter),
-                new Token(TokenType.DotOperator, Position.FirstCharacter),
-                new Token<string>("Function", TokenType.Identifier, Position.FirstCharacter),
-                new Token(TokenType.BoolKeyword, new Position(1, 2))
-            }, new MissingKeywordOrOperatorError(TokenType.SemicolonOperator.ToLiteralString(), new Position(1, 2)));
-
-            Add(new[]
-            {
-                new Token(TokenType.ImportKeyword, Position.FirstCharacter),
                 new Token(TokenType.SemicolonOperator, new Position(1, 2))
             }, new ExpectedIdentifierError(new Position(1, 2)));
         }

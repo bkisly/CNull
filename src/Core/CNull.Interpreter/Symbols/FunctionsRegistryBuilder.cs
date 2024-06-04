@@ -1,6 +1,7 @@
 ﻿using CNull.Common.State;
 using CNull.ErrorHandler;
 using CNull.Interpreter.Errors;
+using CNull.Interpreter.Symbols.StandardLibrary;
 using CNull.Parser;
 using CNull.Parser.Productions;
 
@@ -15,15 +16,18 @@ namespace CNull.Interpreter.Symbols
         private Dictionary<string, Stack<ImportDirective>> _importsToProcess = [];
         private HashSet<string> _processedModules = [];
 
+        private StandardLibrary.StandardLibrary _standardLibrary = null!;
+
         public string RootModule { get; private set; } = string.Empty;
 
-        public FunctionsRegistry? Build()
+        public FunctionsRegistry? Build(StandardLibrary.StandardLibrary standardLibrary)
         {
             _functionsRegistry = new FunctionsRegistry(errorHandler);
             _parsedProgramsCache = [];
             _dependencyTree = new DependencyTree<string>();
             _importsToProcess = [];
             _processedModules = [];
+            _standardLibrary = standardLibrary;
 
             var rootProgram = ParseAndCacheProgram();
             if (rootProgram == null)
@@ -48,7 +52,7 @@ namespace CNull.Interpreter.Symbols
             var moduleImports = _importsToProcess[moduleName];
             while (moduleImports.Count != 0)
             {
-                var (requestedModule, requestedFunctionName, importPosition) = moduleImports.Pop();
+                var (requestedModule, requestedFunctionName, importPosition, _) = moduleImports.Pop();
                 if (!_parsedProgramsCache.TryGetValue(requestedModule, out var importedProgram))
                 {
                     if (!stateManager.TryOpenModule(requestedModule))
@@ -88,8 +92,25 @@ namespace CNull.Interpreter.Symbols
                     throw errorHandler.RaiseFatalCompilationError(new CircularDependencyError(importGroup.First().Position));
 
                 foreach (var importDirective in importGroup.Distinct())
-                    _importsToProcess[moduleName].Push(importDirective);
+                {
+                    if (importDirective.ModuleName == StandardLibrary.StandardLibrary.CNullModule)
+                        ProcessStdlibImport(moduleName, importDirective);
+                    else _importsToProcess[moduleName].Push(importDirective);
+                }
             }
+        }
+
+        private void ProcessStdlibImport(string currentModule, ImportDirective importDirective)
+        {
+            if (importDirective.SubmoduleName == null)
+                throw errorHandler.RaiseFatalCompilationError(new MissingSubmoduleError(importDirective.Position));
+
+            var requestedSignature = new StandardLibrarySignature(importDirective.SubmoduleName, importDirective.FunctionName);
+            if (!_standardLibrary.StandardLibraryFunctions.TryGetValue(requestedSignature, out var function))
+                throw errorHandler.RaiseFatalCompilationError(new FunctionNotFoundError(importDirective.FunctionName,
+                    $"${StandardLibrary.StandardLibrary.CNullModule}.{importDirective.SubmoduleName}", importDirective.Position));
+
+            _functionsRegistry.Register(currentModule, function, StandardLibrary.StandardLibrary.CNullModule);
         }
 
         private Program? ParseAndCacheProgram()

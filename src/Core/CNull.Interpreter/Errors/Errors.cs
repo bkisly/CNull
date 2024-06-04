@@ -24,6 +24,11 @@ namespace CNull.Interpreter.Errors
         public string Message => $"Module: {ModuleName} was not found in the working directory.";
     }
 
+    public record MissingSubmoduleError(Position Position) : ICompilationError
+    {
+        public string Message => $"Missing submodule specification in standard library function import.";
+    }
+
     public record ModuleCompilationError(string ModuleName, Position Position) : ICompilationError
     {
         public string Message => $"Compilation of module: {ModuleName} has finished with errors.";
