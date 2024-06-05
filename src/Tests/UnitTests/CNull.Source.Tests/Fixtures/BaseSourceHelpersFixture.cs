@@ -1,4 +1,6 @@
 ﻿using CNull.ErrorHandler;
+using CNull.ErrorHandler.Errors;
+using CNull.ErrorHandler.Exceptions;
 
 namespace CNull.Source.Tests.Fixtures
 {
@@ -10,6 +12,7 @@ namespace CNull.Source.Tests.Fixtures
         public virtual void Setup(string buffer)
         {
             ErrorHandlerMock = new Mock<IErrorHandler>();
+            ErrorHandlerMock.Setup(e => e.RaiseSourceError(It.IsAny<ISourceError>())).Returns(new FatalErrorException(""));
             Reader = new StringReader(buffer);
         }
 

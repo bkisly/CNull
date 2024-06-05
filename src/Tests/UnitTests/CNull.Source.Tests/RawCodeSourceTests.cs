@@ -1,6 +1,7 @@
 using System.Text;
 using CNull.Common;
 using CNull.Common.Events;
+using CNull.ErrorHandler.Exceptions;
 using CNull.Source.Errors;
 using CNull.Source.Tests.Data;
 using CNull.Source.Tests.Fixtures;
@@ -85,7 +86,7 @@ namespace CNull.Source.Tests
 
             // Act
 
-            codeInput.MoveToNext();
+            Assert.Throws<FatalErrorException>(codeInput.MoveToNext);
             var character = codeInput.CurrentCharacter;
 
             // Assert
@@ -129,12 +130,11 @@ namespace CNull.Source.Tests
 
             // Act
 
-            fixture.StateManagerMock.Raise(m => m.InputRequested += null,
-                new InputRequestedEventArgs(failingStream, testPath));
+            Assert.Throws<FatalErrorException>(() => fixture.StateManagerMock.Raise(m => m.InputRequested += null,
+                new InputRequestedEventArgs(failingStream, testPath)));
 
             // Assert
 
-            Assert.Null(codeInput.CurrentCharacter);
             fixture.ErrorHandlerMock.Verify(e => e.RaiseSourceError(
                 It.Is<InputAccessError>(error => error == new InputAccessError(testPath))), Times.Once);
         }

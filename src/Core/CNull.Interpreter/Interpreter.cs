@@ -27,6 +27,7 @@ namespace CNull.Interpreter
 
             if (functionsRegistryBuilder.Build(_standardLibrary) is not { } functionsRegistry)
                 return;
+
             _functionsRegistry = functionsRegistry;
 
             _environment.CurrentModule = functionsRegistryBuilder.RootModule;
@@ -450,14 +451,14 @@ namespace CNull.Interpreter
                 {
                     Type: DictionaryType
                     {
-                        KeyType.TypeSpecifier: PrimitiveTypes.Integer,
-                        ValueType.TypeSpecifier: PrimitiveTypes.String
+                        KeyType.TypeSpecifier: PrimitiveTypes.Integer, ValueType.TypeSpecifier:
+                        PrimitiveTypes.String
                     }
                 }
             ];
 
             if (!validSignature)
-                throw errorHandler.RaiseSemanticError(new InvalidMainSignatureError(_environment.CurrentFunction));
+                throw errorHandler.RaiseSemanticError(new InvalidMainSignatureError(_environment.CurrentModule));
 
             var dictionary = new Dictionary<int, string>();
             var index = 0;

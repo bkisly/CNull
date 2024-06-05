@@ -51,10 +51,7 @@ namespace CNull.Source
         public void MoveToNext()
         {
             if (_reader == null)
-            {
-                _errorHandler.RaiseSourceError(new StreamNotInitializedError());
-                return;
-            }
+                throw _errorHandler.RaiseSourceError(new StreamNotInitializedError());
 
             _previousCharacter = CurrentCharacter;
             var character = _reader.Read();
@@ -77,7 +74,7 @@ namespace CNull.Source
             }
             catch (IOException ex)
             {
-                _errorHandler.RaiseSourceError(e.SourcePath != null
+                throw _errorHandler.RaiseSourceError(e.SourcePath != null
                     ? new InputAccessError(e.SourcePath)
                     : new InputAccessError(ex));
             }

@@ -75,8 +75,7 @@ namespace CNull.Interpreter
         /// <param name="path">Path to read the program from.</param>
         public async Task ExecuteFromFileAsync(string path) => await BeginExecutionAsync(() =>
         {
-            _stateManager.NotifyInputRequested(path);
-            _interpreter.Execute(_args, _inputCallback, _outputCallback);
+            _stateManager.NotifyInputRequested(GetRootFilePath(path));
         });
 
         /// <summary>
@@ -86,7 +85,6 @@ namespace CNull.Interpreter
         public async Task ExecuteFromStreamAsync(Lazy<Stream> stream) => await BeginExecutionAsync(() =>
         {
             _stateManager.NotifyInputRequested(stream);
-            _interpreter.Execute(_args, _inputCallback, _outputCallback);
         });
 
         private Task BeginExecutionAsync(Action executionAction)
@@ -94,6 +92,7 @@ namespace CNull.Interpreter
             try
             {
                 executionAction.Invoke();
+                _interpreter.Execute(_args, _inputCallback, _outputCallback);
             }
             catch (FatalErrorException ex)
             {
@@ -112,6 +111,11 @@ namespace CNull.Interpreter
             _errorHandler.ErrorOccurred -= ErrorHandler_ErrorOccurred;
             _serviceScope.Dispose();
             _host.Dispose();
+        }
+
+        private static string GetRootFilePath(string path)
+        {
+            return Directory.Exists(path) ? Path.Combine(path, "Program.cnull") : path;
         }
     }
 }
