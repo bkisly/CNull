@@ -36,7 +36,7 @@ namespace CNull.Interpreter.Resolvers
             return value switch
             {
                 bool boolValue => boolValue,
-                null => throw new NotImplementedException("Used a nullable value in non-nullable context"),
+                null => InvalidNullUsage<bool>(),
                 _ => throw new NotImplementedException("Expected a boolean type")
             };
         }
@@ -49,6 +49,7 @@ namespace CNull.Interpreter.Resolvers
                 (float, int) or (int, float) or (float, float) => Convert.ToSingle(left) > Convert.ToSingle(right),
                 (string leftString, int rightInt) => leftString.Length > rightInt,
                 (int leftInt, string rightString) => leftInt > rightString.Length,
+                (null, _) or (_, null) => InvalidNullUsage<bool>(),
                 _ => throw new NotImplementedException("Cannot compare 2 values of types...")
             };
         }
@@ -81,7 +82,7 @@ namespace CNull.Interpreter.Resolvers
             {
                 (int leftInt, int rightInt) => leftInt + rightInt,
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) + Convert.ToSingle(right),
-                (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
+                (null, _) or (_, null) => InvalidNullUsage<int>(),
                 (string leftString, string rightString) => leftString + rightString,
                 (char leftChar, char rightChar) => leftChar + rightChar,
                 (string leftString, not null) => leftString + right,
@@ -98,7 +99,7 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) - Convert.ToSingle(right),
-                (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
+                (null, _) or (_, null) => InvalidNullUsage<int>(),
                 _ => throw new NotImplementedException("Cannot subtract 2 values of types...")
             };
         }
@@ -111,7 +112,7 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) * Convert.ToSingle(right),
-                (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
+                (null, _) or (_, null) => InvalidNullUsage<int>(),
                 _ => throw new NotImplementedException("Cannot multiply 2 values of types...")
             };
         }
@@ -130,7 +131,7 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) / Convert.ToSingle(right),
-                (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
+                (null, _) or (_, null) => InvalidNullUsage<int>(),
                 _ => throw new NotImplementedException("Cannot divide 2 values of types...")
             };
         }
@@ -147,7 +148,7 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) % Convert.ToSingle(right),
-                (null, _) or (_, null) => throw new NotImplementedException("Used null value in non nullable context"),
+                (null, _) or (_, null) => InvalidNullUsage<int>(),
                 _ => throw new NotImplementedException("Cannot calculate modulo between 2 values of types...")
             };
         }
@@ -160,7 +161,7 @@ namespace CNull.Interpreter.Resolvers
             return value switch
             {
                 float floatValue => -floatValue,
-                null => throw new NotImplementedException("Used null value in non nullable context"),
+                null => InvalidNullUsage<int>(),
                 _ => throw new NotImplementedException("Cannot negate a value of type...")
             };
         }
@@ -170,7 +171,7 @@ namespace CNull.Interpreter.Resolvers
             return type.Type switch
             {
                 Types.Dictionary => ResolveDictionaryType((DictionaryType)type),
-                _ => ResolvePrimitiveType(type)
+                _ => ResolvePrimitiveType((PrimitiveType)type)
             };
         }
 
@@ -181,29 +182,15 @@ namespace CNull.Interpreter.Resolvers
 
         private Type ResolveDictionaryType(DictionaryType type)
         {
-            if (!type.KeyType.IsPrimitive || !type.ValueType.IsPrimitive)
-                throw new NotImplementedException();
-
             var keyType = ResolvePrimitiveType(type.KeyType);
             var valueType = ResolvePrimitiveType(type.ValueType);
 
             return typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
         }
 
-        private Type ResolvePrimitiveType(IDeclarableType type)
+        private static Type ResolvePrimitiveType(PrimitiveType type)
         {
-            if (!type.IsPrimitive)
-                throw new NotImplementedException();
-
-            return type.Type switch
-            {
-                Types.Boolean => typeof(bool?),
-                Types.Char => typeof(char?),
-                Types.Float => typeof(float?),
-                Types.Integer => typeof(int?),
-                Types.String => typeof(string),
-                _ => throw new NotImplementedException()
-            };
+            return ResolvePrimitiveType(type.TypeSpecifier) ?? throw new ArgumentOutOfRangeException();
         }
 
         public static Type? ResolvePrimitiveType(PrimitiveTypes type)
@@ -217,6 +204,12 @@ namespace CNull.Interpreter.Resolvers
                 PrimitiveTypes.String => typeof(string),
                 _ => null
             };
+        }
+
+        private T InvalidNullUsage<T>() where T : struct
+        {
+            environment.ActiveException = RuntimeErrors.NullValueException;
+            return default;
         }
     }
 }

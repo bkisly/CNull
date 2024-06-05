@@ -490,7 +490,8 @@ namespace CNull.Interpreter
         private ValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)
         {
             var leftType = _typesResolver.ResolveDeclarableType(type);
-            var resolvedValue = _typesResolver.ResolveAssignment(Activator.CreateInstance(leftType), initializationValue);
+            var resolvedValue = _typesResolver.ResolveAssignment(
+                leftType == typeof(string) ? string.Empty : Activator.CreateInstance(leftType), initializationValue);
             return new ValueContainer(leftType.MakeNullableType(), resolvedValue, type.IsPrimitive);
         }
     }
