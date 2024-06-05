@@ -24,6 +24,8 @@ namespace CNull.Interpreter
         private readonly StandardOutput _outputCallback;
         private readonly StandardError _errorCallback;
 
+        private readonly string[] _args;
+
         private readonly IStateManager _stateManager;
         private readonly IErrorHandler _errorHandler;
         private readonly IInterpreter _interpreter;
@@ -31,11 +33,13 @@ namespace CNull.Interpreter
         /// <summary>
         /// <inheritdoc cref="CNullCore"/>
         /// </summary>
+        /// <param name="args">Command-line arguments.</param>
         /// <param name="inputCallback">Standard input callback.</param>
         /// <param name="outputCallback">Standard output callback.</param>
         /// <param name="errorCallback">Error output callback.</param>
-        public CNullCore(StandardInput inputCallback, StandardOutput outputCallback, StandardError errorCallback)
+        public CNullCore(string[] args, StandardInput inputCallback, StandardOutput outputCallback, StandardError errorCallback)
         {
+            _args = args;
             _inputCallback = inputCallback;
             _outputCallback = outputCallback;
             _errorCallback = errorCallback;
@@ -72,7 +76,7 @@ namespace CNull.Interpreter
         public async Task ExecuteFromFileAsync(string path) => await BeginExecutionAsync(() =>
         {
             _stateManager.NotifyInputRequested(path);
-            _interpreter.Execute(_inputCallback, _outputCallback);
+            _interpreter.Execute(_args, _inputCallback, _outputCallback);
         });
 
         /// <summary>
@@ -82,7 +86,7 @@ namespace CNull.Interpreter
         public async Task ExecuteFromStreamAsync(Lazy<Stream> stream) => await BeginExecutionAsync(() =>
         {
             _stateManager.NotifyInputRequested(stream);
-            _interpreter.Execute(_inputCallback, _outputCallback);
+            _interpreter.Execute(_args, _inputCallback, _outputCallback);
         });
 
         private Task BeginExecutionAsync(Action executionAction)

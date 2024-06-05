@@ -1,5 +1,4 @@
 ﻿using CNull.Common;
-using CNull.Interpreter.Symbols;
 
 namespace CNull.Interpreter.Context
 {

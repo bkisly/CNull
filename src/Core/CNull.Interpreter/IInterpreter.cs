@@ -26,6 +26,6 @@
         /// <summary>
         /// Executes the program.
         /// </summary>
-        void Execute(StandardInput inputCallback, StandardOutput outputCallback);
+        void Execute(string[] args, StandardInput inputCallback, StandardOutput outputCallback);
     }
 }

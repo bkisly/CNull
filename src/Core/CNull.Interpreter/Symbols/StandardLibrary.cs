@@ -7,7 +7,7 @@ using CNull.Interpreter.Resolvers;
 using CNull.Parser;
 using CNull.Parser.Productions;
 
-namespace CNull.Interpreter.Symbols.StandardLibrary
+namespace CNull.Interpreter.Symbols
 {
     public record StandardLibraryHeader(string SubmoduleName, string FunctionName);
 
@@ -188,8 +188,8 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             var realKeyType = TypesResolver.ResolvePrimitiveType(keyType);
             var realValueType = TypesResolver.ResolvePrimitiveType(valueType);
             var args = type.GetGenericArguments();
-            return type.GetGenericTypeDefinition() == typeof(Dictionary<,>) 
-                   && args[0].MakeNullableType() == realKeyType 
+            return type.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+                   && args[0].MakeNullableType() == realKeyType
                    && args[1].MakeNullableType() == realValueType;
         }
 
@@ -350,7 +350,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
         private IDictionary? ValidateDictionary(ValueContainer? container)
         {
-            if (container is { Value: IDictionary dictionaryValue }) 
+            if (container is { Value: IDictionary dictionaryValue })
                 return dictionaryValue;
 
             _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);

@@ -1,7 +1,6 @@
 ﻿using CNull.Common.State;
 using CNull.ErrorHandler;
 using CNull.Interpreter.Errors;
-using CNull.Interpreter.Symbols.StandardLibrary;
 using CNull.Parser;
 using CNull.Parser.Productions;
 
@@ -16,11 +15,11 @@ namespace CNull.Interpreter.Symbols
         private Dictionary<string, Stack<ImportDirective>> _importsToProcess = [];
         private HashSet<string> _processedModules = [];
 
-        private StandardLibrary.StandardLibrary _standardLibrary = null!;
+        private StandardLibrary _standardLibrary = null!;
 
         public string RootModule { get; private set; } = string.Empty;
 
-        public FunctionsRegistry? Build(StandardLibrary.StandardLibrary standardLibrary)
+        public FunctionsRegistry? Build(StandardLibrary standardLibrary)
         {
             _functionsRegistry = new FunctionsRegistry(errorHandler);
             _parsedProgramsCache = [];
@@ -95,7 +94,7 @@ namespace CNull.Interpreter.Symbols
 
                 foreach (var importDirective in importGroup.Distinct())
                 {
-                    if (importDirective.ModuleName == StandardLibrary.StandardLibrary.CNullModule)
+                    if (importDirective.ModuleName == StandardLibrary.CNullModule)
                         ProcessStdlibImport(moduleName, importDirective);
                     else _importsToProcess[moduleName].Push(importDirective);
                 }
@@ -111,9 +110,9 @@ namespace CNull.Interpreter.Symbols
 
             if (!_standardLibrary.StandardLibraryFunctions.TryGetValue(requestedHeader, out var function))
                 throw errorHandler.RaiseSemanticError(new FunctionNotFoundError(importDirective.FunctionName,
-                    $"${StandardLibrary.StandardLibrary.CNullModule}.{importDirective.SubmoduleName}", importDirective.Position.LineNumber));
+                    $"${StandardLibrary.CNullModule}.{importDirective.SubmoduleName}", importDirective.Position.LineNumber));
 
-            _functionsRegistry.Register(currentModule, function, StandardLibrary.StandardLibrary.CNullModule);
+            _functionsRegistry.Register(currentModule, function, StandardLibrary.CNullModule);
         }
 
         private Program? ParseAndCacheProgram()

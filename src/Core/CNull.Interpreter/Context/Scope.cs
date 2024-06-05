@@ -1,6 +1,4 @@
-﻿using CNull.Interpreter.Symbols;
-
-namespace CNull.Interpreter.Context
+﻿namespace CNull.Interpreter.Context
 {
     public class Scope
     {

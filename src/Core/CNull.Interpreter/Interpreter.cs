@@ -5,7 +5,6 @@ using CNull.Interpreter.Errors;
 using CNull.Interpreter.Extensions;
 using CNull.Interpreter.Resolvers;
 using CNull.Interpreter.Symbols;
-using CNull.Interpreter.Symbols.StandardLibrary;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
 
@@ -19,7 +18,7 @@ namespace CNull.Interpreter
         private InterpreterExecutionEnvironment _environment = null!;
         private StandardLibrary _standardLibrary = null!;
 
-        public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
+        public void Execute(string[] args, StandardInput inputCallback, StandardOutput outputCallback)
         {
             _environment = new InterpreterExecutionEnvironment();
             _typesResolver = new TypesResolver(_environment, errorHandler);
@@ -46,6 +45,8 @@ namespace CNull.Interpreter
                 throw errorHandler.RaiseRuntimeError(new UnhandledExceptionError(
                     _environment.ActiveException.Exception, _environment.ActiveException.StackTrace));
         }
+
+        #region Statements visitors
 
         public void Visit(Program program)
         { }
@@ -176,13 +177,6 @@ namespace CNull.Interpreter
             }
         }
 
-        private void ProcessScope(BlockStatement body)
-        {
-            _environment.CurrentContext.EnterScope();
-            body.Accept(this);
-            _environment.CurrentContext.ExitScope();
-        }
-
         public void Visit(WhileStatement whileStatement)
         {
             while (VisitBooleanExpression(whileStatement.BooleanExpression))
@@ -199,23 +193,6 @@ namespace CNull.Interpreter
 
             _environment.CurrentContext.IsContinuing = false;
             _environment.CurrentContext.IsBreaking = false;
-        }
-
-        private bool VisitBooleanExpression(IExpression expression)
-        {
-            var result = VisitExpression(expression);
-            return _typesResolver.EnsureBoolean(result.Value, expression.Position.LineNumber);
-        }
-
-        private ValueContainer VisitExpression(IExpression expression)
-        {
-            expression.Accept(this);
-
-            if (_environment.ActiveException == null) 
-                return _environment.ConsumeLastResult();
-
-            _environment.SaveResult(null);
-            throw new ErrorInExpressionException();
         }
           
         public void Visit(TryStatement tryCatchStatement)
@@ -308,6 +285,10 @@ namespace CNull.Interpreter
             _environment.CurrentContext.IsReturning = true;
         }
 
+        #endregion
+
+        #region Expressions visitors
+
         public void Visit(OrExpression orExpression)
         {
             var leftValue = VisitBooleanExpression(orExpression.LeftFactor);
@@ -343,25 +324,6 @@ namespace CNull.Interpreter
         public void Visit(LessThanOrEqualExpression lessThanOrEqualExpression)
         {
             VisitRelationalExpression(lessThanOrEqualExpression, (l, r, line) => _typesResolver.ResolveRelational(l, r, line) <= 0);
-        }
-
-        private void VisitRelationalExpression(IBinaryExpression binaryExpression, BooleanBinaryOperationResolver resolver)
-        {
-            var leftValue = VisitExpression(binaryExpression.LeftFactor);
-            var rightValue = VisitExpression(binaryExpression.RightFactor);
-
-            var result = resolver.Invoke(leftValue.Value, rightValue.Value, binaryExpression.Position.LineNumber);
-            _environment.SaveResult(new ValueContainer(typeof(bool?), result));
-        }
-
-        private void VisitArithmeticalExpression(IBinaryExpression binaryExpression,
-            BinaryOperationResolver resolver)
-        {
-            var leftValue = VisitExpression(binaryExpression.LeftFactor);
-            var rightValue = VisitExpression(binaryExpression.RightFactor);
-
-            var result = resolver.Invoke(leftValue.Value, rightValue.Value, binaryExpression.Position.LineNumber);
-            _environment.SaveResult(new ValueContainer(result.GetType().MakeNullableType(), result));
         }
 
         public void Visit(EqualExpression equalExpression)
@@ -474,6 +436,10 @@ namespace CNull.Interpreter
             }
         }
 
+        #endregion
+
+        #region Helper methods
+
         private void PerformCall(IFunction function, ValueContainer[] args, int callingLineNumber = 0, string? requestedModule = null)
         {
             if (function.Parameters.Count() != args.Length)
@@ -499,6 +465,49 @@ namespace CNull.Interpreter
              _environment.CurrentFunction = lastFunction;
         }
 
+        private void ProcessScope(BlockStatement body)
+        {
+            _environment.CurrentContext.EnterScope();
+            body.Accept(this);
+            _environment.CurrentContext.ExitScope();
+        }
+
+        private ValueContainer VisitExpression(IExpression expression)
+        {
+            expression.Accept(this);
+
+            if (_environment.ActiveException == null)
+                return _environment.ConsumeLastResult();
+
+            _environment.SaveResult(null);
+            throw new ErrorInExpressionException();
+        }
+
+        private bool VisitBooleanExpression(IExpression expression)
+        {
+            var result = VisitExpression(expression);
+            return _typesResolver.EnsureBoolean(result.Value, expression.Position.LineNumber);
+        }
+
+        private void VisitRelationalExpression(IBinaryExpression binaryExpression, BooleanBinaryOperationResolver resolver)
+        {
+            var leftValue = VisitExpression(binaryExpression.LeftFactor);
+            var rightValue = VisitExpression(binaryExpression.RightFactor);
+
+            var result = resolver.Invoke(leftValue.Value, rightValue.Value, binaryExpression.Position.LineNumber);
+            _environment.SaveResult(new ValueContainer(typeof(bool?), result));
+        }
+
+        private void VisitArithmeticalExpression(IBinaryExpression binaryExpression,
+            BinaryOperationResolver resolver)
+        {
+            var leftValue = VisitExpression(binaryExpression.LeftFactor);
+            var rightValue = VisitExpression(binaryExpression.RightFactor);
+
+            var result = resolver.Invoke(leftValue.Value, rightValue.Value, binaryExpression.Position.LineNumber);
+            _environment.SaveResult(new ValueContainer(result.GetType().MakeNullableType(), result));
+        }
+
         private ValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)
         {
             var leftType = _typesResolver.ResolveDeclarableType(type);
@@ -507,5 +516,7 @@ namespace CNull.Interpreter
                 type.Position.LineNumber);
             return new ValueContainer(leftType.MakeNullableType(), resolvedValue, type.IsPrimitive);
         }
+
+        #endregion
     }
 }

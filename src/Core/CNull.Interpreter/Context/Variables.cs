@@ -1,4 +1,4 @@
-﻿namespace CNull.Interpreter.Symbols
+﻿namespace CNull.Interpreter.Context
 {
     public record Variable(string Name, ValueContainer ValueContainer)
     {
