@@ -33,11 +33,11 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             _embeddedFunctions = CreateEmbeddedFunctions();
         }
 
-        public EmbeddedFunction? GetEmbeddedFunction(string name, ValueContainer parentValue)
+        public EmbeddedFunction? GetEmbeddedFunction(string name, ValueContainer parentValue, int lineNumber)
         {
             if (parentValue.Value == null)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, lineNumber);
                 return null;
             }
 
@@ -176,7 +176,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             return embeddedFunctions;
         }
 
-        private bool DictionaryTypePredicate(object? value, PrimitiveTypes keyType, PrimitiveTypes valueType)
+        private static bool DictionaryTypePredicate(object? value, PrimitiveTypes keyType, PrimitiveTypes valueType)
         {
             if (value == null)
                 return false;
@@ -199,7 +199,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
             if (content.ValueContainer.Value is not { } stringValue)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
                 return;
             }
 
@@ -219,7 +219,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
             if (text.ValueContainer.Value is not { } stringValue)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
                 return;
             }
 
@@ -230,7 +230,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             }
             catch (FormatException)
             {
-                _environment.ActiveException = RuntimeErrors.FormatException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.FormatException, 0);
                 return;
             }
 
@@ -243,7 +243,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
         {
             if (_parentValueContainer.Value is not { } stringValue)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
                 return;
             }
 
@@ -251,7 +251,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
             if (index.ValueContainer.Value is not { } indexValue)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
                 return;
             }
 
@@ -264,7 +264,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             }
             catch (IndexOutOfRangeException)
             {
-                _environment.ActiveException = RuntimeErrors.IndexOutOfRangeException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.IndexOutOfRangeException, 0);
                 return;
             }
 
@@ -280,7 +280,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
             if (keyContainer.Value is not { } key)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
                 return;
             }
 
@@ -299,7 +299,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
             if (keyContainer.Value is not { } key)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
                 return;
             }
 
@@ -309,7 +309,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             }
             catch (ArgumentException)
             {
-                _environment.ActiveException = RuntimeErrors.ItemAlreadyAddedException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.ItemAlreadyAddedException, 0);
             }
         }
 
@@ -323,7 +323,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
             if (keyContainer.Value is not { } key)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
                 return;
             }
 
@@ -339,7 +339,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
             if (keyContainer.Value is not { } key)
             {
-                _environment.ActiveException = RuntimeErrors.NullValueException;
+                _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
                 return;
             }
 
@@ -351,7 +351,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             if (container is { Value: IDictionary dictionaryValue }) 
                 return dictionaryValue;
 
-            _environment.ActiveException = RuntimeErrors.NullValueException;
+            _environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, 0);
             return null;
         }
     }

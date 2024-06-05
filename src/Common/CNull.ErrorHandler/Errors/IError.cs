@@ -30,18 +30,10 @@ namespace CNull.ErrorHandler.Errors
     }
 
     /// <summary>
-    /// Error (exception) which occurred at runtime.
+    /// Error which occurred at runtime.
     /// </summary>
     public interface IRuntimeError : IError
     {
-        /// <summary>
-        /// Name of the module in which the error occurred.
-        /// </summary>
-        string ModuleName { get; }
-        
-        /// <summary>
-        /// Number of the line at which the error occurred.
-        /// </summary>
-        int LineNumber { get; }
+       IEnumerable<CallStackRecord> CallStack { get; }
     }
 }

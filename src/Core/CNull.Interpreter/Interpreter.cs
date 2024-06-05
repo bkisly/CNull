@@ -1,4 +1,5 @@
-﻿using CNull.ErrorHandler;
+﻿using CNull.Common;
+using CNull.ErrorHandler;
 using CNull.Interpreter.Context;
 using CNull.Interpreter.Errors;
 using CNull.Interpreter.Extensions;
@@ -13,7 +14,6 @@ namespace CNull.Interpreter
     public class Interpreter(IFunctionsRegistryBuilder functionsRegistryBuilder, IErrorHandler errorHandler) : IInterpreter, IAstVisitor
     {
         private FunctionsRegistry _functionsRegistry = new(errorHandler);
-        private string _currentModule = null!;
 
         private TypesResolver _typesResolver = null!;
         private InterpreterExecutionEnvironment _environment = null!;
@@ -28,18 +28,21 @@ namespace CNull.Interpreter
             if (functionsRegistryBuilder.Build(_standardLibrary) is not { } functionsRegistry)
                 return;
 
-            _currentModule = functionsRegistryBuilder.RootModule;
+            _environment.CurrentModule = functionsRegistryBuilder.RootModule;
             _functionsRegistry = functionsRegistry;
 
-            var mainFunction = _functionsRegistry.GetEntryPoint(_currentModule) 
-                               ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(_currentModule));
+            var mainFunction = _functionsRegistry.GetEntryPoint(_environment.CurrentModule)
+                               ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(
+                                   _environment.CurrentModule,
+                                   [new CallStackRecord(_environment.CurrentModule, _environment.CurrentFunction, 0)]));
 
             var dictContainer = new ValueContainer(typeof(Dictionary<int, string>),
                 new Dictionary<int?, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
-            PerformCall(mainFunction, [dictContainer]);
+            PerformCall(mainFunction, [dictContainer], 0);
 
             if (_environment.ActiveException != null)
-                throw new NotImplementedException($"Unhandled exeption! {_environment.ActiveException}");
+                throw errorHandler.RaiseRuntimeError(new UnhandledExceptionError(
+                    _environment.ActiveException.Exception, _environment.ActiveException.StackTrace));
         }
 
         public void Visit(Program program)
@@ -148,7 +151,7 @@ namespace CNull.Interpreter
                     return;
                 }
                 
-                var assignmentValue = _typesResolver.ResolveAssignment(leftVariable.ValueContainer, rightValue);
+                var assignmentValue = _typesResolver.ResolveAssignment(leftVariable.ValueContainer, rightValue, leftIdentifier.Position.LineNumber);
                 var (type, _, primitive) = leftVariable.ValueContainer;
                 leftVariable.ValueContainer = new ValueContainer(type, assignmentValue, primitive);
             }
@@ -198,7 +201,7 @@ namespace CNull.Interpreter
         private bool VisitBooleanExpression(IExpression expression)
         {
             var result = VisitExpression(expression);
-            return _typesResolver.EnsureBoolean(result.Value);
+            return _typesResolver.EnsureBoolean(result.Value, expression.Position.LineNumber);
         }
 
         private ValueContainer VisitExpression(IExpression expression)
@@ -221,7 +224,7 @@ namespace CNull.Interpreter
             foreach (var catchClause in tryCatchStatement.CatchClauses)
             {
                 _environment.CurrentContext.EnterScope();
-                var container = new ValueContainer(typeof(string), _environment.ActiveException);
+                var container = new ValueContainer(typeof(string), _environment.ActiveException.Exception);
                 _environment.CurrentContext.DeclareVariable(new Variable(catchClause.Identifier, container));
 
                 bool filterAccepted;
@@ -270,7 +273,7 @@ namespace CNull.Interpreter
 
         public void Visit(ThrowStatement throwStatement)
         {
-            _environment.ActiveException = throwStatement.Message;
+            _environment.ActiveException = new ExceptionInfo(throwStatement.Message, throwStatement.Position.LineNumber);
         }
 
         public void Visit(ReturnStatement returnStatement)
@@ -325,36 +328,36 @@ namespace CNull.Interpreter
         public void Visit(LessThanExpression lessThanExpression)
         {
             VisitRelationalExpression(lessThanExpression,
-                (l, r) => !_typesResolver.ResolveGreaterThan(l, r) && !_typesResolver.ResolveEqualTo(l, r));
+                (l, r, line) => !_typesResolver.ResolveGreaterThan(l, r, line) && !_typesResolver.ResolveEqualTo(l, r, line));
         }
 
         public void Visit(GreaterThanOrEqualExpression greaterThanOrEqualExpression)
         {
             VisitRelationalExpression(greaterThanOrEqualExpression,
-                (l, r) => _typesResolver.ResolveGreaterThan(l, r) || _typesResolver.ResolveEqualTo(l, r));
+                (l, r, line) => _typesResolver.ResolveGreaterThan(l, r, line) || _typesResolver.ResolveEqualTo(l, r, line));
         }
 
         public void Visit(LessThanOrEqualExpression lessThanOrEqualExpression)
         {
-            VisitRelationalExpression(lessThanOrEqualExpression, (l, r) => !_typesResolver.ResolveGreaterThan(l, r));
+            VisitRelationalExpression(lessThanOrEqualExpression, (l, r, line) => !_typesResolver.ResolveGreaterThan(l, r, line));
         }
 
-        private void VisitRelationalExpression(IBinaryExpression binaryExpression, Func<object?, object?, bool> resolver)
+        private void VisitRelationalExpression(IBinaryExpression binaryExpression, BooleanBinaryOperationResolver resolver)
         {
             var leftValue = VisitExpression(binaryExpression.LeftFactor);
             var rightValue = VisitExpression(binaryExpression.RightFactor);
 
-            var result = resolver.Invoke(leftValue.Value, rightValue.Value);
+            var result = resolver.Invoke(leftValue.Value, rightValue.Value, binaryExpression.Position.LineNumber);
             _environment.SaveResult(new ValueContainer(typeof(bool?), result));
         }
 
         private void VisitArithmeticalExpression(IBinaryExpression binaryExpression,
-            Func<object?, object?, object> resolver)
+            BinaryOperationResolver resolver)
         {
             var leftValue = VisitExpression(binaryExpression.LeftFactor);
             var rightValue = VisitExpression(binaryExpression.RightFactor);
 
-            var result = resolver.Invoke(leftValue.Value, rightValue.Value);
+            var result = resolver.Invoke(leftValue.Value, rightValue.Value, binaryExpression.Position.LineNumber);
             _environment.SaveResult(new ValueContainer(result.GetType().MakeNullableType(), result));
         }
 
@@ -365,7 +368,7 @@ namespace CNull.Interpreter
 
         public void Visit(NotEqualExpression notEqualExpression)
         {
-            VisitRelationalExpression(notEqualExpression, (l, r) => !_typesResolver.ResolveEqualTo(l, r));
+            VisitRelationalExpression(notEqualExpression, (l, r, line) => !_typesResolver.ResolveEqualTo(l, r, line));
         }
 
         public void Visit(AdditionExpression additionExpression)
@@ -404,7 +407,7 @@ namespace CNull.Interpreter
             var value = VisitExpression(negationExpression.Expression);
             _environment.SaveResult(new ValueContainer(
                 value.Value?.GetType().MakeNullableType() ?? typeof(object).MakeNullableType(),
-                _typesResolver.ResolveNegation(value.Value)));
+                _typesResolver.ResolveNegation(value.Value, negationExpression.Position.LineNumber)));
         }
 
         public void Visit(NullCheckExpression nullCheckExpression)
@@ -436,7 +439,7 @@ namespace CNull.Interpreter
                 case IdentifierExpression or LiteralExpression<string>:
                 {
                     var parentValue = VisitExpression(callExpression.ParentExpression);
-                    var function = _standardLibrary.GetEmbeddedFunction(callExpression.FunctionName, parentValue);
+                    var function = _standardLibrary.GetEmbeddedFunction(callExpression.FunctionName, parentValue, callExpression.Position.LineNumber);
 
                     if (_environment.ActiveException != null)
                     {
@@ -446,19 +449,21 @@ namespace CNull.Interpreter
 
                     if (function == null)
                         throw errorHandler.RaiseFatalCompilationError(
-                            new FunctionNotFoundError(callExpression.FunctionName, _currentModule,
+                            new FunctionNotFoundError(callExpression.FunctionName, _environment.CurrentModule,
                                 callExpression.Position));
 
-                    PerformCall(function, arguments);
+                    PerformCall(function, arguments, callExpression.Position.LineNumber);
                     break;
                 }
                 case null:
                 {
-                    if (!_functionsRegistry.TryGetValue(_currentModule, callExpression.FunctionName, out var functionsRegistryEntry))
+                    if (!_functionsRegistry.TryGetValue(_environment.CurrentModule, callExpression.FunctionName, out var functionsRegistryEntry))
                         throw errorHandler.RaiseFatalCompilationError(new FunctionNotFoundError(callExpression.FunctionName,
-                            _currentModule, callExpression.Position));
+                            _environment.CurrentModule, callExpression.Position));
 
-                    PerformCall(functionsRegistryEntry.FunctionDefinition, arguments, functionsRegistryEntry.ExternalModuleName);
+                    PerformCall(functionsRegistryEntry.FunctionDefinition, arguments,
+                        callExpression.Position.LineNumber, functionsRegistryEntry.ExternalModuleName);
+
                     break;
                 }
                 default:
@@ -466,7 +471,7 @@ namespace CNull.Interpreter
             }
         }
 
-        private void PerformCall(IFunction function, ValueContainer[] args, string? requestedModule = null)
+        private void PerformCall(IFunction function, ValueContainer[] args, int callingLineNumber, string? requestedModule = null)
         {
             if (function.Parameters.Count() != args.Length)
                 throw new NotImplementedException("Not matching amount of args...");
@@ -476,22 +481,26 @@ namespace CNull.Interpreter
             foreach (var (parameter, argument) in function.Parameters.Zip(args))
                 localVariables.Add(new Variable(parameter.Name, argument.Move()));
 
-            var lastModule = _currentModule;
+            var lastModule = _environment.CurrentModule;
+            var lastFunction = _environment.CurrentFunction;
             if (requestedModule != null)
-                _currentModule = requestedModule;
+                _environment.CurrentModule = requestedModule;
 
-            _environment.EnterCallContext(returnType?.MakeNullableType(), localVariables);
+            _environment.CurrentFunction = function.Name;
+            _environment.EnterCallContext(returnType?.MakeNullableType(), localVariables, new CallStackRecord(lastModule, lastFunction, callingLineNumber));
             function.Accept(this);
              _environment.ExitCallContext();
 
-             _currentModule = lastModule;
+             _environment.CurrentModule = lastModule;
+             _environment.CurrentFunction = lastFunction;
         }
 
         private ValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)
         {
             var leftType = _typesResolver.ResolveDeclarableType(type);
             var resolvedValue = _typesResolver.ResolveAssignment(
-                leftType == typeof(string) ? string.Empty : Activator.CreateInstance(leftType), initializationValue);
+                leftType == typeof(string) ? string.Empty : Activator.CreateInstance(leftType), initializationValue,
+                type.Position.LineNumber);
             return new ValueContainer(leftType.MakeNullableType(), resolvedValue, type.IsPrimitive);
         }
     }

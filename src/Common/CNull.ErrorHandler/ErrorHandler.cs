@@ -1,4 +1,5 @@
-﻿using CNull.Common.Configuration;
+﻿using System.Text;
+using CNull.Common.Configuration;
 using CNull.Common.State;
 using CNull.ErrorHandler.Errors;
 using CNull.ErrorHandler.Events;
@@ -37,8 +38,21 @@ namespace CNull.ErrorHandler
 
         public FatalErrorException RaiseRuntimeError(IRuntimeError error)
         {
-            var lineNumberMessage = error.LineNumber > 0 ? $" (line number: {error.LineNumber})" : string.Empty;
-            RaiseException(error, $"C? unhandled exception{lineNumberMessage}: {error.GetType().Name}{Environment.NewLine}");
+            var messageBuilder = new StringBuilder();
+            messageBuilder.AppendLine($"C? unhandled exception (most recent call first): {error.Message}");
+
+            foreach (var callStackRecord in error.CallStack)
+            {
+                messageBuilder.Append(
+                    $"\tat {callStackRecord.CallingModule}.{callStackRecord.CallingFunction}");
+
+                if (callStackRecord.CallingLineNumber > 0)
+                    messageBuilder.Append($", line: {callStackRecord.CallingLineNumber}");
+
+                messageBuilder.AppendLine();
+            }
+
+            RaiseException(error, messageBuilder.ToString());
             return FatalError();
         }
 
@@ -56,11 +70,8 @@ namespace CNull.ErrorHandler
         private void RaiseException(IRuntimeError error, string message)
         {
             _errors.Enqueue(error);
-
-            logger.LogError($"Error occurred ({error.GetType().Name}, module: {error.ModuleName}): {error.Message}");
-            ErrorOccurred?.Invoke(this,
-                new ErrorOccurredEventArgs(
-                    $"{message}Module: {error.ModuleName}{Environment.NewLine}{error.Message}{Environment.NewLine}"));
+            logger.LogError(message);
+            ErrorOccurred?.Invoke(this, new ErrorOccurredEventArgs(message));
         }
 
         private FatalErrorException FatalError()

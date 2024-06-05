@@ -1,4 +1,5 @@
-﻿using CNull.Interpreter.Symbols;
+﻿using CNull.Common;
+using CNull.Interpreter.Symbols;
 
 namespace CNull.Interpreter.Context
 {
@@ -8,6 +9,8 @@ namespace CNull.Interpreter.Context
         public bool IsContinuing { get; set; }
         public bool IsBreaking { get; set; }
 
+        public CallStackRecord CallStackRecord { get; set; }
+
         public bool IsJumping => IsReturning || IsContinuing || IsBreaking;
 
         public Type? ExpectedReturnType { get; private set; }
@@ -15,9 +18,11 @@ namespace CNull.Interpreter.Context
 
         private readonly Stack<Scope> _scopes = [];
 
-        public CallContext(Type? returnType, IEnumerable<Variable> localVariables)
+        public CallContext(Type? returnType, IEnumerable<Variable> localVariables, CallStackRecord callStackRecord)
         {
             ExpectedReturnType = returnType;
+            CallStackRecord = callStackRecord;
+
             EnterScope();
             var currentScope = _scopes.Peek();
             foreach (var localVariable in localVariables)

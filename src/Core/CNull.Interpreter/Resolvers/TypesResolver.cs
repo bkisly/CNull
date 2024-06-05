@@ -7,19 +7,23 @@ using CNull.Parser.Productions;
 
 namespace CNull.Interpreter.Resolvers
 {
+    public delegate object BinaryOperationResolver(object? left, object? right, int lineNumber);
+
+    public delegate bool BooleanBinaryOperationResolver(object? left, object? right, int lineNumber);
+
     public class TypesResolver(IExecutionEnvironment environment, IErrorHandler errorHandler)
     {
-        public object? ResolveAssignment(ValueContainer left, ValueContainer right)
+        public object? ResolveAssignment(ValueContainer left, ValueContainer right, int lineNumber)
         {
-            return left.Type == right.Type ? right.Value : ResolveAssignmentValue(left.Value, right);
+            return left.Type == right.Type ? right.Value : ResolveAssignmentValue(left.Value, right, lineNumber);
         }
 
-        public object? ResolveAssignment(object? left, object? right)
+        public object? ResolveAssignment(object? left, object? right, int lineNumber)
         {
-            return left?.GetType() == right?.GetType() ? right : ResolveAssignmentValue(left, right);
+            return left?.GetType() == right?.GetType() ? right : ResolveAssignmentValue(left, right, lineNumber);
         }
 
-        private object? ResolveAssignmentValue(object? left, object? right)
+        private object? ResolveAssignmentValue(object? left, object? right, int lineNumber)
         {
             return (left, right) switch
             {
@@ -31,17 +35,17 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        public bool EnsureBoolean(object? value)
+        public bool EnsureBoolean(object? value, int lineNumber)
         {
             return value switch
             {
                 bool boolValue => boolValue,
-                null => InvalidNullUsage<bool>(),
+                null => InvalidNullUsage<bool>(lineNumber),
                 _ => throw new NotImplementedException("Expected a boolean type")
             };
         }
 
-        public bool ResolveGreaterThan(object? left, object? right)
+        public bool ResolveGreaterThan(object? left, object? right, int lineNumber)
         {
             return (left, right) switch
             {
@@ -49,12 +53,12 @@ namespace CNull.Interpreter.Resolvers
                 (float, int) or (int, float) or (float, float) => Convert.ToSingle(left) > Convert.ToSingle(right),
                 (string leftString, int rightInt) => leftString.Length > rightInt,
                 (int leftInt, string rightString) => leftInt > rightString.Length,
-                (null, _) or (_, null) => InvalidNullUsage<bool>(),
+                (null, _) or (_, null) => InvalidNullUsage<bool>(lineNumber),
                 _ => throw new NotImplementedException("Cannot compare 2 values of types...")
             };
         }
 
-        public bool ResolveEqualTo(object? left, object? right)
+        public bool ResolveEqualTo(object? left, object? right, int lineNumber)
         {
             if (left == null || right == null)
                 return left == right;
@@ -76,13 +80,13 @@ namespace CNull.Interpreter.Resolvers
             throw new NotImplementedException("Cannot compare 2 values of types...");
         }
 
-        public object ResolveAddition(object? left, object? right)
+        public object ResolveAddition(object? left, object? right, int lineNumber)
         {
             return (left, right) switch
             {
                 (int leftInt, int rightInt) => leftInt + rightInt,
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) + Convert.ToSingle(right),
-                (null, _) or (_, null) => InvalidNullUsage<int>(),
+                (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
                 (string leftString, string rightString) => leftString + rightString,
                 (char leftChar, char rightChar) => leftChar + rightChar,
                 (string leftString, not null) => leftString + right,
@@ -91,7 +95,7 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        public object ResolveSubtraction(object? left, object? right)
+        public object ResolveSubtraction(object? left, object? right, int lineNumber)
         {
             if ((left, right) is (int leftInt, int rightInt))
                 return leftInt - rightInt;
@@ -99,12 +103,12 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) - Convert.ToSingle(right),
-                (null, _) or (_, null) => InvalidNullUsage<int>(),
+                (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
                 _ => throw new NotImplementedException("Cannot subtract 2 values of types...")
             };
         }
 
-        public object ResolveMultiplication(object? left, object? right)
+        public object ResolveMultiplication(object? left, object? right, int lineNumber)
         {
             if ((left, right) is (int leftInt, int rightInt))
                 return leftInt * rightInt;
@@ -112,31 +116,31 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) * Convert.ToSingle(right),
-                (null, _) or (_, null) => InvalidNullUsage<int>(),
+                (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
                 _ => throw new NotImplementedException("Cannot multiply 2 values of types...")
             };
         }
 
-        public object ResolveDivision(object? left, object? right)
+        public object ResolveDivision(object? left, object? right, int lineNumber)
         {
             if ((left, right) is (int leftInt, int rightInt))
             {
                 if (rightInt != 0) 
                     return leftInt / rightInt;
 
-                environment.ActiveException = RuntimeErrors.DivisionByZeroException;
+                environment.ActiveException = new ExceptionInfo(RuntimeErrors.DivisionByZeroException, lineNumber);
                 return 0;
             }
 
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) / Convert.ToSingle(right),
-                (null, _) or (_, null) => InvalidNullUsage<int>(),
+                (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
                 _ => throw new NotImplementedException("Cannot divide 2 values of types...")
             };
         }
 
-        public object ResolveModulo(object? left, object? right)
+        public object ResolveModulo(object? left, object? right, int lineNumber)
         {
             if ((left, right) is (int leftInt, int rightInt))
             {
@@ -148,12 +152,12 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) % Convert.ToSingle(right),
-                (null, _) or (_, null) => InvalidNullUsage<int>(),
+                (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
                 _ => throw new NotImplementedException("Cannot calculate modulo between 2 values of types...")
             };
         }
 
-        public object ResolveNegation(object? value)
+        public object ResolveNegation(object? value, int lineNumber)
         {
             if (value is int intValue)
                 return -intValue;
@@ -161,7 +165,7 @@ namespace CNull.Interpreter.Resolvers
             return value switch
             {
                 float floatValue => -floatValue,
-                null => InvalidNullUsage<int>(),
+                null => InvalidNullUsage<int>(lineNumber),
                 _ => throw new NotImplementedException("Cannot negate a value of type...")
             };
         }
@@ -206,9 +210,9 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        private T InvalidNullUsage<T>() where T : struct
+        private T InvalidNullUsage<T>(int lineNumber) where T : struct
         {
-            environment.ActiveException = RuntimeErrors.NullValueException;
+            environment.ActiveException = new ExceptionInfo(RuntimeErrors.NullValueException, lineNumber);
             return default;
         }
     }

@@ -34,9 +34,13 @@ namespace CNull.Interpreter.Errors
         public string Message => $"Compilation of module: {ModuleName} has finished with errors.";
     }
 
-    public record MissingEntryPointError(string ModuleName) : IRuntimeError
+    public record MissingEntryPointError(string ModuleName, IEnumerable<CallStackRecord> CallStack) : IRuntimeError
     {
-        public int LineNumber => 0;
         public string Message => $"Entry point ('Main' function) not found in root module: {ModuleName}.";
+    }
+
+    public record UnhandledExceptionError(string Exception, IEnumerable<CallStackRecord> CallStack) : IRuntimeError
+    {
+        public string Message { get; } = Exception;
     }
 }
