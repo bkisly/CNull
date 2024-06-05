@@ -1,6 +1,5 @@
 ﻿using System.CommandLine;
 using CNull.Interpreter;
-using CNull.Semantics.Symbols;
 
 var rootCommand = new RootCommand("Command-line interface for C? language interpreter.");
 var pathOption = new Argument<string>(name: "path", description: "Path to the file or root directory to execute.", getDefaultValue: () => Environment.CurrentDirectory);

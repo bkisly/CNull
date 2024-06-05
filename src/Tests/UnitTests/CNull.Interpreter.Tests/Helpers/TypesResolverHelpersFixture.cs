@@ -3,7 +3,7 @@ using CNull.Interpreter.Context;
 using CNull.Interpreter.Resolvers;
 using Moq;
 
-namespace CNull.Semantics.Symbols.Tests.Helpers
+namespace CNull.Interpreter.Tests.Helpers
 {
     public class TypesResolverHelpersFixture
     {

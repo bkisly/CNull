@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace CNull.Semantics.Symbols.Tests.Data
+namespace CNull.Interpreter.Tests.Data
 {
     public class AssignmentData : TheoryData<object?, object?, object?>
     {
