@@ -110,6 +110,11 @@ namespace CNull.Interpreter.Errors
         }
     }
 
+    public record InvalidMainSignatureError(string ModuleName, int? LineNumber = null) : ISemanticError
+    {
+        public string Message => "Incorrect Main function signature. C? supports either empty Main or containing one dict<int, string> parameter.";
+    }
+
     public record UnhandledExceptionError(string Exception, IEnumerable<CallStackRecord> CallStack) : IRuntimeError
     {
         public string Message { get; } = Exception;

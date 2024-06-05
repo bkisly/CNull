@@ -5,6 +5,7 @@ using CNull.Interpreter.Errors;
 using CNull.Interpreter.Extensions;
 using CNull.Interpreter.Resolvers;
 using CNull.Interpreter.Symbols;
+using CNull.Parser;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
 
@@ -36,10 +37,8 @@ namespace CNull.Interpreter
             var mainFunction = _functionsRegistry.GetEntryPoint(_environment.CurrentModule)
                                ?? throw errorHandler.RaiseSemanticError(new MissingEntryPointError(_environment.CurrentModule));
 
-            var dictContainer = new ValueContainer(typeof(Dictionary<int, string>),
-                new Dictionary<int, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
-
-            PerformCall(mainFunction, [dictContainer]);
+            var dictContainer = ProcessArgs(args, mainFunction);
+            PerformCall(mainFunction, dictContainer != null ? [dictContainer] : []);
 
             if (_environment.ActiveException != null)
                 throw errorHandler.RaiseRuntimeError(new UnhandledExceptionError(
@@ -439,6 +438,37 @@ namespace CNull.Interpreter
         #endregion
 
         #region Helper methods
+
+        private ValueContainer? ProcessArgs(string[] args, IFunction mainFunction)
+        {
+            var parameters = mainFunction.Parameters.ToList();
+            if (parameters.Count == 0)
+                return null;
+
+            var validSignature = parameters is
+            [
+                {
+                    Type: DictionaryType
+                    {
+                        KeyType.TypeSpecifier: PrimitiveTypes.Integer,
+                        ValueType.TypeSpecifier: PrimitiveTypes.String
+                    }
+                }
+            ];
+
+            if (!validSignature)
+                throw errorHandler.RaiseSemanticError(new InvalidMainSignatureError(_environment.CurrentFunction));
+
+            var dictionary = new Dictionary<int, string>();
+            var index = 0;
+            foreach (var arg in args)
+            {
+                dictionary.Add(index, arg);
+                index++;
+            }
+
+            return new ValueContainer(typeof(Dictionary<int, string>), dictionary, IsPrimitive: false);
+        }
 
         private void PerformCall(IFunction function, ValueContainer[] args, int callingLineNumber = 0, string? requestedModule = null)
         {
