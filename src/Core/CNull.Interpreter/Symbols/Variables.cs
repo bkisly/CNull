@@ -1,6 +1,9 @@
 ﻿namespace CNull.Interpreter.Symbols
 {
-    public record Variable(string Name, ValueContainer ValueContainer);
+    public record Variable(string Name, ValueContainer ValueContainer)
+    {
+        public ValueContainer ValueContainer { get; set; } = ValueContainer;
+    }
 
     public record ValueContainer(Type Type, object? Value, bool IsPrimitive = true)
     {

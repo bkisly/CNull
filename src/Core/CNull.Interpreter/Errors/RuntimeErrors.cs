@@ -19,5 +19,15 @@
         /// Thrown after trying to add an item, which already exists in a collection.
         /// </summary>
         public const string ItemAlreadyAddedException = "ItemAlreadyAddedException";
+
+        /// <summary>
+        /// Thrown when trying to divide a number by zero.
+        /// </summary>
+        public const string DivisionByZeroException = "DivisionByZeroException";
+
+        /// <summary>
+        /// Thrown when input value is not in the correct format.
+        /// </summary>
+        public const string FormatException = "FormatException";
     }
 }

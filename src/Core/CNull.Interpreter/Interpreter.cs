@@ -21,8 +21,8 @@ namespace CNull.Interpreter
 
         public void Execute(StandardInput inputCallback, StandardOutput outputCallback)
         {
-            _typesResolver = new TypesResolver(errorHandler);
             _environment = new InterpreterExecutionEnvironment();
+            _typesResolver = new TypesResolver(_environment, errorHandler);
             _standardLibrary = new StandardLibrary(_environment, inputCallback, outputCallback);
 
             if (functionsRegistryBuilder.Build(_standardLibrary) is not { } functionsRegistry)
@@ -52,7 +52,7 @@ namespace CNull.Interpreter
         {
             functionDefinition.FunctionBody.Accept(this);
 
-            if (_environment.CurrentContext is { IsReturning: false, ExpectedReturnType: not null })
+            if (_environment is { CurrentContext: { IsReturning: false, ExpectedReturnType: not null }, ActiveException: null })
                 throw new NotImplementedException("Missing return statement in non-void function");
         }
 
@@ -95,8 +95,14 @@ namespace CNull.Interpreter
 
             if (variableDeclaration.InitializationExpression != null)
             {
-                variableDeclaration.InitializationExpression.Accept(this);
-                initializationValueContainer = _environment.ConsumeLastResult();
+                try
+                {
+                    initializationValueContainer = VisitExpression(variableDeclaration.InitializationExpression);
+                }
+                catch (ErrorInExpressionException)
+                {
+                    return;
+                }
             }
             else if (!variableDeclaration.Type.IsPrimitive)
             {
@@ -119,7 +125,12 @@ namespace CNull.Interpreter
 
             if (expressionStatement.AssignmentValue == null)
             {
-                expressionStatement.Expression.Accept(this);
+                try
+                {
+                    expressionStatement.Expression.Accept(this);
+                }
+                catch (ErrorInExpressionException)
+                { }
             }
             else
             {
@@ -127,9 +138,19 @@ namespace CNull.Interpreter
                 var leftVariable = _environment.CurrentContext.TryGetVariable(leftIdentifier.Identifier) 
                                    ?? throw new NotImplementedException("Undefined variable");
 
-                var rightValue = VisitExpression(expressionStatement.AssignmentValue);
-                var assignmentValue = _typesResolver.ResolveAssignment(leftVariable.ValueContainer.Value, rightValue.Value);
-                leftVariable.ValueContainer.Value = assignmentValue;
+                ValueContainer rightValue;
+                try
+                {
+                    rightValue = VisitExpression(expressionStatement.AssignmentValue);
+                }
+                catch (ErrorInExpressionException)
+                {
+                    return;
+                }
+                
+                var assignmentValue = _typesResolver.ResolveAssignment(leftVariable.ValueContainer, rightValue);
+                var (type, _, primitive) = leftVariable.ValueContainer;
+                leftVariable.ValueContainer = new ValueContainer(type, assignmentValue, primitive);
             }
         }
 
@@ -183,7 +204,12 @@ namespace CNull.Interpreter
         private ValueContainer VisitExpression(IExpression expression)
         {
             expression.Accept(this);
-            return _environment.ConsumeLastResult();
+
+            if (_environment.ActiveException == null) 
+                return _environment.ConsumeLastResult();
+
+            _environment.SaveResult(null);
+            throw new ErrorInExpressionException();
         }
           
         public void Visit(TryStatement tryCatchStatement)
@@ -198,7 +224,20 @@ namespace CNull.Interpreter
                 var container = new ValueContainer(typeof(string), _environment.ActiveException);
                 _environment.CurrentContext.DeclareVariable(new Variable(catchClause.Identifier, container));
 
-                if (catchClause.FilterExpression == null || VisitBooleanExpression(catchClause.FilterExpression))
+                bool filterAccepted;
+                try
+                {
+                    var caughtException = _environment.ActiveException;
+                    _environment.ActiveException = null;
+                    filterAccepted = catchClause.FilterExpression == null || VisitBooleanExpression(catchClause.FilterExpression);
+                    _environment.ActiveException = caughtException;
+                }
+                catch (ErrorInExpressionException)
+                {
+                    return;
+                }
+
+                if (filterAccepted)
                 {
                     _environment.ActiveException = null;
                     catchClause.Body.Accept(this);
@@ -245,8 +284,15 @@ namespace CNull.Interpreter
                 if (returnStatement.ReturnExpression == null)
                     throw new NotImplementedException("Expected an expression");
 
-                returnStatement.ReturnExpression.Accept(this);
-                var returnValue = _environment.ConsumeLastResult();
+                ValueContainer returnValue; 
+                try
+                {
+                    returnValue = VisitExpression(returnStatement.ReturnExpression);
+                }
+                catch (ErrorInExpressionException)
+                {
+                    return;
+                }
 
                 if (returnValue.Value != null && _environment.CurrentContext.ExpectedReturnType != returnValue.Type)
                     throw new NotImplementedException("Expression return type does not match expected return type.");
@@ -394,7 +440,7 @@ namespace CNull.Interpreter
 
                     if (_environment.ActiveException != null)
                     {
-                        _environment.SaveResult(new ValueContainer(typeof(object), null));
+                        _environment.SaveResult(parentValue);
                         break;
                     }
 

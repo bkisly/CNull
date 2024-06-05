@@ -1,16 +1,26 @@
 ﻿using CNull.ErrorHandler;
+using CNull.Interpreter.Context;
+using CNull.Interpreter.Errors;
+using CNull.Interpreter.Symbols;
 using CNull.Parser;
 using CNull.Parser.Productions;
 
 namespace CNull.Interpreter.Resolvers
 {
-    public class TypesResolver(IErrorHandler errorHandler)
+    public class TypesResolver(IExecutionEnvironment environment, IErrorHandler errorHandler)
     {
+        public object? ResolveAssignment(ValueContainer left, ValueContainer right)
+        {
+            return left.Type == right.Type ? right.Value : ResolveAssignmentValue(left.Value, right);
+        }
+
         public object? ResolveAssignment(object? left, object? right)
         {
-            if (left?.GetType() == right?.GetType())
-                return right;
+            return left?.GetType() == right?.GetType() ? right : ResolveAssignmentValue(left, right);
+        }
 
+        private object? ResolveAssignmentValue(object? left, object? right)
+        {
             return (left, right) switch
             {
                 (string, _) => right?.ToString(),
@@ -110,9 +120,11 @@ namespace CNull.Interpreter.Resolvers
         {
             if ((left, right) is (int leftInt, int rightInt))
             {
-                if (rightInt == 0)
-                    throw new NotImplementedException("Division by zero");
-                return leftInt / rightInt;
+                if (rightInt != 0) 
+                    return leftInt / rightInt;
+
+                environment.ActiveException = RuntimeErrors.DivisionByZeroException;
+                return 0;
             }
 
             return (left, right) switch

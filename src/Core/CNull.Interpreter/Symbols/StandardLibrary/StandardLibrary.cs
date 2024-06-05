@@ -71,7 +71,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
 
                 [new StandardLibrarySignature("Console", nameof(ReadLine))] = new(
                     new PrimitiveType(PrimitiveTypes.String, new Position()),
-                    nameof(WriteLine),
+                    nameof(ReadLine),
                     [],
                     ReadLine),
 
@@ -223,7 +223,17 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
                 return;
             }
 
-            var result = Convert.ToInt32(stringValue);
+            int? result;
+            try
+            {
+                result = Convert.ToInt32(stringValue);
+            }
+            catch (FormatException)
+            {
+                _environment.ActiveException = RuntimeErrors.FormatException;
+                return;
+            }
+
 
             _environment.SaveResult(new ValueContainer(typeof(int?), result));
             _environment.CurrentContext.IsReturning = true;
