@@ -3,38 +3,37 @@ using CNull.ErrorHandler.Errors;
 
 namespace CNull.Interpreter.Errors
 {
-    public record CircularDependencyError(Position Position) : ICompilationError
+    public record CircularDependencyError(string ModuleName, int? LineNumber = null) : ISemanticError
     {
         public string Message => "Circular dependency detected.";
     }
 
-    public record FunctionRedefinitionError(string FunctionName) : ICompilationError
+    public record FunctionRedefinitionError(string ModuleName, string FunctionName, int? LineNumber = null) : ISemanticError
     {
-        public Position Position => Position.FirstCharacter;
         public string Message => $"Function with name: {FunctionName} has already been defined.";
     }
 
-    public record FunctionNotFoundError(string FunctionName, string ModuleName, Position Position) : ICompilationError
+    public record FunctionNotFoundError(string FunctionName, string ModuleName, int? LineNumber = null) : ISemanticError
     {
         public string Message => $"The function: {FunctionName} was not found in module: {ModuleName}.";
     }
 
-    public record ModuleNotFoundError(string ModuleName, Position Position) : ICompilationError
+    public record ModuleNotFoundError(string ModuleName, string RequestedModule, int? LineNumber = null) : ISemanticError
     {
-        public string Message => $"Module: {ModuleName} was not found in the working directory.";
+        public string Message => $"Module: {RequestedModule} was not found in the working directory.";
     }
 
-    public record MissingSubmoduleError(Position Position) : ICompilationError
+    public record MissingSubmoduleError(string ModuleName, int? LineNumber = null) : ISemanticError
     {
         public string Message => $"Missing submodule specification in standard library function import.";
     }
 
-    public record ModuleCompilationError(string ModuleName, Position Position) : ICompilationError
+    public record ModuleCompilationError(string ModuleName, string RequestedModule, int? LineNumber = null) : ISemanticError
     {
-        public string Message => $"Compilation of module: {ModuleName} has finished with errors.";
+        public string Message => $"Compilation of module: {RequestedModule} has finished with errors.";
     }
 
-    public record MissingEntryPointError(string ModuleName, IEnumerable<CallStackRecord> CallStack) : IRuntimeError
+    public record MissingEntryPointError(string ModuleName, int? LineNumber = null) : ISemanticError
     {
         public string Message => $"Entry point ('Main' function) not found in root module: {ModuleName}.";
     }

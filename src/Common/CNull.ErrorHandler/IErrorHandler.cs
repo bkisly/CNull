@@ -38,6 +38,13 @@ namespace CNull.ErrorHandler
         FatalErrorException RaiseFatalCompilationError(ICompilationError error);
 
         /// <summary>
+        /// Raises an error which occurred during semantic analysis of the code.
+        /// </summary>
+        /// <param name="error">Error to raise.</param>
+        /// <returns></returns>
+        FatalErrorException RaiseSemanticError(ISemanticError error);
+
+        /// <summary>
         /// Raises an error which occurred at runtime.
         /// </summary>
         /// <param name="error">Error to raise.</param>

@@ -9,7 +9,7 @@ using CNull.Parser.Productions;
 
 namespace CNull.Interpreter.Symbols.StandardLibrary
 {
-    public record StandardLibrarySignature(string SubmoduleName, string FunctionName);
+    public record StandardLibraryHeader(string SubmoduleName, string FunctionName);
 
     public class StandardLibrary
     {
@@ -18,7 +18,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
         private readonly StandardOutput _standardOutput;
 
         public const string CNullModule = "CNull";
-        public Dictionary<StandardLibrarySignature, StandardLibraryFunction> StandardLibraryFunctions { get; }
+        public Dictionary<StandardLibraryHeader, StandardLibraryFunction> StandardLibraryFunctions { get; }
         private readonly Dictionary<Func<object?, bool>, EmbeddedFunction> _embeddedFunctions;
 
         private ValueContainer _parentValueContainer = null!;
@@ -45,11 +45,11 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             return _embeddedFunctions.FirstOrDefault(kvp => kvp.Key.Invoke(parentValue.Value) && kvp.Value.Name == name).Value;
         }
 
-        private Dictionary<StandardLibrarySignature, StandardLibraryFunction> CreateStdlibFunctions()
+        private Dictionary<StandardLibraryHeader, StandardLibraryFunction> CreateStdlibFunctions()
         {
-            return new Dictionary<StandardLibrarySignature, StandardLibraryFunction>
+            return new Dictionary<StandardLibraryHeader, StandardLibraryFunction>
             {
-                [new StandardLibrarySignature("Console", nameof(WriteLine))] = new(
+                [new StandardLibraryHeader("Console", nameof(WriteLine))] = new(
                     new ReturnType(new Position()),
                     nameof(WriteLine),
                     [
@@ -59,7 +59,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
                     ],
                     WriteLine),
 
-                [new StandardLibrarySignature("Console", nameof(Write))] = new(
+                [new StandardLibraryHeader("Console", nameof(Write))] = new(
                     new ReturnType(new Position()),
                     nameof(Write),
                     [
@@ -69,13 +69,13 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
                     ],
                     () => Write()),
 
-                [new StandardLibrarySignature("Console", nameof(ReadLine))] = new(
+                [new StandardLibraryHeader("Console", nameof(ReadLine))] = new(
                     new PrimitiveType(PrimitiveTypes.String, new Position()),
                     nameof(ReadLine),
                     [],
                     ReadLine),
 
-                [new StandardLibrarySignature("Converters", nameof(StringToInt))] = new(
+                [new StandardLibraryHeader("Converters", nameof(StringToInt))] = new(
                     new PrimitiveType(PrimitiveTypes.Integer, new Position()),
                     nameof(StringToInt),
                     [
@@ -91,7 +91,7 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
         {
             var embeddedFunctions = new Dictionary<Func<object?, bool>, EmbeddedFunction>
             {
-                [value => value is string or null] = new(
+                [value => value is string] = new(
                     new PrimitiveType(PrimitiveTypes.Char, new Position()),
                     "Get",
                     [
@@ -188,7 +188,9 @@ namespace CNull.Interpreter.Symbols.StandardLibrary
             var realKeyType = TypesResolver.ResolvePrimitiveType(keyType);
             var realValueType = TypesResolver.ResolvePrimitiveType(valueType);
             var args = type.GetGenericArguments();
-            return type.GetGenericTypeDefinition() == typeof(Dictionary<,>) && args[0] == realKeyType && args[1] == realValueType;
+            return type.GetGenericTypeDefinition() == typeof(Dictionary<,>) 
+                   && args[0].MakeNullableType() == realKeyType 
+                   && args[1].MakeNullableType() == realValueType;
         }
 
         private void WriteLine() => Write(Environment.NewLine);

@@ -56,19 +56,21 @@ namespace CNull.Interpreter.Symbols
                 if (!_parsedProgramsCache.TryGetValue(requestedModule, out var importedProgram))
                 {
                     if (!stateManager.TryOpenModule(requestedModule))
-                        throw errorHandler.RaiseFatalCompilationError(new ModuleNotFoundError(requestedModule, importPosition));
+                        throw errorHandler.RaiseSemanticError(new ModuleNotFoundError(program.ModuleName,
+                            requestedModule, importPosition.LineNumber));
 
                     importedProgram = ParseAndCacheProgram();
                 }
 
                 if (importedProgram == null)
-                    throw errorHandler.RaiseFatalCompilationError(new ModuleCompilationError(requestedModule, importPosition));
+                    throw errorHandler.RaiseSemanticError(new ModuleCompilationError(program.ModuleName,
+                        requestedModule, importPosition.LineNumber));
 
                 RegisterFunctions(importedProgram);
 
                 var desiredFunction = importedProgram.FunctionDefinitions.SingleOrDefault(f => f.Name == requestedFunctionName)
-                                      ?? throw errorHandler.RaiseFatalCompilationError(
-                                          new FunctionNotFoundError(requestedFunctionName, requestedModule, importPosition));
+                                      ?? throw errorHandler.RaiseSemanticError(
+                                          new FunctionNotFoundError(requestedFunctionName, requestedModule, importPosition.LineNumber));
 
                 _functionsRegistry.Register(moduleName, desiredFunction, requestedModule);
             }
@@ -89,7 +91,7 @@ namespace CNull.Interpreter.Symbols
             {
                 _dependencyTree.AddDependency(program.ModuleName, importGroup.Key);
                 if (!_dependencyTree.Build())
-                    throw errorHandler.RaiseFatalCompilationError(new CircularDependencyError(importGroup.First().Position));
+                    throw errorHandler.RaiseSemanticError(new CircularDependencyError(program.ModuleName, importGroup.First().Position.LineNumber));
 
                 foreach (var importDirective in importGroup.Distinct())
                 {
@@ -103,12 +105,13 @@ namespace CNull.Interpreter.Symbols
         private void ProcessStdlibImport(string currentModule, ImportDirective importDirective)
         {
             if (importDirective.SubmoduleName == null)
-                throw errorHandler.RaiseFatalCompilationError(new MissingSubmoduleError(importDirective.Position));
+                throw errorHandler.RaiseSemanticError(new MissingSubmoduleError(currentModule, importDirective.Position.LineNumber));
 
-            var requestedSignature = new StandardLibrarySignature(importDirective.SubmoduleName, importDirective.FunctionName);
-            if (!_standardLibrary.StandardLibraryFunctions.TryGetValue(requestedSignature, out var function))
-                throw errorHandler.RaiseFatalCompilationError(new FunctionNotFoundError(importDirective.FunctionName,
-                    $"${StandardLibrary.StandardLibrary.CNullModule}.{importDirective.SubmoduleName}", importDirective.Position));
+            var requestedHeader = new StandardLibraryHeader(importDirective.SubmoduleName, importDirective.FunctionName);
+
+            if (!_standardLibrary.StandardLibraryFunctions.TryGetValue(requestedHeader, out var function))
+                throw errorHandler.RaiseSemanticError(new FunctionNotFoundError(importDirective.FunctionName,
+                    $"${StandardLibrary.StandardLibrary.CNullModule}.{importDirective.SubmoduleName}", importDirective.Position.LineNumber));
 
             _functionsRegistry.Register(currentModule, function, StandardLibrary.StandardLibrary.CNullModule);
         }

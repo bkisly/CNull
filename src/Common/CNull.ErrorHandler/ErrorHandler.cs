@@ -17,13 +17,14 @@ namespace CNull.ErrorHandler
 
         public FatalErrorException RaiseSourceError(ISourceError error)
         {
-            RaiseError(error, $"C? initialization error: {error.GetType().Name}{Environment.NewLine}");
+            RaiseError(error, stateManager.CurrentSourcePath,
+                $"C? initialization error: {error.GetType().Name}{Environment.NewLine}");
             return FatalError();
         }
 
         public void RaiseCompilationError(ICompilationError error)
         {
-            RaiseError(error,
+            RaiseError(error, stateManager.CurrentSourcePath,
                 $"C? error (line: {error.Position.LineNumber}, column: {error.Position.ColumnNumber}): {error.GetType().Name}{Environment.NewLine}");
 
             if (_errors.Count >= config.MaxErrorsCount)
@@ -33,6 +34,14 @@ namespace CNull.ErrorHandler
         public FatalErrorException RaiseFatalCompilationError(ICompilationError error)
         {
             RaiseCompilationError(error);
+            return FatalError();
+        }
+
+        public FatalErrorException RaiseSemanticError(ISemanticError error)
+        {
+            var lineInfo = error.LineNumber != null ? $" (line: {error.LineNumber})" : string.Empty;
+            RaiseError(error, error.ModuleName,
+                $"C? error{lineInfo}: {error.GetType().Name}{Environment.NewLine}");
             return FatalError();
         }
 
@@ -56,11 +65,9 @@ namespace CNull.ErrorHandler
             return FatalError();
         }
 
-        private void RaiseError(IError error, string message)
+        private void RaiseError(IError error, string source, string message)
         {
             _errors.Enqueue(error);
-
-            var source = stateManager.CurrentSourcePath;
             logger.LogError($"Error occurred ({error.GetType().Name}, source: {source}): {error.Message}");
             ErrorOccurred?.Invoke(this,
                 new ErrorOccurredEventArgs(

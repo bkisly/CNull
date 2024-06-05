@@ -26,7 +26,7 @@ namespace CNull.Interpreter.Symbols
             }
             catch (ArgumentException)
             {
-                throw errorHandler.RaiseFatalCompilationError(new FunctionRedefinitionError(functionDefinition.Name));
+                throw errorHandler.RaiseSemanticError(new FunctionRedefinitionError(moduleName, functionDefinition.Name));
             }
         }
 

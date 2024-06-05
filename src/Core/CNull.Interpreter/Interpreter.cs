@@ -32,12 +32,10 @@ namespace CNull.Interpreter
             _functionsRegistry = functionsRegistry;
 
             var mainFunction = _functionsRegistry.GetEntryPoint(_environment.CurrentModule)
-                               ?? throw errorHandler.RaiseRuntimeError(new MissingEntryPointError(
-                                   _environment.CurrentModule,
-                                   [new CallStackRecord(_environment.CurrentModule, _environment.CurrentFunction, 0)]));
+                               ?? throw errorHandler.RaiseSemanticError(new MissingEntryPointError(_environment.CurrentModule));
 
             var dictContainer = new ValueContainer(typeof(Dictionary<int, string>),
-                new Dictionary<int?, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
+                new Dictionary<int, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
             PerformCall(mainFunction, [dictContainer], 0);
 
             if (_environment.ActiveException != null)
@@ -448,9 +446,9 @@ namespace CNull.Interpreter
                     }
 
                     if (function == null)
-                        throw errorHandler.RaiseFatalCompilationError(
+                        throw errorHandler.RaiseSemanticError(
                             new FunctionNotFoundError(callExpression.FunctionName, _environment.CurrentModule,
-                                callExpression.Position));
+                                callExpression.Position.LineNumber));
 
                     PerformCall(function, arguments, callExpression.Position.LineNumber);
                     break;
@@ -458,8 +456,8 @@ namespace CNull.Interpreter
                 case null:
                 {
                     if (!_functionsRegistry.TryGetValue(_environment.CurrentModule, callExpression.FunctionName, out var functionsRegistryEntry))
-                        throw errorHandler.RaiseFatalCompilationError(new FunctionNotFoundError(callExpression.FunctionName,
-                            _environment.CurrentModule, callExpression.Position));
+                        throw errorHandler.RaiseSemanticError(new FunctionNotFoundError(callExpression.FunctionName,
+                            _environment.CurrentModule, callExpression.Position.LineNumber));
 
                     PerformCall(functionsRegistryEntry.FunctionDefinition, arguments,
                         callExpression.Position.LineNumber, functionsRegistryEntry.ExternalModuleName);
