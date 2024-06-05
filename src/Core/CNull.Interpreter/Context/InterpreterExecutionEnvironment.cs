@@ -26,7 +26,9 @@ namespace CNull.Interpreter.Context
                 }
 
                 value.StackTrace = new[] { new CallStackRecord(CurrentModule, CurrentFunction, value.LineNumber) }
-                        .Union(_contextsStack.Select(c => c.CallStackRecord));
+                        .Union(_contextsStack.Select(c => c.CallStackRecord))
+                        .ToArray();
+                _activeException = value;
             }
         }
 
