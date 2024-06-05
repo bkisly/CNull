@@ -15,7 +15,7 @@ namespace CNull.Interpreter.Resolvers
     {
         public object? ResolveAssignment(ValueContainer left, ValueContainer right, int lineNumber)
         {
-            return left.Type == right.Type ? right.Value : ResolveAssignmentValue(left.Value, right, lineNumber);
+            return left.Type == right.Type ? right.Value : ResolveAssignmentValue(left.Value, right.Value, lineNumber);
         }
 
         public object? ResolveAssignment(object? left, object? right, int lineNumber)
@@ -31,9 +31,11 @@ namespace CNull.Interpreter.Resolvers
                 (int, float rightFloat) => rightFloat,
                 (float, int) => right,
                 (not null, null) => null,
-                _ => throw new NotImplementedException("Cannot assign left to right...")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError(GetTypeName(left), GetTypeName(right), environment.CurrentModule, lineNumber))
             };
         }
+
+        private string GetTypeName(object? value) => value?.GetType().Name ?? "null";
 
         public bool EnsureBoolean(object? value, int lineNumber)
         {
@@ -41,7 +43,7 @@ namespace CNull.Interpreter.Resolvers
             {
                 bool boolValue => boolValue,
                 null => InvalidNullUsage<bool>(lineNumber),
-                _ => throw new NotImplementedException("Expected a boolean type")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError(nameof(Boolean), GetTypeName(value), environment.CurrentModule, lineNumber))
             };
         }
 
@@ -54,7 +56,8 @@ namespace CNull.Interpreter.Resolvers
                 (string leftString, int rightInt) => leftString.Length > rightInt,
                 (int leftInt, string rightString) => leftInt > rightString.Length,
                 (null, _) or (_, null) => InvalidNullUsage<bool>(lineNumber),
-                _ => throw new NotImplementedException("Cannot compare 2 values of types...")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError("relational expression", GetTypeName(left),
+                    GetTypeName(right), environment.CurrentModule, lineNumber))
             };
         }
 
@@ -77,7 +80,8 @@ namespace CNull.Interpreter.Resolvers
             if (left.GetType() == right.GetType())
                 return left.Equals(right);
 
-            throw new NotImplementedException("Cannot compare 2 values of types...");
+            throw errorHandler.RaiseSemanticError(new TypeError("relational expression", GetTypeName(left),
+                GetTypeName(right), environment.CurrentModule, lineNumber));
         }
 
         public object ResolveAddition(object? left, object? right, int lineNumber)
@@ -91,7 +95,7 @@ namespace CNull.Interpreter.Resolvers
                 (char leftChar, char rightChar) => leftChar + rightChar,
                 (string leftString, not null) => leftString + right,
                 (not null, string rightString) => left + rightString,
-                _ => throw new NotImplementedException("Cannot add 2 values of types...")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError("+", GetTypeName(left), GetTypeName(right), environment.CurrentModule, lineNumber))
             };
         }
 
@@ -104,7 +108,7 @@ namespace CNull.Interpreter.Resolvers
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) - Convert.ToSingle(right),
                 (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
-                _ => throw new NotImplementedException("Cannot subtract 2 values of types...")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError("-", GetTypeName(left), GetTypeName(right), environment.CurrentModule, lineNumber))
             };
         }
 
@@ -117,7 +121,7 @@ namespace CNull.Interpreter.Resolvers
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) * Convert.ToSingle(right),
                 (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
-                _ => throw new NotImplementedException("Cannot multiply 2 values of types...")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError("*", GetTypeName(left), GetTypeName(right), environment.CurrentModule, lineNumber))
             };
         }
 
@@ -136,7 +140,7 @@ namespace CNull.Interpreter.Resolvers
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) / Convert.ToSingle(right),
                 (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
-                _ => throw new NotImplementedException("Cannot divide 2 values of types...")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError("/", GetTypeName(left), GetTypeName(right), environment.CurrentModule, lineNumber))
             };
         }
 
@@ -144,16 +148,18 @@ namespace CNull.Interpreter.Resolvers
         {
             if ((left, right) is (int leftInt, int rightInt))
             {
-                if (rightInt == 0)
-                    throw new NotImplementedException("Division by zero");
-                return leftInt / rightInt;
+                if (rightInt != 0)
+                    return leftInt / rightInt;
+
+                environment.ActiveException = new ExceptionInfo(RuntimeErrors.DivisionByZeroException, lineNumber);
+                return 0;
             }
 
             return (left, right) switch
             {
                 (int, float) or (float, int) or (float, float) => Convert.ToSingle(left) % Convert.ToSingle(right),
                 (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
-                _ => throw new NotImplementedException("Cannot calculate modulo between 2 values of types...")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError("%", GetTypeName(left), GetTypeName(right), environment.CurrentModule, lineNumber))
             };
         }
 
@@ -166,7 +172,7 @@ namespace CNull.Interpreter.Resolvers
             {
                 float floatValue => -floatValue,
                 null => InvalidNullUsage<int>(lineNumber),
-                _ => throw new NotImplementedException("Cannot negate a value of type...")
+                _ => throw errorHandler.RaiseSemanticError(new TypeError($"{nameof(Int32)} or {nameof(Single)}", GetTypeName(value), environment.CurrentModule, lineNumber))
             };
         }
 

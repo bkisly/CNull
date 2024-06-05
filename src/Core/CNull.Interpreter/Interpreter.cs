@@ -57,8 +57,9 @@ namespace CNull.Interpreter
         {
             functionDefinition.FunctionBody.Accept(this);
 
-            if (_environment is { CurrentContext: { IsReturning: false, ExpectedReturnType: not null }, ActiveException: null })
-                throw new NotImplementedException("Missing return statement in non-void function");
+            if (_environment is
+                { CurrentContext: { IsReturning: false, ExpectedReturnType: not null }, ActiveException: null })
+                throw errorHandler.RaiseSemanticError(new MissingReturnStatementError(_environment.CurrentModule, functionDefinition.Position.LineNumber));
         }
 
         public void Visit(StandardLibraryFunction standardLibraryFunction)
@@ -126,7 +127,7 @@ namespace CNull.Interpreter
         public void Visit(ExpressionStatement expressionStatement)
         {
             if (expressionStatement is { Expression: not IdentifierExpression, AssignmentValue: not null })
-                throw new NotImplementedException("Cannot assign to something different than identifier.");
+                throw errorHandler.RaiseSemanticError(new InvalidAssignmentError(_environment.CurrentModule, expressionStatement.Position.LineNumber));
 
             if (expressionStatement.AssignmentValue == null)
             {
@@ -141,7 +142,7 @@ namespace CNull.Interpreter
             {
                 var leftIdentifier = (IdentifierExpression)expressionStatement.Expression;
                 var leftVariable = _environment.CurrentContext.TryGetVariable(leftIdentifier.Identifier) 
-                                   ?? throw new NotImplementedException("Undefined variable");
+                                   ?? throw errorHandler.RaiseSemanticError(new UndefinedVariableError(_environment.CurrentModule, expressionStatement.Position.LineNumber));
 
                 ValueContainer rightValue;
                 try
@@ -260,7 +261,7 @@ namespace CNull.Interpreter
         public void Visit(ContinueStatement continueStatement)
         {
             if (_environment.CurrentContext.LoopCounter <= 0)
-                throw new NotImplementedException("Invalid continue");
+                throw errorHandler.RaiseSemanticError(new InvalidContinueError(_environment.CurrentModule, continueStatement.Position.LineNumber));
 
             _environment.CurrentContext.IsContinuing = true;
         }
@@ -268,7 +269,7 @@ namespace CNull.Interpreter
         public void Visit(BreakStatement breakStatement)
         {
             if (_environment.CurrentContext.LoopCounter <= 0)
-                throw new NotImplementedException("Invalid break");
+                throw errorHandler.RaiseSemanticError(new InvalidBreakError(_environment.CurrentModule, breakStatement.Position.LineNumber));
 
             _environment.CurrentContext.IsBreaking = true;
         }
@@ -281,13 +282,12 @@ namespace CNull.Interpreter
         public void Visit(ReturnStatement returnStatement)
         {
             if (_environment.CurrentContext.ExpectedReturnType == null && returnStatement.ReturnExpression != null)
-                throw new NotImplementedException("Tried to return a value from void function");
-
+                throw errorHandler.RaiseSemanticError(new VoidReturnError(_environment.CurrentModule, returnStatement.Position.LineNumber));
 
             if (_environment.CurrentContext.ExpectedReturnType != null)
             {
                 if (returnStatement.ReturnExpression == null)
-                    throw new NotImplementedException("Expected an expression");
+                    throw errorHandler.RaiseSemanticError(new MissingExpressionError(_environment.CurrentModule, returnStatement.Position.LineNumber));
 
                 ValueContainer returnValue; 
                 try
@@ -300,7 +300,7 @@ namespace CNull.Interpreter
                 }
 
                 if (returnValue.Value != null && _environment.CurrentContext.ExpectedReturnType != returnValue.Type)
-                    throw new NotImplementedException("Expression return type does not match expected return type.");
+                    throw errorHandler.RaiseSemanticError(new InvalidReturnExpressionError(_environment.CurrentModule, returnStatement.Position.LineNumber));
 
                 _environment.SaveResult(returnValue);
             }
@@ -427,7 +427,7 @@ namespace CNull.Interpreter
         public void Visit(IdentifierExpression identifierExpression)
         {
             var variable = _environment.CurrentContext.TryGetVariable(identifierExpression.Identifier) 
-                           ?? throw new NotImplementedException("Undefined variable...");
+                           ?? throw errorHandler.RaiseSemanticError(new UndefinedVariableError(_environment.CurrentModule, identifierExpression.Position.LineNumber));
 
             _environment.SaveResult(variable.ValueContainer.Move());
         }
@@ -469,14 +469,15 @@ namespace CNull.Interpreter
                     break;
                 }
                 default:
-                    throw new NotImplementedException("Unsupported member access.");
+                    throw errorHandler.RaiseSemanticError(new InvalidMemberAccessError(_environment.CurrentModule, callExpression.Position.LineNumber));
             }
         }
 
         private void PerformCall(IFunction function, ValueContainer[] args, int callingLineNumber = 0, string? requestedModule = null)
         {
             if (function.Parameters.Count() != args.Length)
-                throw new NotImplementedException("Not matching amount of args...");
+                throw errorHandler.RaiseSemanticError(new InvalidArgumentsCountError(function.Parameters.Count(),
+                    args.Length, _environment.CurrentModule, callingLineNumber));
 
             var returnType = _typesResolver.ResolveReturnType(function.ReturnType);
             var localVariables = new List<Variable>();
