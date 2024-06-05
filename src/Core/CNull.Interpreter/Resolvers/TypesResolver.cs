@@ -1,9 +1,9 @@
 ﻿using CNull.ErrorHandler;
 using CNull.Interpreter.Context;
 using CNull.Interpreter.Errors;
-using CNull.Interpreter.Symbols;
 using CNull.Parser;
 using CNull.Parser.Productions;
+using CNull.Semantics.Errors;
 
 namespace CNull.Interpreter.Resolvers
 {
@@ -35,7 +35,7 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        private string GetTypeName(object? value) => value?.GetType().Name ?? "null";
+        private static string GetTypeName(object? value) => value?.GetType().Name ?? "null";
 
         public bool EnsureBoolean(object? value, int lineNumber)
         {
@@ -176,7 +176,7 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        public Type ResolveDeclarableType(IDeclarableType type)
+        public static Type ResolveDeclarableType(IDeclarableType type)
         {
             return type.Type switch
             {
@@ -185,12 +185,12 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        public Type? ResolveReturnType(ReturnType type)
+        public static Type? ResolveReturnType(ReturnType type)
         {
             return type is IDeclarableType declarableType ? ResolveDeclarableType(declarableType) : null;
         }
 
-        private Type ResolveDictionaryType(DictionaryType type)
+        private static Type ResolveDictionaryType(DictionaryType type)
         {
             var keyType = ResolvePrimitiveType(type.KeyType);
             var valueType = ResolvePrimitiveType(type.ValueType);

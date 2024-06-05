@@ -1,5 +1,4 @@
-﻿using CNull.Interpreter.Symbols;
-using CNull.Parser.Extensions;
+﻿using CNull.Semantics.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CNull.Interpreter.Extensions
@@ -11,8 +10,7 @@ namespace CNull.Interpreter.Extensions
         /// </summary>
         public static IServiceCollection AddInterpreterServices(this IServiceCollection services)
         {
-            services.AddParserServices();
-            services.AddSingleton<IFunctionsRegistryBuilder, FunctionsRegistryBuilder>();
+            services.AddSemanticsServices();
             services.AddSingleton<IInterpreter, Interpreter>();
             return services;
         }

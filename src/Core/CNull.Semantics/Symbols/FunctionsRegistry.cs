@@ -1,8 +1,8 @@
 ﻿using CNull.ErrorHandler;
-using CNull.Interpreter.Errors;
+using CNull.Semantics.Errors;
 using CNull.Parser.Productions;
 
-namespace CNull.Interpreter.Symbols
+namespace CNull.Semantics.Symbols
 {
     public record FunctionsRegistryEntry(IFunction FunctionDefinition, string? ExternalModuleName);
 

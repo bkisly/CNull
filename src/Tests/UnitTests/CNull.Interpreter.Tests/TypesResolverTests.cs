@@ -1,9 +1,9 @@
 using CNull.ErrorHandler.Errors;
-using CNull.Interpreter.Tests.Data;
-using CNull.Interpreter.Tests.Helpers;
+using CNull.Semantics.Symbols.Tests.Data;
+using CNull.Semantics.Symbols.Tests.Helpers;
 using Moq;
 
-namespace CNull.Interpreter.Tests
+namespace CNull.Semantics.Symbols.Tests
 {
     public class TypesResolverTests(TypesResolverHelpersFixture fixture) : IClassFixture<TypesResolverHelpersFixture>
     {

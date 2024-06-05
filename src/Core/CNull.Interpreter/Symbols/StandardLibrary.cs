@@ -6,12 +6,11 @@ using CNull.Interpreter.Extensions;
 using CNull.Interpreter.Resolvers;
 using CNull.Parser;
 using CNull.Parser.Productions;
+using CNull.Semantics.Symbols;
 
 namespace CNull.Interpreter.Symbols
 {
-    public record StandardLibraryHeader(string SubmoduleName, string FunctionName);
-
-    public class StandardLibrary
+    public class StandardLibrary : IStandardLibrary
     {
         private readonly IExecutionEnvironment _environment;
         private readonly StandardInput _standardInput;

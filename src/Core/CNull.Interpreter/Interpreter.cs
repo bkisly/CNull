@@ -8,10 +8,13 @@ using CNull.Interpreter.Symbols;
 using CNull.Parser;
 using CNull.Parser.Productions;
 using CNull.Parser.Visitors;
+using CNull.Semantics;
+using CNull.Semantics.Errors;
+using CNull.Semantics.Symbols;
 
 namespace CNull.Interpreter
 {
-    public class Interpreter(IFunctionsRegistryBuilder functionsRegistryBuilder, IErrorHandler errorHandler) : IInterpreter, IAstVisitor
+    public class Interpreter(ISemanticAnalyzer semanticAnalyzer, IErrorHandler errorHandler) : IInterpreter, IAstVisitor
     {
         private FunctionsRegistry _functionsRegistry = new(errorHandler);
 
@@ -25,12 +28,12 @@ namespace CNull.Interpreter
             _typesResolver = new TypesResolver(_environment, errorHandler);
             _standardLibrary = new StandardLibrary(_environment, inputCallback, outputCallback);
 
-            if (functionsRegistryBuilder.Build(_standardLibrary) is not { } functionsRegistry)
+            if (semanticAnalyzer.Analyze(_standardLibrary) is not { } functionsRegistry)
                 return;
 
             _functionsRegistry = functionsRegistry;
 
-            _environment.CurrentModule = functionsRegistryBuilder.RootModule;
+            _environment.CurrentModule = semanticAnalyzer.RootModule;
             _environment.StackOverflowOccurred += (_, _)
                 => throw errorHandler.RaiseRuntimeError(
                     new StackOverflowError(_environment.GetRecentCallStackRecords(100)));
@@ -113,7 +116,7 @@ namespace CNull.Interpreter
             }
             else if (!variableDeclaration.Type.IsPrimitive)
             {
-                var type = _typesResolver.ResolveDeclarableType(variableDeclaration.Type);
+                var type = TypesResolver.ResolveDeclarableType(variableDeclaration.Type);
                 initializationValueContainer = ValueContainerFactory(variableDeclaration.Type, Activator.CreateInstance(type));
             }
             else
@@ -451,8 +454,8 @@ namespace CNull.Interpreter
                 {
                     Type: DictionaryType
                     {
-                        KeyType.TypeSpecifier: PrimitiveTypes.Integer, ValueType.TypeSpecifier:
-                        PrimitiveTypes.String
+                        KeyType.TypeSpecifier: PrimitiveTypes.Integer, 
+                        ValueType.TypeSpecifier: PrimitiveTypes.String
                     }
                 }
             ];
@@ -477,7 +480,7 @@ namespace CNull.Interpreter
                 throw errorHandler.RaiseSemanticError(new InvalidArgumentsCountError(function.Parameters.Count(),
                     args.Length, _environment.CurrentModule, callingLineNumber));
 
-            var returnType = _typesResolver.ResolveReturnType(function.ReturnType);
+            var returnType = TypesResolver.ResolveReturnType(function.ReturnType);
             var localVariables = new List<Variable>();
             foreach (var (parameter, argument) in function.Parameters.Zip(args))
                 localVariables.Add(new Variable(parameter.Name, argument.Move()));
@@ -541,7 +544,7 @@ namespace CNull.Interpreter
 
         private ValueContainer ValueContainerFactory(IDeclarableType type, object? initializationValue)
         {
-            var leftType = _typesResolver.ResolveDeclarableType(type);
+            var leftType = TypesResolver.ResolveDeclarableType(type);
             var resolvedValue = _typesResolver.ResolveAssignment(
                 leftType == typeof(string) ? string.Empty : Activator.CreateInstance(leftType), initializationValue,
                 type.Position.LineNumber);

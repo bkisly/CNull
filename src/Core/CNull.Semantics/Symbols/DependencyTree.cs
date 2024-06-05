@@ -1,4 +1,4 @@
-﻿namespace CNull.Interpreter.Symbols
+﻿namespace CNull.Semantics.Symbols
 {
     public class DependencyTree<T> where T : notnull
     {

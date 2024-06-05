@@ -1,12 +1,13 @@
 ﻿using CNull.Common.State;
 using CNull.ErrorHandler;
-using CNull.Interpreter.Errors;
+using CNull.Semantics.Symbols;
 using CNull.Parser;
 using CNull.Parser.Productions;
+using CNull.Semantics.Errors;
 
-namespace CNull.Interpreter.Symbols
+namespace CNull.Semantics
 {
-    public class FunctionsRegistryBuilder(IParser parser, IErrorHandler errorHandler, IStateManager stateManager) : IFunctionsRegistryBuilder
+    public class SemanticAnalyzer(IParser parser, IErrorHandler errorHandler, IStateManager stateManager) : ISemanticAnalyzer
     {
         private FunctionsRegistry _functionsRegistry = null!;
         private DependencyTree<string> _dependencyTree = new();
@@ -15,11 +16,12 @@ namespace CNull.Interpreter.Symbols
         private Dictionary<string, Stack<ImportDirective>> _importsToProcess = [];
         private HashSet<string> _processedModules = [];
 
-        private StandardLibrary _standardLibrary = null!;
+        private const string CNullModule = "CNull";
+        private IStandardLibrary _standardLibrary = null!;
 
         public string RootModule { get; private set; } = string.Empty;
 
-        public FunctionsRegistry? Build(StandardLibrary standardLibrary)
+        public FunctionsRegistry? Analyze(IStandardLibrary standardLibrary)
         {
             _functionsRegistry = new FunctionsRegistry(errorHandler);
             _parsedProgramsCache = [];
@@ -94,7 +96,7 @@ namespace CNull.Interpreter.Symbols
 
                 foreach (var importDirective in importGroup.Distinct())
                 {
-                    if (importDirective.ModuleName == StandardLibrary.CNullModule)
+                    if (importDirective.ModuleName == CNullModule)
                         ProcessStdlibImport(moduleName, importDirective);
                     else _importsToProcess[moduleName].Push(importDirective);
                 }
@@ -110,9 +112,9 @@ namespace CNull.Interpreter.Symbols
 
             if (!_standardLibrary.StandardLibraryFunctions.TryGetValue(requestedHeader, out var function))
                 throw errorHandler.RaiseSemanticError(new FunctionNotFoundError(importDirective.FunctionName,
-                    $"${StandardLibrary.CNullModule}.{importDirective.SubmoduleName}", importDirective.Position.LineNumber));
+                    $"${CNullModule}.{importDirective.SubmoduleName}", importDirective.Position.LineNumber));
 
-            _functionsRegistry.Register(currentModule, function, StandardLibrary.CNullModule);
+            _functionsRegistry.Register(currentModule, function, CNullModule);
         }
 
         private Program? ParseAndCacheProgram()
