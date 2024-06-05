@@ -16,9 +16,22 @@ namespace CNull.IntegrationTests.AcceptanceTests
 
                                  void Main(dict<int, string> args)
                                  {
-                                     int a = StringToInt(ReadLine());
-                                     int b = StringToInt(ReadLine());
-                                     Write(a + b);
+                                     int sum = Sum();
+                                     Write(sum);
+                                 }
+                                 
+                                 int Sum()
+                                 {
+                                    try
+                                    {
+                                        int a = StringToInt(ReadLine());
+                                        int b = StringToInt(ReadLine());
+                                        return a + b;
+                                    }
+                                    catch(e e == "FormatException")
+                                    {
+                                        return null;
+                                    }
                                  }
                                  """;
 
