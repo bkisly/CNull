@@ -28,7 +28,7 @@ namespace CNull.Interpreter.Resolvers
             return (left, right) switch
             {
                 (string, _) => right?.ToString(),
-                (int, float rightFloat) => rightFloat,
+                (int, float rightFloat) => (int)rightFloat,
                 (float, int) => right,
                 (not null, null) => null,
                 _ => throw errorHandler.RaiseSemanticError(new TypeError(GetTypeName(left), GetTypeName(right), environment.CurrentModule, lineNumber))
@@ -47,21 +47,21 @@ namespace CNull.Interpreter.Resolvers
             };
         }
 
-        public bool ResolveGreaterThan(object? left, object? right, int lineNumber)
+        public int ResolveRelational(object? left, object? right, int lineNumber)
         {
             return (left, right) switch
             {
-                (int leftInt, int rightInt) => leftInt > rightInt,
-                (float, int) or (int, float) or (float, float) => Convert.ToSingle(left) > Convert.ToSingle(right),
-                (string leftString, int rightInt) => leftString.Length > rightInt,
-                (int leftInt, string rightString) => leftInt > rightString.Length,
-                (null, _) or (_, null) => InvalidNullUsage<bool>(lineNumber),
+                (int leftInt, int rightInt) => leftInt.CompareTo(rightInt),
+                (float, int) or (int, float) or (float, float) => Convert.ToSingle(left).CompareTo(Convert.ToSingle(right)),
+                (string leftString, int rightInt) => leftString.Length.CompareTo(rightInt),
+                (int leftInt, string rightString) => leftInt.CompareTo(rightString.Length),
+                (null, _) or (_, null) => InvalidNullUsage<int>(lineNumber),
                 _ => throw errorHandler.RaiseSemanticError(new TypeError("relational expression", GetTypeName(left),
                     GetTypeName(right), environment.CurrentModule, lineNumber))
             };
         }
 
-        public bool ResolveEqualTo(object? left, object? right, int lineNumber)
+        public bool ResolveEquality(object? left, object? right, int lineNumber)
         {
             if (left == null || right == null)
                 return left == right;
@@ -80,7 +80,7 @@ namespace CNull.Interpreter.Resolvers
             if (left.GetType() == right.GetType())
                 return left.Equals(right);
 
-            throw errorHandler.RaiseSemanticError(new TypeError("relational expression", GetTypeName(left),
+            throw errorHandler.RaiseSemanticError(new TypeError("equality expression", GetTypeName(left),
                 GetTypeName(right), environment.CurrentModule, lineNumber));
         }
 

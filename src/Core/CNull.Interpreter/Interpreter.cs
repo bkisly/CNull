@@ -324,24 +324,25 @@ namespace CNull.Interpreter
 
         public void Visit(GreaterThanExpression greaterThanExpression)
         {
-            VisitRelationalExpression(greaterThanExpression, _typesResolver.ResolveGreaterThan);
+            VisitRelationalExpression(greaterThanExpression,
+                (l, r, line) => _typesResolver.ResolveRelational(l, r, line) > 0);
         }
 
         public void Visit(LessThanExpression lessThanExpression)
         {
             VisitRelationalExpression(lessThanExpression,
-                (l, r, line) => !_typesResolver.ResolveGreaterThan(l, r, line) && !_typesResolver.ResolveEqualTo(l, r, line));
+                (l, r, line) => _typesResolver.ResolveRelational(l, r, line) < 0);
         }
 
         public void Visit(GreaterThanOrEqualExpression greaterThanOrEqualExpression)
         {
             VisitRelationalExpression(greaterThanOrEqualExpression,
-                (l, r, line) => _typesResolver.ResolveGreaterThan(l, r, line) || _typesResolver.ResolveEqualTo(l, r, line));
+                (l, r, line) => _typesResolver.ResolveRelational(l, r, line) >= 0);
         }
 
         public void Visit(LessThanOrEqualExpression lessThanOrEqualExpression)
         {
-            VisitRelationalExpression(lessThanOrEqualExpression, (l, r, line) => !_typesResolver.ResolveGreaterThan(l, r, line));
+            VisitRelationalExpression(lessThanOrEqualExpression, (l, r, line) => _typesResolver.ResolveRelational(l, r, line) <= 0);
         }
 
         private void VisitRelationalExpression(IBinaryExpression binaryExpression, BooleanBinaryOperationResolver resolver)
@@ -365,12 +366,12 @@ namespace CNull.Interpreter
 
         public void Visit(EqualExpression equalExpression)
         {
-            VisitRelationalExpression(equalExpression, _typesResolver.ResolveEqualTo);
+            VisitRelationalExpression(equalExpression, _typesResolver.ResolveEquality);
         }
 
         public void Visit(NotEqualExpression notEqualExpression)
         {
-            VisitRelationalExpression(notEqualExpression, (l, r, line) => !_typesResolver.ResolveEqualTo(l, r, line));
+            VisitRelationalExpression(notEqualExpression, (l, r, line) => !_typesResolver.ResolveEquality(l, r, line));
         }
 
         public void Visit(AdditionExpression additionExpression)
