@@ -14,6 +14,9 @@ namespace CNull.Interpreter.Context
 
         private ExceptionInfo? _activeException;
 
+        private const int MaxCallStack = 800;
+        public event EventHandler? StackOverflowOccurred;
+
         public ExceptionInfo? ActiveException
         {
             get => _activeException;
@@ -46,12 +49,27 @@ namespace CNull.Interpreter.Context
 
         public void EnterCallContext(Type? returnType, IEnumerable<Variable> localVariables, CallStackRecord callStackRecord)
         {
-            _contextsStack.Push(new CallContext(returnType, localVariables, callStackRecord));
+            if (_contextsStack.Count == MaxCallStack)
+                OnStackOverflowOccurred(this, EventArgs.Empty);
+            else
+            {
+                var context = new CallContext(returnType, localVariables, callStackRecord);
+                context.StackOverflowOccurred += OnStackOverflowOccurred;
+                _contextsStack.Push(context);
+            }
         }
 
         public void ExitCallContext()
         {
-            _contextsStack.Pop();
+            var context = _contextsStack.Pop();
+            context.StackOverflowOccurred -= OnStackOverflowOccurred;
         }
+
+        public IEnumerable<CallStackRecord> GetRecentCallStackRecords(int number)
+        {
+            return _contextsStack.Select(c => c.CallStackRecord).Take(number);
+        }
+
+        private void OnStackOverflowOccurred(object? sender, EventArgs e) => StackOverflowOccurred?.Invoke(sender, e);
     }
 }

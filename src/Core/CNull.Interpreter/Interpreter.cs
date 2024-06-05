@@ -27,16 +27,20 @@ namespace CNull.Interpreter
 
             if (functionsRegistryBuilder.Build(_standardLibrary) is not { } functionsRegistry)
                 return;
+            _functionsRegistry = functionsRegistry;
 
             _environment.CurrentModule = functionsRegistryBuilder.RootModule;
-            _functionsRegistry = functionsRegistry;
+            _environment.StackOverflowOccurred += (_, _)
+                => throw errorHandler.RaiseRuntimeError(
+                    new StackOverflowError(_environment.GetRecentCallStackRecords(100)));
 
             var mainFunction = _functionsRegistry.GetEntryPoint(_environment.CurrentModule)
                                ?? throw errorHandler.RaiseSemanticError(new MissingEntryPointError(_environment.CurrentModule));
 
             var dictContainer = new ValueContainer(typeof(Dictionary<int, string>),
                 new Dictionary<int, string> { [0] = "first", [1] = "second" }, IsPrimitive: false);
-            PerformCall(mainFunction, [dictContainer], 0);
+
+            PerformCall(mainFunction, [dictContainer]);
 
             if (_environment.ActiveException != null)
                 throw errorHandler.RaiseRuntimeError(new UnhandledExceptionError(
@@ -469,7 +473,7 @@ namespace CNull.Interpreter
             }
         }
 
-        private void PerformCall(IFunction function, ValueContainer[] args, int callingLineNumber, string? requestedModule = null)
+        private void PerformCall(IFunction function, ValueContainer[] args, int callingLineNumber = 0, string? requestedModule = null)
         {
             if (function.Parameters.Count() != args.Length)
                 throw new NotImplementedException("Not matching amount of args...");

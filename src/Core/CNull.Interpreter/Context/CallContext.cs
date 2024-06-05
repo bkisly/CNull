@@ -16,6 +16,9 @@ namespace CNull.Interpreter.Context
         public Type? ExpectedReturnType { get; private set; }
         public int LoopCounter { get; private set; }
 
+        public event EventHandler? StackOverflowOccurred;
+
+        private const int MaxLocalVariables = 100;
         private readonly Stack<Scope> _scopes = [];
 
         public CallContext(Type? returnType, IEnumerable<Variable> localVariables, CallStackRecord callStackRecord)
@@ -51,11 +54,19 @@ namespace CNull.Interpreter.Context
 
         public void EnterScope()
         {
-            _scopes.Push(new Scope());
+            if (_scopes.Count == MaxLocalVariables)
+                OnStackOverflowOccurred(this, EventArgs.Empty);
+            else _scopes.Push(new Scope());
         }
 
         public void EnterLoopScope()
         {
+            if (_scopes.Count == MaxLocalVariables)
+            {
+                OnStackOverflowOccurred(this, EventArgs.Empty);
+                return;
+            }
+
             _scopes.Push(new Scope());
             LoopCounter++;
         }
@@ -70,5 +81,7 @@ namespace CNull.Interpreter.Context
         {
             _scopes.Pop();
         }
+
+        private void OnStackOverflowOccurred(object sender, EventArgs e) => StackOverflowOccurred?.Invoke(sender, e);
     }
 }

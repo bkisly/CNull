@@ -42,4 +42,9 @@ namespace CNull.Interpreter.Errors
     {
         public string Message { get; } = Exception;
     }
+
+    public record StackOverflowError(IEnumerable<CallStackRecord> CallStack) : IRuntimeError
+    {
+        public string Message => "Stack overflow. Showing last 100 call stack entries.";
+    }
 }
