@@ -7,6 +7,7 @@
 
     public record ValueContainer(Type Type, object? Value, bool IsPrimitive = true)
     {
+        public Type Type { get; set; } = Type;
         public object? Value { get; set; } = Value;
 
         public ValueContainer Move()

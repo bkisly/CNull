@@ -1,4 +1,4 @@
-# C? - dokumentacja wstępna języka
+# C? - dokumentacja języka
 
 ## Informacje ogólne
 
@@ -12,8 +12,8 @@ Cele przyświecające powstaniu języka C?:
 
 - Język **interpretowany**.
 - Paradygmat **proceduralny**.
-- **Statyczne i silne typowanie.** To wymaganie implikuje możliwość rzutowania jednych typów danych na inne, jak i również niejawnych konwersji przy operacjach na typach liczbowych o różnych zakresach wielkości.
-- **Podstawowe operacje matematyczne** na typach liczbowych (dodawanie, odejmowanie, mnożenie, dzielenie, priorytetyzacja operacji z użyciem nawiasów).
+- **Statyczne i słabe typowanie.** Wszelkie rzutowania typów w języku C? odbywają się niejawnie (jeśli są właściwe), istnieją różne rodzaje konwersji niejawnych.
+- **Podstawowe operacje matematyczne** na typach liczbowych (dodawanie, odejmowanie, mnożenie, dzielenie, reszta z dzielenia, priorytetyzacja operacji z użyciem nawiasów).
 - Udostępnienie operacji **konkatenacji łańcuchów znakowych** oraz **odwoływania się do konkretnych znaków w łańcuchu**.
 - Dostępne są **instrukcje warunkowe *if-else*, pętla *while***.
 - Możliwość **dodawania komentarzy jednolinijkowych**
@@ -24,6 +24,7 @@ Cele przyświecające powstaniu języka C?:
 - **Sygnalizowanie błędów przy próbie operacji na wartości *null***.
 - **Możliwość obsługi wyjątków** w blokach *try-catch*, znanych z innych języków programowania. Wyjątki w C? są jedynie komunikatami tekstowymi (tj. można "rzucać stringa")
 - **Możliwość importowania funkcji z innych plików**, na takiej samej zasadzie jak w przypadku języka Python.
+- **Dostępne funkcje do interakcji ze standardowym wejściem i wyjściem**, zamknięte w bibliotece standardowej.
 
 ### Wymagania niefunkcjonalne
 
@@ -54,6 +55,12 @@ cnull [ścieżka-do-katalogu]
 ```
 
 Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnalizowanie błędu w przypadku niepowodzenia.
+
+Możliwe jest podawanie argumentów wywołania poprzez parametr `--args`:
+
+```shell
+cnull --args first second third
+```
 
 **Inne polecenia interpretera:**
 - `cnull --help` - wyświetlenie instrukcji interpretera
@@ -86,7 +93,7 @@ Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnali
 
 ### Typy danych
 
-Język C? jest typowany **statycznie i silnie**. Domyślnie, **każdy typ danych akceptuje wartość `null`.** Język C?, podobnie jak język C#, dzieli typy na 2 podstawowe grupy:
+Język C? jest typowany **statycznie i słabo**. Domyślnie, **każdy typ danych akceptuje wartość `null`.** Język C?, podobnie jak język C#, dzieli typy na 2 podstawowe grupy:
 - **typy wartościowe** - w przypadku C? są to wszystkie typy prymitywne (łącznie ze `string`). Są one **niemutowalne**, **kopiowane przy przypisaniu** oraz **przekazywane przez wartość** jako argument.
 - **typy referencyjne** - czyli klasy. Są one **mutowalne**, przy przypisaniu **kopiowana jest referencja**, a jako argument są one **przekazywane przez referencję**.
 
@@ -104,16 +111,18 @@ Wyjątki w C? są de facto stringami, które można rzucać i obsługiwać tak, 
 
 ### Dane w programie
 
-- Typowanie w języku C? jest **silne i statyczne**
+- Typowanie w języku C? jest **słabe i statyczne**
 - Argumenty do funkcji przekazywane są w zależności od ich typu:
 	- typy prymitywne - **przez wartość**
 	- typy złożone - **przez referencję**
 - **Konwersje typów**:
 	- następują niejawnie, ponieważ **operator przypisania jednocześnie jest w stanie wykonać rzutowanie w razie potrzeby**. Np. chcąc przypisać wartość typu `float` do typu `int`, zostanie ona automatycznie zrzutowana do typu docelowego, a jeśli to się nie powiedzie, to rzucony zostanie wyjątek.
+	- istnieją również bardziej nietypowe konwersje typów związane z łańcuchami znaków:
+		- porównanie wartości całkowitoliczbowej z łańcuchem znaków skutkuje porównaniem długości tego łańcucha z tą liczbą
+		- przypisanie jakiejkolwiek wartości prymitywnej (poza `null`) do zmiennej typu `string` spowoduje jej skonwertowanie do łańcucha znakowego
 - **Zakres zmiennej** jest ograniczony do bloku kodu, w której jest zdefiniowana, a także do bloków podrzędnych
-- **Funkcje mogą być przeciążane** w obrębie pliku. Przeciążone metody muszą mieć co najmniej różny typ zwracany lub różne listy parametrów
 - **Przykrywanie zmiennych** może występować podczas zdefiniowania zmiennej lokalnej w funkcji, kiedy już zdefiniowano zmienną o tej samej nazwie w pliku. Wówczas w danym kontekście brana pod uwagę jest ta zmienna, która jest na najniższym poziomie zagnieżdżenia. Nie można redefiniować pól i zmiennych lokalnych.
-- W przypadku importowania elementów o tych samych nazwach, należy odnosić się do nich po pełnej nazwie (tj. razem z nazwą modułu).
+- Importowanie funkcji następuje poprzez podanie nazwy modułu oraz nazwy funkcji (po kropce). Funkcje z biblioteki standardowej są dodatkowo grupowane w tzw. podmoduły (przez co odwołujemy się do nich per `CNull.Podmoduł.Funkcja`).
 
 ### Obsługa błędów
 
@@ -122,21 +131,22 @@ Błędy będą obsługiwane przez osobny moduł projektu. Każde wystąpienie b�
 Obsługiwane rodzaje błędów:
 1. **Błędy dostępu do źródła** - zgłaszane w momencie nieprawidłowości odwołania do źródła kodu (np. próba odwołania do nieistniejącego pliku)
 2. **Błędy kompilacji** - błędy związane ze statyczną analizą kodu (wszelkie błędy składniowe, semantyczne lub leksykalne)
-3. **Błędy czasu wykonania** - sygnalizowane w czasie interpretacji programu (np. nieprawidłowe rzutowanie)
+3. **Błędy semantyczne** - sygnalizowane w przypadku wykrycia kodu nieprawidłowego semantycznie (np. niezgodność typów)
+4. **Błędy czasu wykonania** - sygnalizowane w czasie interpretacji programu (np. odwołanie do wartości `null`)
 
 Komunikaty o błędach sformatowane będą w następujący sposób:
-- dla błędów wykrytych przed wykonaniem:
+- dla błędów wykrytych przed wykonaniem lub błędów semantycznych:
 
 ```bash
-C? error: [komunikat o błędzie]
-	in [nazwa pliku] (line [nr linii], column [nr kolumny])
+C? error: [typ błędu]
+Source: [nazwa pliku lub modułu] (line [nr linii], column [nr kolumny])
 ```
 
-- dla błędów czasu wykonania (nieobsłużonych wyjątków) - wypisanie stosu wywołań:
+- dla nieobsłużonych wyjątków - wypisanie stosu wywołań:
 
 ```
 C? unhandled exception ([komunikat z wyjątku]):
-	at [nazwa funkcji, w której wystąpił wyjątek] (line [nr linii])
+	at [nazwa modułu i funkcji, w której wystąpił wyjątek] (line [nr linii])
 ```
 
 ### Przykłady użycia języka
@@ -148,14 +158,21 @@ C? unhandled exception ([komunikat z wyjątku]):
 **1. Obliczenie sumy liczb podanych przez użytkownika**
 
 ```csharp
+import CNull.Console.Write;
 import CNull.Console.WriteLine;
-import CNull.Convert.ConvertToInt;
+import CNull.Convert.StringToInt;
 
-int first = ConvertToInt(ReadLine("Podaj pierwsza liczbe: "));
-int second = ConvertToInt(ReadLine("Podaj druga liczbe: "));
+void Main()
+{
+	Write("Podaj pierwsza liczbe: ");
+	int first = StringToInt(ReadLine());
 
-int result = first + second;
-WriteLine(result);
+	Write("Podaj druga liczbe: ");
+	int second = StringToInt(ReadLine());
+	
+	int result = first + second;
+	WriteLine(result);
+}
 ```
 
 Wynik:
@@ -168,13 +185,16 @@ Podaj druga liczbe: 20
 **2. Złożona operacja matematyczna z niejawnymi konwersjami**
 
 ```csharp
-import CNull.Console;
+import CNull.Console.WriteLine;
 
-int a = 23;
-short b = 14;
-
-int c = (b + a) * (2 - b) / 2;
-WriteLine(c);
+void Main()
+{
+	int a = 23;
+	float b = 14.2;
+	
+	int c = (b + a) * (2 - b) / 2;
+	WriteLine(c);
+}
 ```
 
 Wynik:
@@ -182,66 +202,73 @@ Wynik:
 -222
 ```
 
-**3. Złożona operacja matematyczna z automatycznym rzutowaniem typu**
+**3. Niejawne konwersje na typ `string`**
 
 ```csharp
-import CNull.Console;
+import CNull.Console.WriteLine;
 
-int a = 23;
-short b = 14;
+void Main()
+{
+	int a = 23;
+	string b = 14;
+	
+	string c = a + b;
+	WriteLine(c);
+}
 
-short c = (short)((b + a) * (2 - b) / 2);
-WriteLine(c);
 ```
 
 Wynik:
 ```
--222
+2314
 ```
 
 **4. Deklaracje zmiennych wraz i bez inicjalizacji oraz demonstracja typów danych**
 
 ```csharp
-int a;
-a = 2000;
-a = -2000;
-
-short b = 0;
-b = 300;
-
-char c = 'A';
-c = '';
-string d = "Ala ma kota";
-d = '';
-
-bool e = true;
-e = false;
-
-float f = 2.1234355;
-f = -2.424244;
-f = 123123.123123;
-f = 0.123123;
-f = .12312313;
-
-a = null;
-b = null;
-c = null;
-d = null;
-e = null;
-f = null;
+void Main()
+{
+	int a;
+	a = 2000;
+	a = -2000;
+	
+	char c = 'A';
+	c = '';
+	string d = "Ala ma kota";
+	d = "";
+	
+	bool e = true;
+	e = false;
+	
+	float f = 2.1234355;
+	f = -2.424244;
+	f = 123123.123123;
+	f = 0.123123;
+	f = 0.12312313;
+	
+	a = null;
+	b = null;
+	c = null;
+	d = null;
+	e = null;
+	f = null;
+}
 ```
  
 **5. Prezentacja różnych możliwych identyfikatorów**
 
 ```csharp
-int someVariable;
-int _someVariable;
-int SOME_VARIABLE;
-int _;
-int ________;
-int someVariable1;
-int some_variable_1;
-int _12345;
+void Main()
+{
+	int someVariable;
+	int _someVariable;
+	int SOME_VARIABLE;
+	int _;
+	int ________;
+	int someVariable1;
+	int some_variable_1;
+	int _12345;
+}
 ```
 
 **6. Wyrażenia boolowskie**
@@ -256,15 +283,13 @@ bool d = !(a || b) && a?;
 
 WriteLine(a?);
 WriteLine(c?);
-WriteLine(c);
 WriteLine(d);
 ```
 
 Wynik:
 ```
-true
-false
-null
+True
+False
 false
 ```
 
@@ -297,16 +322,20 @@ C? error on line 1, column 5: Keywords cannot be used as identifiers.
 **3. Odwołanie do wartości `null`**
 
 ```csharp
-int a = 1;
-int b;
-
-int c = a + b;
+void Main()
+{
+	int a = 1;
+	int b;
+	
+	int c = a + b;
+}
 ```
 
 Wynik:
 ```
-C? unhandled exception (NullValueException - Tried to access null value in a non-nullable statement):
-	at Program.cnull (line 4)
+C? unhandled exception (NullValueException):
+	at Program.Main (line: 6)
+	at Program.<entry point>
 ```
 
 #### Przykłady złożone - funkcje, instrukcje sterujące i obsługa wyjątków
@@ -318,7 +347,7 @@ import CNull.Console.WriteLine;
 
 int Factorial(int n)
 {
-	if (!n?) // Check if the given value isn't null. Return null if yes.
+	if (n?) // Check if the given value is null. Return null if yes.
 	{
 		return null;
 	}
@@ -333,11 +362,14 @@ int Factorial(int n)
 	}
 }
 
-WriteLine(Factorial(0));
-WriteLine(Factorial(1));
-WriteLine(Factorial(5));
-WriteLine(Factorial(null));
-WriteLine(Factorial(1000000000));
+void Main()
+{
+	WriteLine(Factorial(0));
+	WriteLine(Factorial(1));
+	WriteLine(Factorial(5));
+	WriteLine(Factorial(null)?);
+	WriteLine(Factorial(1000000000));
+}
 ```
 
 Wynik:
@@ -345,66 +377,21 @@ Wynik:
 1
 1
 120
-null
+True
 C? unhandled exception (Stack overflow):
-	at Program.cnull (line 24)
-	at Program.cnull (line 16)
+	at Program.Factorial (line 16)
+	at Program.Factorial (line 16)
+	...
 ```
 
-**2. Definicja własnego wyjątku, rzucenie go w przykładowej funkcji oraz jego obsługa.**
+**2. Przekazywanie przez wartość typów prymitywnych**
 
 ```csharp
 import CNull.Console.WriteLine;
-import CNull.Convert.ConvertToString;
-
-exception MyCustomException
-{
-	int InvalidValue;
-}
-
-void Foo(int a, int b)
-{
-	if (b > a)
-	{
-		throw new MyCustomException(b);
-	}
-}
-
-try
-{
-	Foo(20, 10);
-	Foo(10, 10);
-	Foo(10, 20);
-	Foo(10, 40);
-	Foo(null, null);
-}
-catch (MyCustomException ex)
-{
-	WriteLine("Invalid value was: " + ConvertToString(ex.InvalidValue));
-}
-
-Foo(null, 20);
-```
-
-Wynik:
-```
-Invalid value was: 20
-C? unhandled exception (NullValueException - Tried to access null value in a non-nullable statement):
-	at Program.cs (line 28)
-	at Program.cs (line 11)
-```
-
-
-**3. Przekazywanie przez wartość typów prymitywnych**
-
-```csharp
-import CNull.Console.WriteLine;
-
-int a = 20;
 
 void Process(int value)
 {
-	while (value <= 50)
+	while (value < 50)
 	{
 		value = value + 1;
 	}
@@ -412,8 +399,12 @@ void Process(int value)
 	WriteLine(value);
 }
 
-Process(a);
-WriteLine(a);
+void Main()
+{
+	int a = 20;
+	Process(a);
+	WriteLine(a);
+}
 ```
 
 Wynik:
@@ -422,44 +413,39 @@ Wynik:
 20
 ```
 
-**4. Operacje na słowniku**
+**3. Operacje na słowniku**
 
 ```csharp
 import CNull.Console.WriteLine;
 
-dict<int, bool> d;
-
-WriteLine(dict.Count());
-
-d.Add(1, true);
-d.Add(2, false);
-d.Add(3, null);
-
-WriteLine(d.Count());
-WriteLine(d.Get(1));
-WriteLine(d.Get(3));
-WriteLine(d.Get(200));
-
-d.Add(null, null);
+void Main()
+{
+	dict<int, bool> d;
+	
+	d.Add(1, true);
+	d.Add(2, false);
+	
+	WriteLine(d.Get(1));
+	WriteLine(d.Get(3));
+	WriteLine(d.Get(200)?);
+	
+	d.Add(null, null);
+}
 ```
 
 Wynik:
 ```
-0
-3
-true
-null
-null
-C? unhandled exception (NullValueException - Cannot add a dictionary entry with null key):
-	at Program.cnull (line 16)
+True
+False
+True
+C? unhandled exception (NullValueException):
+	at Program.Main (line 15)
 ```
 
-**5. Wielokrotne, zagnieżdżone wywołania funkcji razem z przekazywaniem argumentu przez wartość**
+**4. Wielokrotne, zagnieżdżone wywołania funkcji razem z przekazywaniem argumentu przez wartość**
 
 ```csharp
 import CNull.Console.WriteLine;
-
-int a = 20;
 
 int A(int val)
 {
@@ -499,10 +485,14 @@ int C(int val)
 	return B(val);
 }
 
-WriteLine(C(100));
-WriteLine(C(10));
-WriteLine(C(a));
-WriteLine(a);
+void Main()
+{
+	int a = 20;
+	WriteLine(C(100));
+	WriteLine(C(10));
+	WriteLine(C(a));
+	WriteLine(a);
+}
 ```
 
 Wynik:
@@ -513,44 +503,6 @@ Wynik:
 20
 ```
 
-**6. Definicja klasy i przekazywanie przez referencję typu złożonego.**
-
-```csharp
-import CNull.Console.WriteLine;
-import CNull.Convert.ConvertToString;
-
-class Person
-{
-	int Age = 20;
-	string Name;
-
-	string IntroduceMyself()
-	{
-		if(Age? || Name?)
-		{
-			return null;
-		}
-
-		return "Hi, my name is " + Name + " and I'm " + ConvertToString(Age) + " years old.";
-	}
-}
-
-Person p = new Person;
-
-void SetPersonInfo(Person person, int age, string name)
-{
-	person.Age = age;
-	person.Name = name;
-}
-
-SetPersonInfo(p, 10, "Bruce");
-WriteLine(p.IntroduceMyself());
-```
-
-Wynik:
-```
-Hi, my name is Bruce and I'm 10 years old.
-```
 ### Opis gramatyki EBNF
 
 #### Warstwa leksykalna
@@ -565,19 +517,19 @@ Opis gramatyki na poziomie składni znajduje się w pliku [syntactic_grammar.ebn
 
 ### Struktura projektu
 
-Projekt C? będzie zrealizowany w języku C# w formie modularnej. Każdy moduł realizowany jest przez osobny projekt biblioteki klas C# albo aplikację konsolową jako warstwa front-end.
+Projekt C? został zrealizowany w języku C# w formie modularnej. Każdy moduł realizowany jest przez osobny projekt biblioteki klas C# albo aplikację konsolową jako warstwa front-end. Cały "rdzeń" interpretera dla tego języka został zamknięty w formie ściśle odseparowanej od używanej warstwy prezentacji oraz używanej obsługi standardowego wejścia i wyjścia, co sprawia, że może być on dystrybuowany jako biblioteka, reużywalna w różnych warstwach prezentacji.
 
 Główne moduły składające się na projekt:
 - **`CNull.Source`** - biblioteka klas realizująca dostęp do źródła kodu oraz udostępnianie ich lekserowi w zunifikowanej formie nadającej się do przeprowadzenia analizy leksykalnej. Główne elementy składające się na tę bibliotekę:
 	- Interfejs pobierania znaków ze źródła udostępniany lekserowi
 	- Klasa realizująca dostęp do danych z plików i ich przetwarzanie z pomocą strumieni
 	- Elementy pomocnicze dla warstwy dostępu do danych
-	- Zdarzenia błędów charakterystyczne dla procesu dostępu do danych
+	- Definicje błędów charakterystycznych dla procesu dostępu do danych
 - **`CNull.Lexer`** - biblioteka klas realizująca analizę leksykalną, tworzenie tokenów i udostępnianie ich parserowi w formie nadającej się do przeprowadzenia analizy składniowej. Główne elementy składające się na tę bibliotekę:
 	- Analizator leksykalny (w tym jego interfejs udostępniany parserowi)
 	- Generyczna implementacja tokenu
 	- Enumeracje i mapy dla typów tokenów
-	- Zdarzenia błędów charakterystyczne dla analizy leksykalnej
+	- Definicje błędów charakterystycznych dla analizy leksykalnej
 	- Elementy pomocnicze dla analizatora leksykalnego
 - **`CNull.Parser`** - biblioteka klas realizująca analizę składniową, tworzenie drzewa rozbioru składniowego i udostępnienie go w formie nadającej się do przeprowadzenia analizy semantycznej. Główne elementy składające się na tę bibliotekę:
 	- Analizator składniowy (w tym jego interfejs udostępniany analizatorowi semantycznemu)
@@ -585,19 +537,20 @@ Główne moduły składające się na projekt:
 	- Implementację proxy realizującego filtrowanie tokenów komentarzy
 	- Zdarzenia błędów charakterystyczne dla analizy składniowej
 	- Elementy pomocnicze dla analizatora składniowego
-- **`CNull.Semantics`** - biblioteka klas realizująca analizę semantyczną otrzymanego drzewa rozbioru składniowego i umożliwienie wykonanie programu interpreterowi w formie sekwencji instrukcji. Główne elementy składające się na tę bibliotekę:
+- **`CNull.Semantics`** - biblioteka klas realizująca budowanie rejestru funkcji dostępnych w zebranych razem modułach programu.
 	- Analizator semantyczny (w tym jego interfejs udostępniany interpreterowi)
-	- Abstrakcję pozwalającą na reprezentację instrukcji
-	- Zdarzenia błędów charakterystyczne dla analizy semantycznej
+	- Definicje błędów charakterystycznych dla analizy semantycznej
 	- Elementy pomocnicze dla analizatora semantycznego
 - **`CNull.Interpreter`** - biblioteka klas stanowiąca implementację interpretera - w tym miejscu wykonywany jest program C?. Główne elementy składające się na tę bibliotekę:
 	- Interpreter (w tym jego interfejs udostępniany modułom klienckim, w tym wypadku aplikacji konsolowej)
-	- Zdarzenia błędów charakterystyczne dla interpretera
-	- Elementy pomocnicze dla interpretera
+	- Biblioteka standardowa
+	- Resolver typów
+	- Klasy obsługujące kontekst wykonania programu oraz elementy pomocnicze dla interpretera
+	- Fasadę udostępniającą uproszczony interfejs całej biblioteki "rdzenia" oraz konfigurującą wszystkie komponenty
 - **`CNull`** - aplikacja konsolowa realizująca interakcję z użytkownikiem oraz obsługę jego poleceń. Posiada odwołanie do interpretera, któremu zleca wykonanie programu podanego przez użytkownika. Jej jedyną odpowiedzialnością jest obsługa CLI, wypisywanie błędów na ekran (zgłaszanych przez zdarzenia modułu obsługi błędów) oraz przekazywanie polecenia wykonania programu interpreterowi.
 
 Dodatkowe moduły:
-- **`CNull.ErrorHandler`** - moduł odpowiadający za obsługę błędów zgłaszanych przez poszczególne warstwy programu. Jego zadaniem jest subskrypcja zdarzeń za pośrednictwem agregatora zdarzeń, następnie ich obsługa (na którą mogą składać się jakiekolwiek dodatkowe czynności potrzebne przy ich obsłudze, np. zrzucanie pewnych informacji do logów) oraz przekazanie informacji o błędzie "front-endowi" w formie pojedynczego zdarzenia, z informacjami koniecznymi do realizacji wyświetlenia błędu.
+- **`CNull.ErrorHandler`** - moduł odpowiadający za obsługę błędów zgłaszanych przez poszczególne warstwy programu. Udostępnia interfejs do zgłaszania błędów, po czym przeprowadza ich obsługę (na którą mogą składać się jakiekolwiek dodatkowe czynności potrzebne przy ich obsłudze, np. zrzucanie pewnych informacji do logów) oraz przekazanie informacji o błędzie "front-endowi" w formie pojedynczego zdarzenia, z informacjami koniecznymi do realizacji wyświetlenia błędu.
 - **`CNull.Common`** - moduł zawierający elementy pomocnicze i wspólne dla wszystkich składników programu.
 
 Projekty testów:
@@ -606,7 +559,9 @@ Projekty testów:
 
 Komunikacja między głównymi modułami następuje w taki sposób, że dany moduł ma powiązania jedynie z modułem znajdującym się bezpośrednio "pod nim" (tj. lekser może mieć zależność jedynie od źródła, parser od leksera itd.). Każdy z modułów głównych ma dostęp do modułu obsługi błędów. Wszystkie moduły mają dostęp do modułu elementów wspólnych.
 
-Aby ułatwić testowanie oraz zarządzanie zależnościami, główne obiekty będą operować na interfejsach swoich zależności, a zarządzanie nimi będzie realizowane przez dependency injection.
+Aby ułatwić testowanie oraz zarządzanie zależnościami, główne obiekty będą operować na interfejsach swoich zależności, a zarządzanie nimi będzie realizowane przez dependency injection. 
+
+Warto nadmienić, że interpreter nie ma bezpośrednio uwiązany ze standardowym wyjściem i wejściem konsoli. Udostępniane są mu tzw. callbacki, które realizują operacje wypisania lub pobrania zawartości z odpowiednich standardowych strumieni. Dzięki temu warstwa prezentacji dla interpretera języka C? może zostać wykonana w niemal dowolny sposób (nie tylko jako interfejs CLI).
 
 ### Testowanie
 

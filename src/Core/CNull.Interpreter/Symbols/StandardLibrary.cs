@@ -184,8 +184,8 @@ namespace CNull.Interpreter.Symbols
             if (!type.IsGenericType)
                 return false;
 
-            var realKeyType = TypesResolver.ResolvePrimitiveType(keyType);
-            var realValueType = TypesResolver.ResolvePrimitiveType(valueType);
+            var realKeyType = TypesResolver.ResolvePrimitiveType(keyType)?.MakeNullableType();
+            var realValueType = TypesResolver.ResolvePrimitiveType(valueType)?.MakeNullableType();
             var args = type.GetGenericArguments();
             return type.GetGenericTypeDefinition() == typeof(Dictionary<,>)
                    && args[0].MakeNullableType() == realKeyType

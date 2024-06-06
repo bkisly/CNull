@@ -1,6 +1,7 @@
 ﻿using CNull.ErrorHandler;
 using CNull.Interpreter.Context;
 using CNull.Interpreter.Errors;
+using CNull.Interpreter.Extensions;
 using CNull.Parser;
 using CNull.Parser.Productions;
 using CNull.Semantics.Errors;
@@ -15,8 +16,20 @@ namespace CNull.Interpreter.Resolvers
     {
         public object? ResolveAssignment(ValueContainer left, ValueContainer right, int lineNumber)
         {
-            return left.Type == right.Type ? right.Value : ResolveAssignmentValue(left.Value, right.Value, lineNumber);
-        }
+            if (left.Type == right.Type)
+                return right.Value;
+            if (left.Type == typeof(string) && right.IsPrimitive)
+                return right.Value?.ToString();
+
+            var typesPair = (left.Type, right.Type);
+            if (typesPair == (typeof(int?), typeof(float?)))
+                return right.Value != null ? Convert.ToInt32(right.Value) : null;
+            if(typesPair == (typeof(float?), typeof(int?)))
+                return right.Value != null ? Convert.ToSingle(right.Value): null;
+
+            throw errorHandler.RaiseSemanticError(new TypeError(left.Type.Name, right.Type.Name,
+                environment.CurrentModule, lineNumber));
+        }     
 
         public object? ResolveAssignment(object? left, object? right, int lineNumber)
         {
@@ -31,7 +44,8 @@ namespace CNull.Interpreter.Resolvers
                 (int, float rightFloat) => (int)rightFloat,
                 (float, int) => right,
                 (not null, null) => null,
-                _ => throw errorHandler.RaiseSemanticError(new TypeError(GetTypeName(left), GetTypeName(right), environment.CurrentModule, lineNumber))
+                _ => throw errorHandler.RaiseSemanticError(new TypeError(GetTypeName(left), GetTypeName(right), 
+                    environment.CurrentModule, lineNumber))
             };
         }
 
@@ -195,7 +209,7 @@ namespace CNull.Interpreter.Resolvers
             var keyType = ResolvePrimitiveType(type.KeyType);
             var valueType = ResolvePrimitiveType(type.ValueType);
 
-            return typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
+            return typeof(Dictionary<,>).MakeGenericType(keyType.MakeNullableType(), valueType.MakeNullableType());
         }
 
         private static Type ResolvePrimitiveType(PrimitiveType type)
@@ -207,10 +221,10 @@ namespace CNull.Interpreter.Resolvers
         {
             return type switch
             {
-                PrimitiveTypes.Boolean => typeof(bool?),
-                PrimitiveTypes.Char => typeof(char?),
-                PrimitiveTypes.Float => typeof(float?),
-                PrimitiveTypes.Integer => typeof(int?),
+                PrimitiveTypes.Boolean => typeof(bool),
+                PrimitiveTypes.Char => typeof(char),
+                PrimitiveTypes.Float => typeof(float),
+                PrimitiveTypes.Integer => typeof(int),
                 PrimitiveTypes.String => typeof(string),
                 _ => null
             };

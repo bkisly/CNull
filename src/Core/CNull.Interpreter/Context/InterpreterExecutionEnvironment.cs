@@ -13,7 +13,7 @@ namespace CNull.Interpreter.Context
 
         private ExceptionInfo? _activeException;
 
-        private const int MaxCallStack = 800;
+        private const int MaxCallStack = 500;
         public event EventHandler? StackOverflowOccurred;
 
         public ExceptionInfo? ActiveException

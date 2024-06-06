@@ -1,7 +1,7 @@
 (*Start symbol and essential elements*)
 
 document                        = { import_directive }, { function_definition };
-import_directive                = 'import', identifier, { '.', identifier }, ';';
+import_directive                = 'import', identifier, '.', identifier, [ '.', identifier ], ';';
 
 (*Functions, methods and types*)
 

@@ -107,7 +107,8 @@ namespace CNull.Interpreter
             {
                 try
                 {
-                    initializationValueContainer = VisitExpression(variableDeclaration.InitializationExpression);
+                    var initExpressionContainer = VisitExpression(variableDeclaration.InitializationExpression);
+                    initializationValueContainer = ValueContainerFactory(variableDeclaration.Type, initExpressionContainer.Value);
                 }
                 catch (ErrorInExpressionException)
                 {
@@ -125,7 +126,16 @@ namespace CNull.Interpreter
             }
 
             var variable = new Variable(variableDeclaration.Name, initializationValueContainer);
-            _environment.CurrentContext.DeclareVariable(variable);
+
+            try
+            {
+                _environment.CurrentContext.DeclareVariable(variable);
+            }
+            catch (ArgumentException)
+            {
+                throw errorHandler.RaiseSemanticError(new VariableRedeclarationError(_environment.CurrentModule,
+                    variableDeclaration.Name, variableDeclaration.Position.LineNumber));
+            }
         }
 
         public void Visit(ExpressionStatement expressionStatement)
@@ -182,20 +192,28 @@ namespace CNull.Interpreter
 
         public void Visit(WhileStatement whileStatement)
         {
-            while (VisitBooleanExpression(whileStatement.BooleanExpression))
+            try
             {
-                _environment.CurrentContext.EnterLoopScope();
-                whileStatement.Body.Accept(this);
-                _environment.CurrentContext.ExitLoopScope();
+                while (_environment is { ActiveException: null, CurrentContext.IsReturning: false }
+                       && VisitBooleanExpression(whileStatement.BooleanExpression))
+                {
+                    _environment.CurrentContext.EnterLoopScope();
+                    whileStatement.Body.Accept(this);
+                    _environment.CurrentContext.ExitLoopScope();
 
-                if (_environment.CurrentContext.IsBreaking)
-                    break;
+                    if (_environment.CurrentContext.IsBreaking)
+                        break;
 
-                _environment.CurrentContext.IsContinuing = false;
+                    _environment.CurrentContext.IsContinuing = false;
+                }
             }
-
-            _environment.CurrentContext.IsContinuing = false;
-            _environment.CurrentContext.IsBreaking = false;
+            catch (ErrorInExpressionException)
+            { }
+            finally
+            {
+                _environment.CurrentContext.IsContinuing = false;
+                _environment.CurrentContext.IsBreaking = false;
+            }
         }
           
         public void Visit(TryStatement tryCatchStatement)
@@ -479,6 +497,11 @@ namespace CNull.Interpreter
             if (function.Parameters.Count() != args.Length)
                 throw errorHandler.RaiseSemanticError(new InvalidArgumentsCountError(function.Parameters.Count(),
                     args.Length, _environment.CurrentModule, callingLineNumber));
+
+            var parameterNames = function.Parameters.Select(p => p.Name).ToArray();
+            if (parameterNames.Distinct().Count() != parameterNames.Length)
+                throw errorHandler.RaiseSemanticError(new DuplicateParameterNameError(_environment.CurrentModule,
+                    function.Parameters.First().Position.LineNumber));
 
             var returnType = TypesResolver.ResolveReturnType(function.ReturnType);
             var localVariables = new List<Variable>();

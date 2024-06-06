@@ -12,6 +12,16 @@ namespace CNull.Semantics.Errors
         public string Message => $"Function with name: {FunctionName} has already been defined.";
     }
 
+    public record VariableRedeclarationError(string ModuleName, string VariableName, int? LineNumber = null) : ISemanticError
+    {
+        public string Message => $"Variable with name: {VariableName} has already been defined in the current scope.";
+    }
+
+    public record DuplicateParameterNameError(string ModuleName, int? LineNumber = null) : ISemanticError
+    {
+        public string Message => $"The function has duplicate parameter names.";
+    }
+
     public record FunctionNotFoundError(string FunctionName, string ModuleName, int? LineNumber = null) : ISemanticError
     {
         public string Message => $"The function: {FunctionName} was not found in module: {ModuleName}.";

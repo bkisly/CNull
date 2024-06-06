@@ -51,7 +51,9 @@ namespace CNull.Interpreter
                 .AddCommonServices();
 
             builder.Logging.ClearProviders();
-            builder.Logging.AddFile($"{DateTime.Now:yyyy-M-d-hh-mm-ss}.log", false);
+            builder.Logging.AddFile(
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CNull/Logs", $"{DateTime.Now:yyyy-M-d-hh-mm-ss}.log"),
+                false);
 
             _host = builder.Build();
             _serviceScope = _host.Services.CreateScope();
