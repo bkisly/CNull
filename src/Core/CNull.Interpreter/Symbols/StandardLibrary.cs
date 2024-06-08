@@ -130,7 +130,7 @@ namespace CNull.Interpreter.Symbols
                             ),
 
                             new Parameter(
-                                new PrimitiveType(keyType, new Position()),
+                                new PrimitiveType(valueType, new Position()),
                                 "value",
                                 new Position()
                             ),
@@ -149,7 +149,7 @@ namespace CNull.Interpreter.Symbols
                             ),
 
                             new Parameter(
-                                new PrimitiveType(keyType, new Position()),
+                                new PrimitiveType(valueType, new Position()),
                                 "value",
                                 new Position()
                             ),

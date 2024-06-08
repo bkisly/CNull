@@ -489,7 +489,7 @@ namespace CNull.Interpreter
                 index++;
             }
 
-            return new ValueContainer(typeof(Dictionary<int, string>), dictionary, IsPrimitive: false);
+            return new ValueContainer(typeof(Dictionary<int?, string>), dictionary, IsPrimitive: false);
         }
 
         private void PerformCall(IFunction function, ValueContainer[] args, int callingLineNumber = 0, string? requestedModule = null)
@@ -506,7 +506,13 @@ namespace CNull.Interpreter
             var returnType = TypesResolver.ResolveReturnType(function.ReturnType);
             var localVariables = new List<Variable>();
             foreach (var (parameter, argument) in function.Parameters.Zip(args))
-                localVariables.Add(new Variable(parameter.Name, argument.Move()));
+            {
+                var value = _typesResolver.ResolveAssignment(ValueContainerFactory(parameter.Type, null), argument,
+                    callingLineNumber);
+                argument.Value = value;
+                localVariables.Add(new Variable(parameter.Name, argument));
+            }
+
 
             var lastModule = _environment.CurrentModule;
             var lastFunction = _environment.CurrentFunction;
