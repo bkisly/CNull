@@ -1,161 +1,158 @@
-# C? - dokumentacja języka
+# C? - language documentation
 
-## Informacje ogólne
+## General information
 
-**C?** (czytane *C-null*) jest **interpretowanym, proceduralnym językiem wysokiego poziomu**, który swoją składnią przypomina języki C, C++ i C#. Główną cechą charakterystyczną języka C? jest **domyślna nullowalność wszystkich typów danych** (w tym typów prymitywnych) i jednoczesna **kontrola odwołań do wartości *null***.
+**C?** (read as *C-null*) is an **interpreted, procedural high-level language**, which syntax is similar to C, C++ or C# languages. The main feature of the C? language is **default nullability of all data types** (including primitive types) and **null-access control**.
 
-Cele przyświecające powstaniu języka C?:
-- połączenie **możliwości szybkiego pisania programów w stylu skryptowym** znanym z języków Python lub JavaScript razem z **przejrzystością, spójnością składni oraz bardzo czytelnymi konwencjami nazewniczymi** znanymi z języka C#, przez co język C? będzie językiem przyjaznym programiście, umożliwiającym szybkie pisanie programów
-- **wbudowanie w język możliwości dodania informacji zwrotnej o powodzeniu wykonywanych w programie operacji**, co jest mechanizmem znanym z języka Rust
+Goals of the C? language:
+- connecting **the ability for quick coding in scripting style** known from Python or JavaScript, along with clarity and consistency of the syntax and easy-to-read naming convetions known from the C# language, what makes C programmer-friendly,
+- **language built-in information about the success of executed operations** in the program, known from the Rust language.
+### General set of functional requirements
 
-### Ogólne zestawienie wymagań funkcjonalnych
+- **Interpreted** language.
+- **Procedural** paradigm.
+- **Static and weak typing**. All casting operations in C? are executed implicitly (if they are semantically correct). There are different types of implicit conversions.
+- **Essential mathematical operations** on numeric types (addition, subtraction, multiplication, division, modulo, prioritizing using parenthesis).
+- **String concatenation** and **access to particular characters** by index.
+- Ability to create **custom, programmer-defined functions**, which can contain local variables.
+- **`if`-`else` statements, `while` loop.**
+- **Single-line comments** available.
+- **Default acceptance of `null` value for all data types**, including primitive types.
+- **Built-in data collection** (dictionary), as the example of a complex type, having its own interface for adding, retrieving, setting and deleting elements. The key in this dictionary can never be a `null` value,
+- Errors signalized during improper null access.
+- **Exception handling in `try`-`catch` blocks**, known from other programming languages. All exceptions in C? are strings. Possible exception filtering in `catch` blocks.
+- **Possibility to create multi-file programs** and **import selected functions from other modules**, similarly to the Python language.
+- Available functions for interacting with standard input and output, closed in the **standard library**.
 
-- Język **interpretowany**.
-- Paradygmat **proceduralny**.
-- **Statyczne i słabe typowanie.** Wszelkie rzutowania typów w języku C? odbywają się niejawnie (jeśli są właściwe), istnieją różne rodzaje konwersji niejawnych.
-- **Podstawowe operacje matematyczne** na typach liczbowych (dodawanie, odejmowanie, mnożenie, dzielenie, reszta z dzielenia, priorytetyzacja operacji z użyciem nawiasów).
-- Udostępnienie operacji **konkatenacji łańcuchów znakowych** oraz **odwoływania się do konkretnych znaków w łańcuchu**.
-- Dostępne są **instrukcje warunkowe *if-else*, pętla *while***.
-- Możliwość **dodawania komentarzy jednolinijkowych**
-- **Programista może tworzyć własne funkcje**, w których może definiować zmienne lokalne.
-- Struktura kodu napisanego w języku C? przypomina tę znaną z języka C/C++.
-- **Domyślna akceptacja wartości *null*** przez wszystkie typy, w tym wszystkie typy prymitywne.
-- Wbudowana **kolekcja danych (słownik)**, będąca przykładem typu złożonego, posiadająca własny interfejs umożliwiający dodawanie, usuwanie, wyszukiwanie i sortowanie elementów. **Klucz w takim słowniku nie może mieć wartości *null***.
-- **Sygnalizowanie błędów przy próbie operacji na wartości *null***.
-- **Możliwość obsługi wyjątków** w blokach *try-catch*, znanych z innych języków programowania. Wyjątki w C? są jedynie komunikatami tekstowymi (tj. można "rzucać stringa")
-- **Możliwość importowania funkcji z innych plików**, na takiej samej zasadzie jak w przypadku języka Python.
-- **Dostępne funkcje do interakcji ze standardowym wejściem i wyjściem**, zamknięte w bibliotece standardowej.
+### Non-functional requirements
 
-### Wymagania niefunkcjonalne
+- **Multi-platform** - interpreter for the C? language is available for Windows, macOS and Linux operating systems.
+- **Reliability of the interpreter** - every non-standard situation is handled properly by the interpreter, thus it is impossible for it to terminate the execution unexpectedly.
+- **Programmer-friendly** - syntax and naming conventions defined by the C? language support the clarity of the code and being easy-to-read.
+- **Ability for quick coding** - a little amount of preparatory code is required for C? programs to start working.
+- **Security** - being high-level and featuring data access control and reliability of the interpreter, C? is a secure language.
 
-- **Wieloplatformowość** - interpreter dla języka C? będzie dostępny na platformy Windows, macOS oraz Linux.
-- **Niezawodność interpretera** - każda niestandardowa sytuacja będzie obsługiwana w odpowiedni sposób przez interpreter, przez co niemożliwe będzie, aby interpreter w nieoczekiwany sposób zakończył swoje działanie.
-- **Przyjazność programiście** - składnia oraz konwencje nazewnicze wykorzystywane w języku C? będą wspierać czytelność kodu oraz łatwość poruszania się po nim.
-- **Możliwość szybkiego rozpoczęcia pisania programów** - język C? będzie można wykorzystywać jako język skryptowy, dzięki czemu nie będzie konieczności uwzględniania sporej ilości kodu po to, aby program mógł się uruchomić.
-- **Bezpieczeństwo** - działanie na wysokim poziomie, kontrola dostępu do danych oraz odporność interpretera na sytuacje nietypowe uczynią język C? bezpiecznym.
+### Executing the programs and interacting with the interpreter
 
-### Sposób uruchomienia programu oraz interakcja z interpreterem
-
-Interpreter języka C? udostępnia CLI umożliwiające uruchamianie programów z terminala. Sposób uruchomienia programu przeprowadzany jest w sposób analogiczny do języka Python:
+Interpreter of the C? language provides the CLI, enabling the user to execute their programs from the terminal. Launching the programs is similar to Python:
 
 ```bash
-cnull [ścieżka-do-pliku-startowego]
+cnull [main-file-path]
 ```
 
-Konwencjonalnie pliki zawierające kod języka C? mają rozszerzenie `.cnull`. Istnieje również możliwość szybszego uruchamiania programów C?, jeśli pracujemy z wieloplikowym projektem. Jeżeli w katalogu roboczym znajduje się plik `Program.cnull` (konwencjonalnie traktowany jako "punkt wejścia" programu), to do jego uruchomienia wystarczy wywołanie polecenia:
+Conventionally, the extension of C? source files is `.cnull`. It is also possible to launch C? programs in a more simple way, if we work with a multi-module program. If a file `Program.cnull` exists in the working directory, the program can be launched using the following command:
 
 ```bash
 cnull
 ```
 
-Jeżeli nie znajdujemy się w katalogu z projektem, możemy także użyć polecenia:
+If our working directory is different than the project directory, we can also used the command:
 
 ```bash
-cnull [ścieżka-do-katalogu]
+cnull [path-to-the-directory]
 ```
 
-Spowoduje to uruchomienie pliku `Program.cnull` w podanym katalogu lub zasygnalizowanie błędu w przypadku niepowodzenia.
+This will result in executing the program from the `Program.cnull` file from the given directory, or notifying about the error in case of failure.
 
-Możliwe jest podawanie argumentów wywołania poprzez parametr `--args`:
+It is possible to pass command-line arguments using `--args` parameter:
 
 ```shell
 cnull --args first second third
 ```
 
-**Inne polecenia interpretera:**
-- `cnull --help` - wyświetlenie instrukcji interpretera
-- `cnull --version` - wyświetlenie używanej wersji interpretera
+**Other commands**:
+- `cnull --help` - displays the instructions.
+- `cnull --version` - displays the current version of the interpreter.
 
-## Specyfikacja języka
+## Language specification
 
-### Elementy języka
+### Language elements
 
-#### Literały, identyfikatory i operatory
+#### Literals, identifiers and operators
 
-1. **Stałe**
-	- **stałe liczbowe** - interpretowane w formacie dziesiętnym. Niedozwolone jest poprzedzanie stałych zerami.
-		- całkowitoliczbowe - `0, -250, 12345`
-		- zmiennoprzecinkowe - `0.24`, `-1.4567`, `1234.5678`, `0.290`. 
-	- **stałe tekstowe** - ujmowane znakiem cudzysłowu - `"przykładowy tekst"`, `"Ala ma kota"`
-	- **stałe znakowe** - ujmowane znakiem apostrofu. Mogą zawierać jedynie pojedynczy znak - `'a', 'A', 'h'`
-	- **stałe boolowskie** - `true`, `false`
-	- **stała wartości pustej** - `null`
-2. **Identyfikatory** - mogą zawierać jedynie litery, znaki podkreślenia oraz cyfry (z czego cyfry nie może być znakiem rozpoczynającym identyfikator). Zasady tworzenia identyfikatorów są takie same dla zmiennych i funkcji. Maksymalna długość identyfikatora wynosi 256 znaków. `myVariable`, `MYVARIABLE`, `My_Variable`, `_myVariable1`, `____`. 
-3. **Operatory**
-	- **matematyczne** - `+`, `-`, `*`, `/`, `%`
-	- **priorytetu** - `(`, `)`
-	- **przypisania** - `=`
-	- **porównania** - `<`, `<=`, `>`, `>=`, `==`, `!=`
-	- **boolowskie** - `&&`, `||`, `!`, `?` (sprawdzenie, czy wartość jest pusta)
-	- **wyłuskania** - `.`
-4. **Oznaczenie granic bloku kodu** - `{`, `}`
-5. **Komentarze** - `// przykładowy komentarz jednolinijkowy`
+1. **Constants**
+	- **numeric constants** - interpreted in decimal format. Zero-prefixed numeric values are not allowed.
+		- integer - `0, -250, 12345`
+		- floating-point - `0.24`, `-1.4567`, `1234.5678`, `0.290`. 
+	- **string literals** - embraced by double quotes - `"sample text"`, `"lorem ipsum"`, `""`
+	- **char literals** - embraced by single quotes. Can contain contain only a single character, cannot be empty - `'a'`, `'A'`, `'h'`
+	- **boolean literals** - `true`, `false`
+	- **null value literal** - `null`
+2. **Identifiers** - can contain only letters, underscore characters and digits (which cannot be the prefix of the identifier). Identifiers building rules remain the same for variables and functions. Maximum identifier length is 256 characters - `myVariable`, `MYVARIABLE`, `My_Variable`, `_myVariable1`, `____`. 
+3. **Operators**
+	- **arithmetical** - `+`, `-`, `*`, `/`, `%`
+	- **prioritizing** - `(`, `)`
+	- **assignment** - `=`
+	- **relational** - `<`, `<=`, `>`, `>=`, `==`, `!=`
+	- **boolean** - `&&`, `||`, `!`, `?` (null-checking)
+	- **member access** - `.`
+4. **Setting code block boundaries** - `{`, `}`
+5. **Comments** - `// sample single-line comment`
+### Data types
 
-### Typy danych
+C? is **statically and weakly typed**. By default, **every data type accepts the `null` value**.  The C? languages, similarly to C#, separates the types into 2 essential groups:
+- **value types** - all primitive types (including `string` type). They are **immutable**, **copied during assignment** and **passed by value** as an argument.
+- **reference types** - all complex types. They are **mutable**, **the reference is copied during assignment**, they are **passed by reference** as an argument.
 
-Język C? jest typowany **statycznie i słabo**. Domyślnie, **każdy typ danych akceptuje wartość `null`.** Język C?, podobnie jak język C#, dzieli typy na 2 podstawowe grupy:
-- **typy wartościowe** - w przypadku C? są to wszystkie typy prymitywne (łącznie ze `string`). Są one **niemutowalne**, **kopiowane przy przypisaniu** oraz **przekazywane przez wartość** jako argument.
-- **typy referencyjne** - czyli klasy. Są one **mutowalne**, przy przypisaniu **kopiowana jest referencja**, a jako argument są one **przekazywane przez referencję**.
+#### Value types
 
-#### Typy wartościowe
+1. **`bool`** - boolean type
+2. **`int`** - integer type (32-bit signed integer number)
+3. **`float`** - single precision floating-point number
+4. **`string`** - characters string
+5. **`char`** - single character (unsigned byte)
 
-1. **`bool`** - typ boolowski
-2. **`int`** - typ całkowitoliczbowy (32-bitowa liczba całkowita ze znakiem)
-3. **`float`** - liczba zmiennoprzecinkowa pojedynczej precyzji
-4. **`string`** - ciąg znaków
-5. **`char`** - pojedynczy znak
+#### Exceptions
 
-#### Wyjątki
+Exceptions in C? are in fact strings, which can be thrown and handled the same way as regular exceptions. There is a defined set of several standard exceptions, which are thrown e.x. during an invalid cast or invalid null access.
 
-Wyjątki w C? są de facto stringami, które można rzucać i obsługiwać tak, jak standardowe wyjątki. Zdefiniowany jest zestaw kilku standardowych wyjątków, które są rzucane np. w przypadku nieprawidłowego rzutowania lub odwołania do wartości `null`.
+### Data in the program
 
-### Dane w programie
+- **Weak and static** typing
+- Arguments are passed to the function accordingly to their type group:
+	- primitive types - **by value**
+	- complex types - **by reference**
+- **Type conversions**:
+	- performed implicitly, since the assignment operator can simultaneously perform casting if needed. For instance, when trying to assign a value of type `float` to a variable of type `int`, it will be automatically converted to the target type. In case of failure, an exception will be thrown.
+	- there are also more non-typical type conversions related to strings:
+		- comparing an integer value to a string value results in comparing the length of that string to that number
+		- assigning any primitive value (excluding `null`) to a variable of type `string` will result in converting that value to string
+- **The scope of a variable** is limited to the block in which it is defined, including all nested blocks
+- **Variables hiding** can occur during redefining a variable with the same name in an inner block. In this case, the most nested variable will be processed.
+- **Importing functions** from external modules is done by specifying the name of a module and the name of a function. Standard library functions are additionally grouped in submodules (so that they are accessed as `CNull.Submodule.Function`).
 
-- Typowanie w języku C? jest **słabe i statyczne**
-- Argumenty do funkcji przekazywane są w zależności od ich typu:
-	- typy prymitywne - **przez wartość**
-	- typy złożone - **przez referencję**
-- **Konwersje typów**:
-	- następują niejawnie, ponieważ **operator przypisania jednocześnie jest w stanie wykonać rzutowanie w razie potrzeby**. Np. chcąc przypisać wartość typu `float` do typu `int`, zostanie ona automatycznie zrzutowana do typu docelowego, a jeśli to się nie powiedzie, to rzucony zostanie wyjątek.
-	- istnieją również bardziej nietypowe konwersje typów związane z łańcuchami znaków:
-		- porównanie wartości całkowitoliczbowej z łańcuchem znaków skutkuje porównaniem długości tego łańcucha z tą liczbą
-		- przypisanie jakiejkolwiek wartości prymitywnej (poza `null`) do zmiennej typu `string` spowoduje jej skonwertowanie do łańcucha znakowego
-- **Zakres zmiennej** jest ograniczony do bloku kodu, w której jest zdefiniowana, a także do bloków podrzędnych
-- **Przykrywanie zmiennych** może występować podczas zdefiniowania zmiennej lokalnej w funkcji, kiedy już zdefiniowano zmienną o tej samej nazwie w pliku. Wówczas w danym kontekście brana pod uwagę jest ta zmienna, która jest na najniższym poziomie zagnieżdżenia. Nie można redefiniować pól i zmiennych lokalnych.
-- Importowanie funkcji następuje poprzez podanie nazwy modułu oraz nazwy funkcji (po kropce). Funkcje z biblioteki standardowej są dodatkowo grupowane w tzw. podmoduły (przez co odwołujemy się do nich per `CNull.Podmoduł.Funkcja`).
+### Error handling
 
-### Obsługa błędów
+Errors are handled by a separate module of the project. All occurrance of an error in a specific module of the interpreter (e.x. lexer, parser or the interpreter itself) will result in signalizing an error on behalf of error handler component. Having the information regarding the specific error, the error handler performs proper actions (such as sending the output to standard error stream or saving information to logs).
 
-Błędy będą obsługiwane przez osobny moduł projektu. Każde wystąpienie błędu w danym module interpretera (np. lekserze, parserze czy samym interpreterze) będzie sygnalizowane zgłoszeniem błędu, którego obsługa zostanie oddelegowana do modułu obsługi błędów. Na podstawie informacji przekazanych w błędzie podejmowane będą odpowiednie działania, jak np. wyświetlenie informacji na ekranie, zapis do logu itp.
+Handled types of errors:
+1. **Source access errors** - raised during detected issues when accessing source files (such as trying to access a non-existing file)
+2. **Compilation errors** - errors related to the static analysis of the code (all syntax or lexical errors)
+3. **Semantic errors** - raised during detecting semantically incorrect code (e.x. invalid typing)
+4. **Runtime errors** - exceptions raised during program interpretation, must be handled by the user (e.x. invalid null access).
 
-Obsługiwane rodzaje błędów:
-1. **Błędy dostępu do źródła** - zgłaszane w momencie nieprawidłowości odwołania do źródła kodu (np. próba odwołania do nieistniejącego pliku)
-2. **Błędy kompilacji** - błędy związane ze statyczną analizą kodu (wszelkie błędy składniowe, semantyczne lub leksykalne)
-3. **Błędy semantyczne** - sygnalizowane w przypadku wykrycia kodu nieprawidłowego semantycznie (np. niezgodność typów)
-4. **Błędy czasu wykonania** - sygnalizowane w czasie interpretacji programu (np. odwołanie do wartości `null`)
-
-Komunikaty o błędach sformatowane będą w następujący sposób:
-- dla błędów wykrytych przed wykonaniem lub błędów semantycznych:
+Errors messages are formed the following way:
+- for compilation or semantic errors:
 
 ```bash
-C? error: [typ błędu]
-Source: [nazwa pliku lub modułu] (line [nr linii], column [nr kolumny])
+C? error: [error type]
+Source: [file or module name] (line [line number], column [column number])
 ```
 
-- dla nieobsłużonych wyjątków - wypisanie stosu wywołań:
+- for unhandled exceptions - displaying stack trace:
 
 ```
-C? unhandled exception ([komunikat z wyjątku]):
-	at [nazwa modułu i funkcji, w której wystąpił wyjątek] (line [nr linii])
+C? unhandled exception ([exception name]):
+	at [module and function name, in which the exception was thrown] (line [line number])
 ```
 
-### Przykłady użycia języka
+### Examples
 
-#### Przykłady elementarne - zmienne, importowanie bibliotek, operacje na danych prymitywnych i interakcja z terminalem
+#### Essentials - variables, imports, operations on primitive types and interaction with the user
 
-##### Sytuacje poprawne
+##### Valid cases
 
-**1. Obliczenie sumy liczb podanych przez użytkownika**
+**1. Calculating the sum of numbers given by the user**
 
 ```csharp
 import CNull.Console.Write;
@@ -164,10 +161,10 @@ import CNull.Convert.StringToInt;
 
 void Main()
 {
-	Write("Podaj pierwsza liczbe: ");
+	Write("Input the first number: ");
 	int first = StringToInt(ReadLine());
 
-	Write("Podaj druga liczbe: ");
+	Write("Input the second number: ");
 	int second = StringToInt(ReadLine());
 	
 	int result = first + second;
@@ -175,14 +172,14 @@ void Main()
 }
 ```
 
-Wynik:
+Result:
 ```
-Podaj pierwsza liczbe: 30
-Podaj druga liczbe: 20
+Input the first number: 30
+Input the second number: 20
 50
 ```
 
-**2. Złożona operacja matematyczna z niejawnymi konwersjami**
+**2. Complex arithmetical operation with implicit casts**
 
 ```csharp
 import CNull.Console.WriteLine;
@@ -197,12 +194,12 @@ void Main()
 }
 ```
 
-Wynik:
+Result:
 ```
 -222
 ```
 
-**3. Niejawne konwersje na typ `string`**
+**3. Implicit conversions to `string`**
 
 ```csharp
 import CNull.Console.WriteLine;
@@ -215,15 +212,14 @@ void Main()
 	string c = a + b;
 	WriteLine(c);
 }
-
 ```
 
-Wynik:
+Result:
 ```
 2314
 ```
 
-**4. Deklaracje zmiennych wraz i bez inicjalizacji oraz demonstracja typów danych**
+**4. Variable declarations with optional initializations and primitive types demonstrations**
 
 ```csharp
 void Main()
@@ -234,7 +230,7 @@ void Main()
 	
 	char c = 'A';
 	c = '';
-	string d = "Ala ma kota";
+	string d = "Sample text";
 	d = "";
 	
 	bool e = true;
@@ -255,7 +251,7 @@ void Main()
 }
 ```
  
-**5. Prezentacja różnych możliwych identyfikatorów**
+**5. Examples of valid identifiers**
 
 ```csharp
 void Main()
@@ -271,7 +267,7 @@ void Main()
 }
 ```
 
-**6. Wyrażenia boolowskie**
+**6. Boolean expressions**
 
 ```csharp
 import CNull.Console.WriteLine;
@@ -286,16 +282,16 @@ WriteLine(c?);
 WriteLine(d);
 ```
 
-Wynik:
+Result:
 ```
 True
 False
 false
 ```
 
-##### Sytuacje niepoprawne
+##### Invalid cases
 
-**1. Dyrektywy `import` niebędące na początku pliku**
+**1. `import` directives not defined at the beginning of the file**
 
 ```csharp
 bool a = true;
@@ -303,23 +299,23 @@ import CNull.Console.WriteLine;
 WriteLine(a);
 ```
 
-Wynik:
+Result:
 ```
 C? error on line 2, column 1: Import statement must be placed at the top of the file.
 ```
 
-**2. Użycie słowa kluczowego jako identyfikatora**
+**2. Using the keyword as an identifier**
 
 ```csharp
 int bool = 2;
 ```
 
-Wynik:
+Result:
 ```
 C? error on line 1, column 5: Keywords cannot be used as identifiers.
 ```
 
-**3. Odwołanie do wartości `null`**
+**3. Invallid `null` access**
 
 ```csharp
 void Main()
@@ -331,16 +327,16 @@ void Main()
 }
 ```
 
-Wynik:
+Result:
 ```
 C? unhandled exception (NullValueException):
 	at Program.Main (line: 6)
 	at Program.<entry point>
 ```
 
-#### Przykłady złożone - funkcje, instrukcje sterujące i obsługa wyjątków
+#### Complex examples - functions, control flow i and exceptions handling
 
-**1. Rekurencyjna funkcja silni z komentarzami i zasygnalizowaniem wynikiem `null` niepoprawnych danych wejściowych. Przykład z przepełnieniem stosu**
+**1. Recursive factorial function containing comments and returning `null` in case of invalid input. Example featuring stack overflow.**
 
 ```csharp
 import CNull.Console.WriteLine;
@@ -372,7 +368,7 @@ void Main()
 }
 ```
 
-Wynik:
+Result:
 ```
 1
 1
@@ -384,7 +380,7 @@ C? unhandled exception (Stack overflow):
 	...
 ```
 
-**2. Przekazywanie przez wartość typów prymitywnych**
+**2. Passing primitive types by value**
 
 ```csharp
 import CNull.Console.WriteLine;
@@ -407,13 +403,13 @@ void Main()
 }
 ```
 
-Wynik:
+Result:
 ```
 50
 20
 ```
 
-**3. Operacje na słowniku**
+**3. Operations on a dictionary**
 
 ```csharp
 import CNull.Console.WriteLine;
@@ -433,7 +429,7 @@ void Main()
 }
 ```
 
-Wynik:
+Result:
 ```
 True
 False
@@ -442,7 +438,7 @@ C? unhandled exception (NullValueException):
 	at Program.Main (line 15)
 ```
 
-**4. Wielokrotne, zagnieżdżone wywołania funkcji razem z przekazywaniem argumentu przez wartość**
+**4. Multiple, nested function calls along with passing data by value**
 
 ```csharp
 import CNull.Console.WriteLine;
@@ -495,7 +491,7 @@ void Main()
 }
 ```
 
-Wynik:
+Result:
 ```
 140
 55
@@ -503,68 +499,68 @@ Wynik:
 20
 ```
 
-### Opis gramatyki EBNF
+### EBNF grammar specification
 
-#### Warstwa leksykalna
+#### Lexical layer
 
-Opis gramatyki na poziomie leksykalnym znajduje się w pliku [lexical_grammar.ebnf](docs/lexical_grammar.ebnf).
+Grammar specifiaction on the lexical layer is included in the [lexical_grammar.ebnf](docs/lexical_grammar.ebnf) file.
 
-#### Warstwa składniowa
+#### Syntactic layer
 
-Opis gramatyki na poziomie składni znajduje się w pliku [syntactic_grammar.ebnf](docs/syntactic_grammar.ebnf).
+Grammar specification on the syntactic layer is included in the [syntactic_grammar.ebnf](docs/syntactic_grammar.ebnf) file.
 
-## Realizacja projektu
+## Implementation
 
-### Struktura projektu
+### Project structure
 
-Projekt C? został zrealizowany w języku C# w formie modularnej. Każdy moduł realizowany jest przez osobny projekt biblioteki klas C# albo aplikację konsolową jako warstwa front-end. Cały "rdzeń" interpretera dla tego języka został zamknięty w formie ściśle odseparowanej od używanej warstwy prezentacji oraz używanej obsługi standardowego wejścia i wyjścia, co sprawia, że może być on dystrybuowany jako biblioteka, reużywalna w różnych warstwach prezentacji.
+Project C? is implemented as a modular, C# application. Each module is either a separate C# class library or a console application as the front-end layer. The whole core layer of the interpreter for this language is highly separated from the presentation layer and used standard input and output, which makes it a distributable and reusable library for different front-ends.
 
-Główne moduły składające się na projekt:
-- **`CNull.Source`** - biblioteka klas realizująca dostęp do źródła kodu oraz udostępnianie ich lekserowi w zunifikowanej formie nadającej się do przeprowadzenia analizy leksykalnej. Główne elementy składające się na tę bibliotekę:
-	- Interfejs pobierania znaków ze źródła udostępniany lekserowi
-	- Klasa realizująca dostęp do danych z plików i ich przetwarzanie z pomocą strumieni
-	- Elementy pomocnicze dla warstwy dostępu do danych
-	- Definicje błędów charakterystycznych dla procesu dostępu do danych
-- **`CNull.Lexer`** - biblioteka klas realizująca analizę leksykalną, tworzenie tokenów i udostępnianie ich parserowi w formie nadającej się do przeprowadzenia analizy składniowej. Główne elementy składające się na tę bibliotekę:
-	- Analizator leksykalny (w tym jego interfejs udostępniany parserowi)
-	- Generyczna implementacja tokenu
-	- Enumeracje i mapy dla typów tokenów
-	- Definicje błędów charakterystycznych dla analizy leksykalnej
-	- Elementy pomocnicze dla analizatora leksykalnego
-- **`CNull.Parser`** - biblioteka klas realizująca analizę składniową, tworzenie drzewa rozbioru składniowego i udostępnienie go w formie nadającej się do przeprowadzenia analizy semantycznej. Główne elementy składające się na tę bibliotekę:
-	- Analizator składniowy (w tym jego interfejs udostępniany analizatorowi semantycznemu)
-	- Abstrakcja pozwalająca na reprezentację drzewa tokenów
-	- Implementację proxy realizującego filtrowanie tokenów komentarzy
-	- Zdarzenia błędów charakterystyczne dla analizy składniowej
-	- Elementy pomocnicze dla analizatora składniowego
-- **`CNull.Semantics`** - biblioteka klas realizująca budowanie rejestru funkcji dostępnych w zebranych razem modułach programu.
-	- Analizator semantyczny (w tym jego interfejs udostępniany interpreterowi)
-	- Definicje błędów charakterystycznych dla analizy semantycznej
-	- Elementy pomocnicze dla analizatora semantycznego
-- **`CNull.Interpreter`** - biblioteka klas stanowiąca implementację interpretera - w tym miejscu wykonywany jest program C?. Główne elementy składające się na tę bibliotekę:
-	- Interpreter (w tym jego interfejs udostępniany modułom klienckim, w tym wypadku aplikacji konsolowej)
-	- Biblioteka standardowa
-	- Resolver typów
-	- Klasy obsługujące kontekst wykonania programu oraz elementy pomocnicze dla interpretera
-	- Fasadę udostępniającą uproszczony interfejs całej biblioteki "rdzenia" oraz konfigurującą wszystkie komponenty
-- **`CNull`** - aplikacja konsolowa realizująca interakcję z użytkownikiem oraz obsługę jego poleceń. Posiada odwołanie do interpretera, któremu zleca wykonanie programu podanego przez użytkownika. Jej jedyną odpowiedzialnością jest obsługa CLI, wypisywanie błędów na ekran (zgłaszanych przez zdarzenia modułu obsługi błędów) oraz przekazywanie polecenia wykonania programu interpreterowi.
+Main modules of the project:
+- **`CNull.Source`** - class library performing the access to the source of the code and passing it to the lexer in a unified form, convenient for performing lexical analysis. Main elements of this library are the following:
+	- interface for getting characters from the source to be used by lexer,
+	- class performing the access to the source using streams,
+	- helpers for source access layer,
+	- source access errors definitions.
+- **`CNull.Lexer`** - class library performing lexical analysis, including tokenization of the source code and exposing the tokens to the parser in a convenient form to perform syntactic analysis. Main elements of this library are the following:
+	- lexical analyser (including its interface exposed to the parser)
+	- generic implementation of a token,
+	- enums and maps for token types,
+	- lexical errors definitions,
+	- helpers for the lexer.
+- **`CNull.Parser`** - class library performing syntactic analysis and building abstract syntax tree of the code and exposing it to the semantic analyser. Main elements of this library are the following:
+	- syntactic analyser (including its interface exposed to the semantic analyser),
+	- abstractions for representing syntax tree,
+	- implementation of the comments-filtering proxy,
+	- syntax errors definitions,
+	- helpers for the parser.
+- **`CNull.Semantics`** - (*for future implementation*) class library responsible for performing syntactic analysis of the code. Main elements of this library are the following:
+	- semantic analyser (including its interface exposed to the interpreter),
+	- semantic errors definitions,
+	- helpers for the semantic analyser.
+- **`CNull.Interpreter`** - class library containing the implementation of the interpreter - this is the place in which C? programs are actually executed. Main elements of this library are the following:
+	- interpreter (including its interface exposed to the core library facade),
+	- standard library,
+	- types resolver,
+	- classes handling call contexts and helper actions for the interpreter,
+	- facade exposing the simplified interface for client applications and configuring all components.
+- **`CNull`** - console application handling interaction with the user and their commands. Its only responsibility is exposing the CLI and delegating program execution to the referenced core library.
 
-Dodatkowe moduły:
-- **`CNull.ErrorHandler`** - moduł odpowiadający za obsługę błędów zgłaszanych przez poszczególne warstwy programu. Udostępnia interfejs do zgłaszania błędów, po czym przeprowadza ich obsługę (na którą mogą składać się jakiekolwiek dodatkowe czynności potrzebne przy ich obsłudze, np. zrzucanie pewnych informacji do logów) oraz przekazanie informacji o błędzie "front-endowi" w formie pojedynczego zdarzenia, z informacjami koniecznymi do realizacji wyświetlenia błędu.
-- **`CNull.Common`** - moduł zawierający elementy pomocnicze i wspólne dla wszystkich składników programu.
+Additional modules:
+- **`CNull.ErrorHandler`** -  module responsible for handling the errors raised by all core modules. It performs all tasks related to error handling (including serializing information about errors to logs) and passing the information to the front-end layer.
+- **`CNull.Common`** - module containing common elements for all project layers.
 
-Projekty testów:
-- **`CNull.*.Tests`** - testy jednostkowe, gdzie `*` jest nazwą modułu głównego, np. `CNull.Lexer.Tests`
-- **`CNull.IntegrationTests`** - testy integracyjne
+Test projects:
+- **`CNull.*.Tests`** - unit tests, where `*`is the name of the tested module, e.x. `CNull.Lexer.Tests`.
+- **`CNull.IntegrationTests`** - integration tests.
 
-Komunikacja między głównymi modułami następuje w taki sposób, że dany moduł ma powiązania jedynie z modułem znajdującym się bezpośrednio "pod nim" (tj. lekser może mieć zależność jedynie od źródła, parser od leksera itd.). Każdy z modułów głównych ma dostęp do modułu obsługi błędów. Wszystkie moduły mają dostęp do modułu elementów wspólnych.
+Communication between core modules is limited to the "adjacent" ones, so that a module can access only the one which is logically directly under it (i.e. lexer can only reference source, parser can only reference lexer and so on). Each of the core modules can access the error handler. All modules can access the common module.
 
-Aby ułatwić testowanie oraz zarządzanie zależnościami, główne obiekty będą operować na interfejsach swoich zależności, a zarządzanie nimi będzie realizowane przez dependency injection. 
+To simplify testing and objects management, main components operate only on the interfaces of their dependencies, which instantiation is managed by DI framework.
 
-Warto nadmienić, że interpreter nie ma bezpośrednio uwiązany ze standardowym wyjściem i wejściem konsoli. Udostępniane są mu tzw. callbacki, które realizują operacje wypisania lub pobrania zawartości z odpowiednich standardowych strumieni. Dzięki temu warstwa prezentacji dla interpretera języka C? może zostać wykonana w niemal dowolny sposób (nie tylko jako interfejs CLI).
+It is worth mentioning that the interpreter is not directly connected to console's standard input and output. Instead, it gets callbacks, which operate on corresponding streams. This way, presentation layer for the interpreter can be implemented not only as a CLI.
 
-### Testowanie
+### Testing
 
-Jak w każdym złożonym projekcie, będzie można wyróżnić testy jednostkowe i integracyjne:
-- **testy jednostkowe** będą ściśle odseparowywać wszelkie zależności od testowanych elementów, aby zapewnić jak najlepszą izolację przypadków testowych od pozostałych elementów i zapewnić atomowość takich testów. W szczególności, źródło danych będzie mockowane i przekazywane będą dane w postaci stringów. Do mockowania wykorzystany zostanie framework *Moq*.
-- **testy integracyjne** będą sprawdzały poprawność współpracy kilku komponentów jednocześnie, od współpracy "w parach" (np. parsera z lekserem), jak i bardziej złożonej. 
+As in every complex project, unit and integration tests can be featured:
+- **unit tests** strictly separate all tested components from each other, to isolate each test case and ensure their atomicy. Particuarly, data source is mocked and input data is passed as strings. *Moq* framework is used for mocking.
+- **integration tests** vallidate the behavior of several components connected together.
